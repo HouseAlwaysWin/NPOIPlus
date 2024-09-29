@@ -28,6 +28,8 @@ namespace NPOIPlus
 		public Action<ICellStyle> SetDefaultStringCellStyle = (value) => { };
 		public Action<ICellStyle> SetDefaultDateTimeCellStyle = (value) => { };
 
+		private Dictionary<string, ICellStyle> _styles;
+
 		public NPOIWorkbook(IWorkbook workbook)
 		{
 			Workbook = workbook;
@@ -99,6 +101,24 @@ namespace NPOIPlus
 			rowStyle?.Invoke(newCellStyle);
 			colStyle?.Invoke(newCellStyle);
 			cell.CellStyle = newCellStyle;
+		}
+
+		// 檢查並創建樣式
+		public ICellStyle GetOrCreateStyle(string styleKey)
+		{
+			if (_styles.ContainsKey(styleKey))
+			{
+				return _styles[styleKey];  // 如果樣式已存在，直接返回
+			}
+
+			// 創建新樣式
+			ICellStyle newStyle = Workbook.CreateCellStyle();
+			// 這裡可以根據需要設置樣式屬性
+			newStyle.Alignment = HorizontalAlignment.Center;
+
+			// 將新樣式存入字典
+			_styles[styleKey] = newStyle;
+			return newStyle;
 		}
 
 		/// <summary>

@@ -51,6 +51,14 @@ namespace NPOIPlusConsoleExample
 					dataTable.Rows.Add(2, "Bob", new DateTime(1985, 5, 23));
 					dataTable.Rows.Add(3, "Charlie", new DateTime(2000, 10, 15));
 
+					// 4. 使用迴圈新增一百筆數據
+					for (int i = 4; i <= 10003; i++)
+					{
+						string name = "Name" + i;  // 根據ID生成名字
+						DateTime dateOfBirth = new DateTime(1990, 1, 1).AddDays(i * 10); // 根據ID生成不同的生日
+						dataTable.Rows.Add(i, name, dateOfBirth);
+					}
+
 					workbook.SetExcelCell(sheet1, dataTable, 1, "ID", ExcelColumns.D, 12, (cell, value) =>
 					{
 						return $"{value}st";
