@@ -30,6 +30,10 @@ namespace NPOIPlusConsoleExample
 						style.BorderLeft = BorderStyle.Thin;
 						style.BorderRight = BorderStyle.Thin;
 						style.BorderTop = BorderStyle.Thin;
+						IFont font = workbook.Workbook.CreateFont();
+						font.FontName = "Calibri";  // 
+						font.FontHeightInPoints = 10;  // 
+						style.SetFont(font);
 					};
 
 					workbook.SetDefaultDateTimeCellStyle = (style) =>
@@ -58,17 +62,17 @@ namespace NPOIPlusConsoleExample
 					dataTable.Rows.Add(2, "Bob", new DateTime(1985, 5, 23));
 					dataTable.Rows.Add(3, "Charlie", new DateTime(2000, 10, 15));
 
-					//workbook.SetColExcelCells(sheet1, dataTable, 1, new List<ExcelCellParam>
-					//{
-					//	new("ID",null,(style)=>{
-					//		style.Alignment = HorizontalAlignment.Left;
-					//	}),
-					//	new("Name"),
-					//	new("DateOfBirth"),
-					//}, ExcelColumns.A, 1, (style) =>
-					//{
-					//	style.Alignment = HorizontalAlignment.Center;
-					//});
+					workbook.SetColExcelCells(sheet1, dataTable, 1, new List<ExcelCellParam>
+					{
+						new("ID",null,(style)=>{
+							style.Alignment = HorizontalAlignment.Left;
+						}),
+						new("Name"),
+						new("DateOfBirth"),
+					}, ExcelColumns.A, 1, (style) =>
+					{
+						style.Alignment = HorizontalAlignment.Center;
+					});
 
 					workbook.SetRowExcelCells(sheet1, dataTable, new List<ExcelCellParam>
 					{
@@ -91,7 +95,7 @@ namespace NPOIPlusConsoleExample
 						new((row, col, value) =>
 						{
 							return $"{col}{row}:{col}{row+1}";
-						} )
+						})
 					}, ExcelColumns.E, 1, (style) =>
 					{
 						style.BorderBottom = BorderStyle.Double;

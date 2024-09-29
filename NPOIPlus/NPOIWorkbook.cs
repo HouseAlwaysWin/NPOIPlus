@@ -157,7 +157,6 @@ namespace NPOIPlus
 		{
 			for (int colIndex = 0; colIndex < param.Count; colIndex++)
 			{
-				//var col = param[colIndex].Copy();
 				var colnum = colIndex + startColnum;
 				var col = param[colIndex];
 				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
