@@ -59,9 +59,9 @@ namespace NPOIPlus
 		}
 
 
-		private void SetCellValueBasedOnType(ICell cell, object value, Func<object, object> valueAction = null)
+		private void SetCellValueBasedOnType(ICell cell, object value, CellValueActionType valueAction = null)
 		{
-			value = valueAction?.Invoke(value) ?? value;
+			value = valueAction?.Invoke(cell, value) ?? value;
 			switch (value)
 			{
 				case int i:
@@ -124,7 +124,7 @@ namespace NPOIPlus
 			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, cellValue, colStyle, null, null, isFormula, null);
 		}
 
-		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, Func<object, object> cellValueAction = null, Action<ICellStyle> colStyle = null, bool? isFormula = null)
+		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, CellValueActionType cellValueAction = null, Action<ICellStyle> colStyle = null, bool? isFormula = null)
 		{
 			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, cellValueAction, isFormula, null);
 		}
@@ -141,7 +141,7 @@ namespace NPOIPlus
 		/// <param name="rownum"></param>
 		/// <param name="cellValue"></param>
 		/// <exception cref="Exception"></exception>
-		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, Func<object, object> cellValueAction = null, bool? isFormula = false, FormulaCellValueType formulaCellValueType = null)
+		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false, FormulaCellValueType formulaCellValueType = null)
 		{
 			if (rownum < 1) rownum = 1;
 			int zeroBaseIndex = rownum - 1;

@@ -51,7 +51,7 @@ namespace NPOIPlusConsoleExample
 					dataTable.Rows.Add(2, "Bob", new DateTime(1985, 5, 23));
 					dataTable.Rows.Add(3, "Charlie", new DateTime(2000, 10, 15));
 
-					workbook.SetExcelCell(sheet1, dataTable, 1, "ID", ExcelColumns.D, 12, (value) =>
+					workbook.SetExcelCell(sheet1, dataTable, 1, "ID", ExcelColumns.D, 12, (cell, value) =>
 					{
 						return $"{value}st";
 					});
