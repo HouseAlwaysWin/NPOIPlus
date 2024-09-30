@@ -29,7 +29,7 @@ namespace NPOIPlus
 		public Action<ICellStyle> SetDefaultStringCellStyle = (value) => { };
 		public Action<ICellStyle> SetDefaultDateTimeCellStyle = (value) => { };
 
-		private Dictionary<string, ICellStyle> _styles;
+		public Dictionary<string, ICellStyle> _styles = new Dictionary<string, ICellStyle>();
 
 		public NPOIWorkbook(IWorkbook workbook)
 		{
@@ -110,20 +110,35 @@ namespace NPOIPlus
 		private void SetCellStyle(ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, ExcelColumns colnum = 0, int rownum = 1)
 		{
 			//ICellStyle newCellStyle = Workbook.CreateCellStyle();
-			ICellStyle newCellStyle = GetOrCreateStyle($"GlobalStyle");
-			SetGlobalCellStyle(newCellStyle);
-			SetCellStyleBasedOnType(cellValue, newCellStyle);
-			if (rowStyle != null)
+			string key = "$GlobalStyle";
+			if (colStyle != null && rowStyle != null)
 			{
-				newCellStyle = GetOrCreateStyle($"RowStyle_{rownum}");
+				key = $"{colnum}{rownum}";
 			}
-			rowStyle?.Invoke(newCellStyle);
-			if (colStyle != null)
+			else if (colStyle != null)
 			{
-				newCellStyle = GetOrCreateStyle($"ColStyle_{colnum}");
+				key = $"{colnum}";
 			}
-			colStyle?.Invoke(newCellStyle);
-			cell.CellStyle = newCellStyle;
+			else
+			{
+				key = $"{rownum}";
+			}
+			if (_styles.ContainsKey(key))
+			{
+				var style = _styles[key];  // 如果樣式已存在，直接返回
+				cell.CellStyle = style;
+			}
+			else
+			{
+				ICellStyle newCellStyle = Workbook.CreateCellStyle();
+
+				SetGlobalCellStyle(newCellStyle);
+				SetCellStyleBasedOnType(cellValue, newCellStyle);
+				rowStyle?.Invoke(newCellStyle);
+				colStyle?.Invoke(newCellStyle);
+				cell.CellStyle = newCellStyle;
+				_styles.Add(key, newCellStyle);
+			}
 		}
 
 		// 檢查並創建樣式
@@ -136,12 +151,9 @@ namespace NPOIPlus
 
 			// 創建新樣式
 			ICellStyle newStyle = Workbook.CreateCellStyle();
-			// 這裡可以根據需要設置樣式屬性
-			newStyle.Alignment = HorizontalAlignment.Center;
-
 			// 將新樣式存入字典
 			_styles[styleKey] = newStyle;
-			return newStyle;
+			return _styles[styleKey];
 		}
 
 		/// <summary>
@@ -159,7 +171,7 @@ namespace NPOIPlus
 			int zeroBaseIndex = rownum - 1;
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
-			SetCellStyle(cell, cellValue, style);
+			SetCellStyle(cell, cellValue, style, null, colnum, rownum);
 			SetCellValueBasedOnType(cell, cellValue);
 		}
 
@@ -192,7 +204,7 @@ namespace NPOIPlus
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
 			var newValue = cellValueAction ?? cellValue ?? dataTable.Rows[tableIndex][tableColName];
-			SetCellStyle(cell, newValue, colStyle, rowStyle);
+			SetCellStyle(cell, newValue, colStyle, rowStyle, colnum, rownum);
 			if (isFormula.HasValue)
 			{
 				if (isFormula.Value)

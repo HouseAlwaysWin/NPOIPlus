@@ -111,6 +111,8 @@ namespace NPOIPlusConsoleExample
 						style.SetCellFillForegroundColor(100, 100, 0);
 					});
 
+					var test = workbook._styles;
+
 
 
 
