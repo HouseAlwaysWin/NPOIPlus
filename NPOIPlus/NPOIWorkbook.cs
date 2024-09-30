@@ -219,6 +219,22 @@ namespace NPOIPlus
 			}
 		}
 
+		public void RemovwRowRange(ISheet sheet, int startRow = 1, int endRow = 2)
+		{
+			if (startRow < 1) startRow = 1;
+			if (endRow < 2) endRow = 2;
+			startRow = startRow - 1;
+			endRow = endRow - 1;
+			for (int i = endRow; i >= startRow; i--)
+			{
+				IRow row = sheet.GetRow(i);
+				if (row != null)
+				{
+					sheet.RemoveRow(row);
+				}
+			}
+		}
+
 
 	}
 
