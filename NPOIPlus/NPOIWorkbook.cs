@@ -107,12 +107,21 @@ namespace NPOIPlus
 		}
 
 
-		private void SetCellStyle(ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null)
+		private void SetCellStyle(ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, ExcelColumns colnum = 0, int rownum = 1)
 		{
-			ICellStyle newCellStyle = Workbook.CreateCellStyle();
+			//ICellStyle newCellStyle = Workbook.CreateCellStyle();
+			ICellStyle newCellStyle = GetOrCreateStyle($"GlobalStyle");
 			SetGlobalCellStyle(newCellStyle);
 			SetCellStyleBasedOnType(cellValue, newCellStyle);
+			if (rowStyle != null)
+			{
+				newCellStyle = GetOrCreateStyle($"RowStyle_{rownum}");
+			}
 			rowStyle?.Invoke(newCellStyle);
+			if (colStyle != null)
+			{
+				newCellStyle = GetOrCreateStyle($"ColStyle_{colnum}");
+			}
 			colStyle?.Invoke(newCellStyle);
 			cell.CellStyle = newCellStyle;
 		}
