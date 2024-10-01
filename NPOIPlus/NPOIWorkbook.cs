@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 
 namespace NPOIPlus
 {
@@ -29,7 +30,7 @@ namespace NPOIPlus
 		public Action<ICellStyle> SetDefaultStringCellStyle = (value) => { };
 		public Action<ICellStyle> SetDefaultDateTimeCellStyle = (value) => { };
 
-		public Dictionary<string, ICellStyle> _styles = new Dictionary<string, ICellStyle>();
+		public List<ExcelStyleCached> _cellStyles = new List<ExcelStyleCached>();
 
 		public NPOIWorkbook(IWorkbook workbook)
 		{
@@ -107,54 +108,56 @@ namespace NPOIPlus
 		}
 
 
-		private void SetCellStyle(ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, ExcelColumns colnum = 0, int rownum = 1)
+		private void SetCellStyle(string cachedKey, ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, ExcelColumns colnum = 0, int rownum = 1)
 		{
-			//ICellStyle newCellStyle = Workbook.CreateCellStyle();
-			string key = "$GlobalStyle";
-			if (colStyle != null && rowStyle != null)
-			{
-				key = $"{colnum}{rownum}";
-			}
-			else if (colStyle != null)
-			{
-				key = $"{colnum}";
-			}
-			else
-			{
-				key = $"{rownum}";
-			}
-			if (_styles.ContainsKey(key))
-			{
-				var style = _styles[key];  // 如果樣式已存在，直接返回
-				cell.CellStyle = style;
-			}
-			else
-			{
-				ICellStyle newCellStyle = Workbook.CreateCellStyle();
+			// 根據列號和行號或全局樣式鍵生成樣式key
+			var styleGroup = _cellStyles.First(s => s.GroupName == cachedKey);
+			var style = styleGroup.CellStyles;
 
+			string key = "$GlobalStyle";
+
+			if (colStyle != null)
+			{
+				key = $"OnlyCellStyle_{colnum}";
+			}
+			else if (colStyle == null && rowStyle != null)
+			{
+				key = $"GlobalRowStyle";
+			}
+
+			// 檢查是否已有樣式
+			if (style.ContainsKey(key))
+			{
+				cell.CellStyle = style[key];  // 直接使用已存在的樣式
+			}
+			else
+			{
+				ICellStyle newCellStyle = Workbook.CreateCellStyle(); ;
 				SetGlobalCellStyle(newCellStyle);
 				SetCellStyleBasedOnType(cellValue, newCellStyle);
 				rowStyle?.Invoke(newCellStyle);
 				colStyle?.Invoke(newCellStyle);
+
 				cell.CellStyle = newCellStyle;
-				_styles.Add(key, newCellStyle);
+
+				style.Add(key, newCellStyle);
 			}
 		}
 
 		// 檢查並創建樣式
-		public ICellStyle GetOrCreateStyle(string styleKey)
-		{
-			if (_styles.ContainsKey(styleKey))
-			{
-				return _styles[styleKey];  // 如果樣式已存在，直接返回
-			}
+		//public ICellStyle GetOrCreateStyle(string styleKey)
+		//{
+		//	if (_styles.ContainsKey(styleKey))
+		//	{
+		//		return _styles[styleKey];  // 如果樣式已存在，直接返回
+		//	}
 
-			// 創建新樣式
-			ICellStyle newStyle = Workbook.CreateCellStyle();
-			// 將新樣式存入字典
-			_styles[styleKey] = newStyle;
-			return _styles[styleKey];
-		}
+		//	// 創建新樣式
+		//	ICellStyle newStyle = Workbook.CreateCellStyle();
+		//	// 將新樣式存入字典
+		//	_styles[styleKey] = newStyle;
+		//	return _styles[styleKey];
+		//}
 
 		/// <summary>
 		/// For set single cell
@@ -168,10 +171,20 @@ namespace NPOIPlus
 		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> style = null)
 		{
 			if (rownum < 1) rownum = 1;
+			var sheetName = sheet.SheetName;
+			var key = $"SetCell{sheetName}_{colnum}{rownum}";
+			if (_cellStyles.FirstOrDefault(s => s.GroupName == key) == null)
+			{
+				_cellStyles.Add(new ExcelStyleCached
+				{
+					GroupName = key,
+					CellStyles = new Dictionary<string, ICellStyle>()
+				});
+			}
 			int zeroBaseIndex = rownum - 1;
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
-			SetCellStyle(cell, cellValue, style, null, colnum, rownum);
+			SetCellStyle(key, cell, cellValue, style, null, colnum, rownum);
 			SetCellValueBasedOnType(cell, cellValue);
 		}
 
@@ -185,26 +198,30 @@ namespace NPOIPlus
 			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, cellValueAction, isFormula);
 		}
 
-
-		/// <summary>
-		/// For set single cell with datatable
-		/// </summary>
-		/// <param name="sheet"></param>
-		/// <param name="dataTable"></param>
-		/// <param name="tableIndex"></param>
-		/// <param name="tableColName"></param>
-		/// <param name="colnum"></param>
-		/// <param name="rownum"></param>
-		/// <param name="cellValue"></param>
-		/// <exception cref="Exception"></exception>
 		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
+		{
+			var sheetName = sheet.SheetName;
+			var key = $"SetCell{sheetName}_{colnum}{rownum}";
+			if (_cellStyles.FirstOrDefault(s => s.GroupName == key) == null)
+			{
+				_cellStyles.Add(new ExcelStyleCached
+				{
+					GroupName = key,
+					CellStyles = new Dictionary<string, ICellStyle>()
+				});
+			}
+			SetExcelCell(sheet, key, dataTable, tableIndex, tableColName, colnum, rownum, cellValue, colStyle, rowStyle, cellValueAction, isFormula);
+		}
+
+
+		private void SetExcelCell(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
 		{
 			if (rownum < 1) rownum = 1;
 			int zeroBaseIndex = rownum - 1;
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
 			var newValue = cellValueAction ?? cellValue ?? dataTable.Rows[tableIndex][tableColName];
-			SetCellStyle(cell, newValue, colStyle, rowStyle, colnum, rownum);
+			SetCellStyle(groupKey, cell, newValue, colStyle, rowStyle, colnum, rownum);
 			if (isFormula.HasValue)
 			{
 				if (isFormula.Value)
@@ -220,23 +237,48 @@ namespace NPOIPlus
 
 		public void SetColExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
 		{
+			var sheetName = sheet.SheetName;
+			var key = $"SetCol{sheetName}_{startColnum}{rownum}";
+			if (_cellStyles.FirstOrDefault(s => s.GroupName == key) == null)
+			{
+				_cellStyles.Add(new ExcelStyleCached
+				{
+					GroupName = key,
+					CellStyles = new Dictionary<string, ICellStyle>()
+				});
+			}
+			SetColExcelCells(sheet, key, dataTable, tableIndex, param, startColnum, rownum, rowStyle, isFormula);
+		}
+
+		private void SetColExcelCells(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
+		{
 			for (int colIndex = 0; colIndex < param.Count; colIndex++)
 			{
 				var colnum = colIndex + startColnum;
 				var col = param[colIndex];
 				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
-				SetExcelCell(sheet, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
+				SetExcelCell(sheet, groupKey, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
 			}
 		}
 
 		public void SetRowExcelCells(ISheet sheet, DataTable dataTable, List<ExcelCellParam> param, ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
 		{
 			if (startRownum < 1) startRownum = 1;
+			var sheetName = sheet.SheetName;
+			var key = $"SetRow_{sheetName}_{startColnum}{startRownum}";
+			if (_cellStyles.FirstOrDefault(s => s.GroupName == key) == null)
+			{
+				_cellStyles.Add(new ExcelStyleCached
+				{
+					GroupName = key,
+					CellStyles = new Dictionary<string, ICellStyle>()
+				});
+			}
 
 			for (int dtIndex = 0; dtIndex < dataTable.Rows.Count; dtIndex++)
 			{
 				var rownum = startRownum + dtIndex;
-				SetColExcelCells(sheet, dataTable, dtIndex, param, startColnum, rownum, rowStyle, isFormula);
+				SetColExcelCells(sheet, key, dataTable, dtIndex, param, startColnum, rownum, rowStyle, isFormula);
 			}
 		}
 

@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="NPOIWorkbook.cs~RF20d6cc51.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NPOI" Version="2.7.1" />
   </ItemGroup>
 

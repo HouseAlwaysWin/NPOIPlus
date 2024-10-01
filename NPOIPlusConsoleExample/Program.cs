@@ -78,13 +78,14 @@ namespace NPOIPlusConsoleExample
 
 					workbook.SetRowExcelCells(sheet1, dataTable, new List<ExcelCellParam>
 					{
-						new("ID" ,
-						null,(style)=>{
-							style.Alignment = HorizontalAlignment.Center;
-							//style.BorderBottom = BorderStyle.Thick;
-							style.SetBorderStyle(bottom:BorderStyle.Thick);
-						}
-						),
+						//new("ID" ,
+						//null,(style)=>{
+						//	style.Alignment = HorizontalAlignment.Center;
+						//	//style.BorderBottom = BorderStyle.Thick;
+						//	style.SetBorderStyle(bottom:BorderStyle.Thick);
+						//}
+						//),
+						new("ID"),
 						new("Name",
 						null,(style)=>{
 							style.Alignment = HorizontalAlignment.Left;
@@ -102,16 +103,16 @@ namespace NPOIPlusConsoleExample
 						),
 						new(null,"Test",(cell,value,row, col) =>
 						{
-							return $"{col-3}{row}:{col-3}{row+1}";
+							return $"{col}{row}:{col}{row}";
 						})
 					}, ExcelColumns.E, 1, (style) =>
 					{
 						style.BorderBottom = BorderStyle.Double;
 						style.FillPattern = FillPattern.SolidForeground;
-						style.SetCellFillForegroundColor(100, 100, 0);
+						style.SetCellFillForegroundColor(IndexedColors.Aqua);
 					});
 
-					var test = workbook._styles;
+					var test = workbook._cellStyles;
 
 
 

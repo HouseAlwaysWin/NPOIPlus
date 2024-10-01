@@ -13,7 +13,7 @@
 
 	<ItemGroup>
 		<None Update="Resources\Test.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
