@@ -30,7 +30,8 @@ namespace NPOIPlus
 		public Action<ICellStyle> SetDefaultStringCellStyle = (value) => { };
 		public Action<ICellStyle> SetDefaultDateTimeCellStyle = (value) => { };
 
-		public List<ExcelStyleCached> _cellStyles = new List<ExcelStyleCached>();
+		public List<ExcelStyleCached> _cellStylesCached = new List<ExcelStyleCached>();
+		public Dictionary<string, ICellStyle> _globalCellStyleCached = new Dictionary<string, ICellStyle>();
 
 		public NPOIWorkbook(IWorkbook workbook)
 		{
@@ -107,14 +108,46 @@ namespace NPOIPlus
 			}
 		}
 
+		private string SetGlobalStyleKeyBasedOnType(object cellValue, string key)
+		{
+			bool isInt = true;
+			bool isDouble = true;
+			bool isDateTime = true;
+
+			if (!int.TryParse(cellValue.ToString(), out int i)) isInt = false;
+
+			if (!double.TryParse(cellValue.ToString(), out double d)) isDouble = false;
+
+			if (!DateTime.TryParse(cellValue.ToString(), out DateTime dt)) isDateTime = false;
+
+			// 動態調整型別
+			if (isInt)
+			{
+				key = $"Int_{key}";
+			}
+			else if (isDouble)
+			{
+				key = $"double_{key}";
+			}
+			else if (isDateTime)
+			{
+				key = $"date_{key}";
+			}
+			else
+			{
+				key = $"str_{key}";
+			}
+			return key;
+		}
+
 
 		private void SetCellStyle(string cachedKey, ICell cell, object cellValue, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, ExcelColumns colnum = 0, int rownum = 1)
 		{
 			// 根據列號和行號或全局樣式鍵生成樣式key
-			var styleGroup = _cellStyles.First(s => s.GroupName == cachedKey);
+			var styleGroup = _cellStylesCached.First(s => s.GroupName == cachedKey);
 			var style = styleGroup.CellStyles;
 
-			string key = "$GlobalStyle";
+			string key = SetGlobalStyleKeyBasedOnType(cellValue, "GlobalStyle");
 
 			if (colStyle != null)
 			{
@@ -122,7 +155,11 @@ namespace NPOIPlus
 			}
 			else if (colStyle == null && rowStyle != null)
 			{
-				key = $"GlobalRowStyle";
+				key = SetGlobalStyleKeyBasedOnType(cellValue, "GlobalRowStyle");
+			}
+			else
+			{
+				style = _globalCellStyleCached;
 			}
 
 			// 檢查是否已有樣式
@@ -137,27 +174,11 @@ namespace NPOIPlus
 				SetCellStyleBasedOnType(cellValue, newCellStyle);
 				rowStyle?.Invoke(newCellStyle);
 				colStyle?.Invoke(newCellStyle);
-
 				cell.CellStyle = newCellStyle;
 
 				style.Add(key, newCellStyle);
 			}
 		}
-
-		// 檢查並創建樣式
-		//public ICellStyle GetOrCreateStyle(string styleKey)
-		//{
-		//	if (_styles.ContainsKey(styleKey))
-		//	{
-		//		return _styles[styleKey];  // 如果樣式已存在，直接返回
-		//	}
-
-		//	// 創建新樣式
-		//	ICellStyle newStyle = Workbook.CreateCellStyle();
-		//	// 將新樣式存入字典
-		//	_styles[styleKey] = newStyle;
-		//	return _styles[styleKey];
-		//}
 
 		/// <summary>
 		/// For set single cell
@@ -173,9 +194,9 @@ namespace NPOIPlus
 			if (rownum < 1) rownum = 1;
 			var sheetName = sheet.SheetName;
 			var key = $"SetCell{sheetName}_{colnum}{rownum}";
-			if (_cellStyles.FirstOrDefault(s => s.GroupName == key) == null)
+			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
 			{
-				_cellStyles.Add(new ExcelStyleCached
+				_cellStylesCached.Add(new ExcelStyleCached
 				{
 					GroupName = key,
 					CellStyles = new Dictionary<string, ICellStyle>()
@@ -202,9 +223,9 @@ namespace NPOIPlus
 		{
 			var sheetName = sheet.SheetName;
 			var key = $"SetCell{sheetName}_{colnum}{rownum}";
-			if (_cellStyles.FirstOrDefault(s => s.GroupName == key) == null)
+			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
 			{
-				_cellStyles.Add(new ExcelStyleCached
+				_cellStylesCached.Add(new ExcelStyleCached
 				{
 					GroupName = key,
 					CellStyles = new Dictionary<string, ICellStyle>()
@@ -239,9 +260,9 @@ namespace NPOIPlus
 		{
 			var sheetName = sheet.SheetName;
 			var key = $"SetCol{sheetName}_{startColnum}{rownum}";
-			if (_cellStyles.FirstOrDefault(s => s.GroupName == key) == null)
+			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
 			{
-				_cellStyles.Add(new ExcelStyleCached
+				_cellStylesCached.Add(new ExcelStyleCached
 				{
 					GroupName = key,
 					CellStyles = new Dictionary<string, ICellStyle>()
@@ -266,9 +287,9 @@ namespace NPOIPlus
 			if (startRownum < 1) startRownum = 1;
 			var sheetName = sheet.SheetName;
 			var key = $"SetRow_{sheetName}_{startColnum}{startRownum}";
-			if (_cellStyles.FirstOrDefault(s => s.GroupName == key) == null)
+			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
 			{
-				_cellStyles.Add(new ExcelStyleCached
+				_cellStylesCached.Add(new ExcelStyleCached
 				{
 					GroupName = key,
 					CellStyles = new Dictionary<string, ICellStyle>()

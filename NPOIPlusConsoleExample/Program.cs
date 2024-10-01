@@ -112,7 +112,7 @@ namespace NPOIPlusConsoleExample
 						style.SetCellFillForegroundColor(IndexedColors.Aqua);
 					});
 
-					var test = workbook._cellStyles;
+					var test = workbook._cellStylesCached;
 
 
 
