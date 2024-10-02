@@ -1,14 +1,25 @@
-﻿using NPOI.SS.UserModel;
+﻿using NPOI.SS.Formula.Functions;
+using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using NPOIPlus.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NPOIPlus
 {
 	public static class NPOIPlusExtensions
 	{
+
+		public static IRow GetExcelRowOrCreate(this ISheet sheet, int row = 1)
+		{
+			if (row < 1) row = 1;
+			IRow newRow = sheet.GetRow(row - 1) ?? sheet.CreateRow(row - 1);
+			return newRow;
+		}
+
 		/// <summary>
 		/// Use rgb to set foreground color
 		/// </summary>
@@ -94,15 +105,36 @@ namespace NPOIPlus
 			style.BorderTop = top;
 		}
 
-		public static void SetAligment(this ICellStyle style, HorizontalAlignment horizontal = HorizontalAlignment.General, VerticalAlignment vertical = VerticalAlignment.None)
+		public static void SetAligment(this ICellStyle style, HorizontalAlignment horizontal = HorizontalAlignment.General)
 		{
 			style.Alignment = horizontal;
+		}
+		public static void SetAligment(this ICellStyle style, VerticalAlignment vertical = VerticalAlignment.None)
+		{
 			style.VerticalAlignment = vertical;
 		}
 		public static void SetAligment(this ICellStyle style, VerticalAlignment vertical = VerticalAlignment.None, HorizontalAlignment horizontal = HorizontalAlignment.General)
 		{
 			style.Alignment = horizontal;
 			style.VerticalAlignment = vertical;
+		}
+
+		public static void SetColumnWidthRange(this ISheet sheet, ExcelColumns start, ExcelColumns end, int size)
+		{
+			for (int i = (int)start; i <= (int)end; i++)
+			{
+				sheet.SetColumnWidth(i, size * 256);
+			}
+		}
+
+		public static void SetColumnWidth(this ISheet sheet, ExcelColumns col, int size)
+		{
+			sheet.SetColumnWidth((int)col, size * 256);
+		}
+
+		public static void CreateFreezePane(this ISheet sheet, ExcelColumns col, int row)
+		{
+			sheet.CreateFreezePane((int)col + 1, row);
 		}
 	}
 }

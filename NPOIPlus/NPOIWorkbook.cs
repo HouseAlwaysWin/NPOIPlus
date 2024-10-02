@@ -180,6 +180,7 @@ namespace NPOIPlus
 			}
 		}
 
+
 		/// <summary>
 		/// For set single cell
 		/// </summary>
@@ -244,8 +245,7 @@ namespace NPOIPlus
 		private void SetExcelCell(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
 		{
 			if (rownum < 1) rownum = 1;
-			int zeroBaseIndex = rownum - 1;
-			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
+			IRow row = sheet.GetExcelRowOrCreate(rownum);
 			ICell cell = row.CreateCell((int)colnum);
 			var newValue = cellValueAction ?? cellValue ?? dataTable.Rows[tableIndex][tableColName];
 			SetCellStyle(groupKey, cell, newValue, colStyle, rowStyle, colnum, rownum);

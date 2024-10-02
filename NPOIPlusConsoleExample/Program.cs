@@ -80,7 +80,7 @@ namespace NPOIPlusConsoleExample
 					{
 						new("ID" ,
 						null,(style)=>{
-							style.Alignment = HorizontalAlignment.Center;
+							style.SetAligment(HorizontalAlignment.Center);
 							//style.BorderBottom = BorderStyle.Thick;
 							style.SetBorderStyle(bottom:BorderStyle.Thick);
 						}
@@ -91,7 +91,6 @@ namespace NPOIPlusConsoleExample
 							style.Alignment = HorizontalAlignment.Left;
 							// 設定單元格背景色（RGB 顏色）
 							style.FillPattern = FillPattern.SolidForeground;
-							//style.FillForegroundColor = IndexedColors.Grey25Percent.Index;
 							style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
 							//style.SetCellFillForegroundColor("#FF5733");
 						}
@@ -122,6 +121,14 @@ namespace NPOIPlusConsoleExample
 							return $"{col}{row}:{col}{row}";
 						})
 					}, ExcelColumns.L, 1);
+					workbook.SetExcelCell(sheet1, dataTable, 1, "Name", ExcelColumns.E, 1);
+
+					sheet1.SetColumnWidthRange(ExcelColumns.A, ExcelColumns.H, 20);
+					sheet1.SetColumnWidth(ExcelColumns.A, 10);
+
+					sheet1.CreateFreezePane(ExcelColumns.A, 0);
+
+
 
 					var test = workbook._cellStylesCached;
 					var test2 = workbook._globalCellStyleCached;
