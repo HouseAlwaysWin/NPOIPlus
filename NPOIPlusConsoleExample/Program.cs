@@ -76,7 +76,14 @@ namespace NPOIPlusConsoleExample
 						style.BorderTop = BorderStyle.Dashed;
 					});
 
-					workbook.SetRowExcelCells(sheet1, dataTable, new List<ExcelCellParam>
+					List<ExampleData> exampleData = new List<ExampleData>()
+					{
+						new(1, "Alice", new DateTime(1990, 1, 1)),
+						new(2, "Bob", new DateTime(1985, 5, 23)),
+						new(3, "Charlie", new DateTime(2000, 10, 15)),
+					};
+
+					workbook.SetRowExcelCells(sheet1, exampleData, new List<ExcelCellParam>
 					{
 						new("ID" ,
 						null,(style)=>{
@@ -117,8 +124,12 @@ namespace NPOIPlusConsoleExample
 						new("Name" ),
 						new("DateOfBirth"),
 						new("Test")
-					}, ExcelColumns.L, 1);
-					workbook.SetExcelCell(sheet1, dataTable, 1, "Name", ExcelColumns.E, 1);
+					}, ExcelColumns.L, 1, (style) =>
+					{
+						style.BorderBottom = BorderStyle.Double;
+						style.FillPattern = FillPattern.SolidForeground;
+						style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
+					});
 
 					sheet1.SetColumnWidthRange(ExcelColumns.A, ExcelColumns.H, 20);
 					sheet1.SetColumnWidth(ExcelColumns.A, 10);

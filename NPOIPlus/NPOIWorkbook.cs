@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace NPOIPlus
 {
@@ -183,6 +185,48 @@ namespace NPOIPlus
 			}
 		}
 
+		private object GetPropertyValue<T>(T obj, string propertyName)
+		{
+			if (obj != null && typeof(T).IsClass)
+			{
+				var parameter = Expression.Parameter(typeof(T), "obj");
+
+				// 嘗試取得屬性
+				MemberInfo memberInfo = typeof(T).GetProperty(propertyName)
+										?? (MemberInfo)typeof(T).GetField(propertyName);
+
+				if (memberInfo == null)
+				{
+					return null;
+				}
+
+				// 根據是屬性還是字段來動態生成訪問的 Expression
+				Expression memberAccess;
+				if (memberInfo is PropertyInfo property)
+				{
+					memberAccess = Expression.Property(parameter, property);
+				}
+				else if (memberInfo is FieldInfo field)
+				{
+					memberAccess = Expression.Field(parameter, field);
+				}
+				else
+				{
+					return null;
+				}
+
+				// 將結果轉換為 object
+				var convert = Expression.Convert(memberAccess, typeof(object));
+
+				// 創建 Lambda 表達式：obj => (object)obj.Member
+				var lambda = Expression.Lambda<Func<T, object>>(convert, parameter);
+
+				// 編譯並返回委託，然後取得值
+				var compiledLambda = lambda.Compile();
+				return compiledLambda(obj);
+			}
+			return null;
+		}
 
 		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = null)
 		{
@@ -202,15 +246,7 @@ namespace NPOIPlus
 			}
 			SetExcelCell(sheet, key, cellValue, colnum, rownum, colStyle, rowStyle, cellValueAction, isFormula);
 		}
-		/// <summary>
-		/// For set single cell
-		/// </summary>
-		/// <param name="sheet"></param>
-		/// <param name="cellValue"></param>
-		/// <param name="colnum"></param>
-		/// <param name="rownum"></param>
-		/// <param name="param"></param>
-		/// <exception cref="Exception"></exception>
+
 		private void SetExcelCell<T>(ISheet sheet, string groupKey, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = null)
 		{
 			int zeroBaseIndex = rownum - 1;
@@ -228,8 +264,29 @@ namespace NPOIPlus
 					return;
 				}
 			}
-			SetCellValueBasedOnType(cell, cellValue, null, colnum, rownum);
+			SetCellValueBasedOnType(cell, cellValue, cellValueAction, colnum, rownum);
 		}
+
+		private void SetExcelCell<T>(ISheet sheet, string groupKey, IEnumerable<T> dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
+		{
+			if (rownum < 1) rownum = 1;
+			IRow row = sheet.GetExcelRowOrCreate(rownum);
+			ICell cell = row.CreateCell((int)colnum);
+			var newValue = GetPropertyValue(dataTable.ElementAt(tableIndex), tableColName) ?? cellValue;
+			SetCellStyle(groupKey, cell, newValue, colStyle, rowStyle, colnum, rownum);
+			if (isFormula.HasValue)
+			{
+				if (isFormula.Value)
+				{
+					string newCellValue = cellValueAction?.Invoke(cell, cellValue, colnum, rownum);
+					cell.SetCellFormula(newCellValue);
+					return;
+				}
+			}
+
+			SetCellValueBasedOnType(cell, newValue, cellValueAction, colnum, rownum);
+		}
+
 
 		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, Action<ICellStyle> colStyle = null, bool? isFormula = null)
 		{
@@ -251,11 +308,11 @@ namespace NPOIPlus
 					});
 				}
 			}
-			SetExcelCell(sheet, key, dataTable, tableIndex, tableColName, colnum, rownum, cellValue, colStyle, rowStyle, cellValueAction, isFormula);
+			SetExcelCell(sheet, key, dataTable, tableIndex, tableColName, cellValue, colnum, rownum, colStyle, rowStyle, cellValueAction, isFormula);
 		}
 
 
-		private void SetExcelCell(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
+		private void SetExcelCell(ISheet sheet, string groupKey, DataTable dataTable, int tableIndex, string tableColName, object cellValue = null, ExcelColumns colnum = 0, int rownum = 1, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
 		{
 			if (rownum < 1) rownum = 1;
 			IRow row = sheet.GetExcelRowOrCreate(rownum);
@@ -274,6 +331,7 @@ namespace NPOIPlus
 
 			SetCellValueBasedOnType(cell, newValue, cellValueAction, colnum, rownum);
 		}
+
 
 		public void SetColExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
 		{
@@ -297,7 +355,38 @@ namespace NPOIPlus
 				var colnum = colIndex + startColnum;
 				var col = param[colIndex];
 				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
-				SetExcelCell(sheet, groupKey, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
+				SetExcelCell(sheet, groupKey, dataTable, tableIndex, col.ColumnName, col.CellValue, colnum, rownum, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
+			}
+		}
+		public void SetColExcelCells<T>(ISheet sheet, List<T> table, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
+		{
+			var sheetName = sheet.SheetName;
+			var key = $"SetCol{sheetName}_{startColnum}{rownum}";
+			if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
+			{
+				_cellStylesCached.Add(new ExcelStyleCached
+				{
+					GroupName = key,
+					CellStyles = new Dictionary<string, ICellStyle>()
+				});
+			}
+			for (int colIndex = 0; colIndex < param.Count; colIndex++)
+			{
+				var colnum = colIndex + startColnum;
+				var col = param[colIndex];
+				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
+				SetExcelCell(sheet, key, table, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
+			}
+		}
+
+		private void SetColExcelCells<T>(ISheet sheet, string groupKey, IEnumerable<T> table, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
+		{
+			for (int colIndex = 0; colIndex < param.Count; colIndex++)
+			{
+				var colnum = colIndex + startColnum;
+				var col = param[colIndex];
+				var isFormulaValue = col.IsFormula.HasValue ? col.IsFormula : isFormula;
+				SetExcelCell(sheet, groupKey, table, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
 			}
 		}
 
@@ -325,6 +414,32 @@ namespace NPOIPlus
 				SetColExcelCells(sheet, key, dataTable, dtIndex, param, startColnum, rownum, rowStyle, isFormula);
 			}
 		}
+
+		public void SetRowExcelCells<T>(ISheet sheet, IEnumerable<T> table, List<ExcelCellParam> param, ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
+		{
+			if (startRownum < 1) startRownum = 1;
+			var sheetName = sheet.SheetName;
+			var key = $"SetRow_{sheetName}_{startColnum}{startRownum}";
+			if (rowStyle != null || param.Any(p => p.CellStyle != null))
+			{
+				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
+				{
+					_cellStylesCached.Add(new ExcelStyleCached
+					{
+						GroupName = key,
+						CellStyles = new Dictionary<string, ICellStyle>()
+					});
+				}
+			}
+
+			for (int tIndex = 0; tIndex < table.Count(); tIndex++)
+			{
+				var rownum = startRownum + tIndex;
+				SetColExcelCells(sheet, key, table, tIndex, param, startColnum, rownum, rowStyle, isFormula);
+			}
+		}
+
+
 
 		public void RemovwRowRange(ISheet sheet, int startRow = 1, int endRow = 2)
 		{
