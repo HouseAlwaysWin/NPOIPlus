@@ -6,27 +6,21 @@ using System.Text;
 namespace NPOIPlus.Models
 {
 	public delegate T DefaultType<T>(T value);
-	public delegate string CellValueActionType(ICell cell, object cellValue = null, int rownum = 0, ExcelColumns colnum = 0);
+	public delegate string CellValueActionType(ICell cell, object cellValue = null, ExcelColumns colnum = 0, int rownum = 0);
 
 	public class ExcelCellParam
 	{
-		public object CellValue { get; set; }
-		public string ColumnName { get; set; }
-		public Action<ICellStyle> CellStyle { get; set; }
-		public CellValueActionType CellValueAction { get; set; }
-		public bool? IsFormula { get; set; }
+		public readonly object CellValue;
+		public readonly string ColumnName;
+		public readonly Action<ICellStyle> CellStyle;
+		public readonly CellValueActionType CellValueAction;
+		public readonly bool? IsFormula;
 
-		public ExcelCellParam(string columnName, object cellValue, CellValueActionType cellValueAction = null, Action<ICellStyle> style = null)
-		{
-			ColumnName = columnName;
-			CellValueAction = cellValueAction;
-			CellValue = cellValue;
-			CellStyle = style;
-		}
-		public ExcelCellParam(string columnName, CellValueActionType cellValueAction = null, Action<ICellStyle> style = null, bool? isFormula = false)
+		public ExcelCellParam(object valueOrColName, CellValueActionType cellValueAction = null, Action<ICellStyle> style = null, bool? isFormula = false)
 		{
 			CellValueAction = cellValueAction;
-			ColumnName = columnName;
+			ColumnName = valueOrColName.ToString();
+			CellValue = valueOrColName;
 			CellStyle = style;
 			IsFormula = isFormula;
 		}

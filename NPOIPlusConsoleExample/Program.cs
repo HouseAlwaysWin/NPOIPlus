@@ -100,7 +100,7 @@ namespace NPOIPlusConsoleExample
 							style.Alignment = HorizontalAlignment.Right;
 						}
 						),
-						new(null,"Test",(cell,value,row, col) =>
+						new("Test",(cell,value,row, col) =>
 						{
 							return $"{col}{row}:{col}{row}";
 						})
@@ -116,10 +116,7 @@ namespace NPOIPlusConsoleExample
 						new("ID"),
 						new("Name" ),
 						new("DateOfBirth"),
-						new(null,"Test",(cell,value,row, col) =>
-						{
-							return $"{col}{row}:{col}{row}";
-						})
+						new("Test")
 					}, ExcelColumns.L, 1);
 					workbook.SetExcelCell(sheet1, dataTable, 1, "Name", ExcelColumns.E, 1);
 
@@ -128,16 +125,13 @@ namespace NPOIPlusConsoleExample
 
 					sheet1.CreateFreezePane(ExcelColumns.A, 0);
 
+					workbook.SetExcelCell(sheet1, "test", ExcelColumns.F, 10);
 
 
 					var test = workbook._cellStylesCached;
 					var test2 = workbook._globalCellStyleCached;
 
 
-
-
-
-					// 将修改后的内容写回文件
 					using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
 					{
 						workbook.Workbook.Write(outFile);

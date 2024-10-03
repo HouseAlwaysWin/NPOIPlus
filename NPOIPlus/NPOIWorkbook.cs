@@ -38,6 +38,8 @@ namespace NPOIPlus
 			Workbook = workbook;
 		}
 
+		#region CellStyle
+
 		private void SetCellStyleBasedOnType(object cellValue, ICellStyle style)
 		{
 			bool isInt = true;
@@ -67,44 +69,6 @@ namespace NPOIPlus
 			else
 			{
 				SetDefaultStringCellStyle?.Invoke(style);
-			}
-		}
-
-
-		private void SetCellValueBasedOnType(ICell cell, object cellValue, CellValueActionType valueAction = null)
-		{
-			cellValue = valueAction?.Invoke(cell, cellValue) ?? cellValue;
-			bool isInt = true;
-			bool isDouble = true;
-			bool isDateTime = true;
-			if (cellValue == DBNull.Value) return;
-
-			if (!int.TryParse(cellValue.ToString(), out int i)) isInt = false;
-
-			if (!double.TryParse(cellValue.ToString(), out double d)) isDouble = false;
-
-			if (!DateTime.TryParse(cellValue.ToString(), out DateTime dt)) isDateTime = false;
-
-			// 動態調整型別
-			if (isInt)
-			{
-				var intValue = SetDefaultIntCellValue(i);
-				cell.SetCellValue(intValue);
-			}
-			else if (isDouble)
-			{
-				var doubleValue = SetDefaultDoubleCellValue(d);
-				cell.SetCellValue(doubleValue);
-			}
-			else if (isDateTime)
-			{
-				var dateValue = SetDefaultDateTimeCellValue(dt);
-				cell.SetCellValue(dateValue);
-			}
-			else
-			{
-				var stringValue = SetDefaultStringCellValue(cellValue?.ToString());
-				cell.SetCellValue(stringValue);
 			}
 		}
 
@@ -180,22 +144,52 @@ namespace NPOIPlus
 			}
 		}
 
+		#endregion
 
-		/// <summary>
-		/// For set single cell
-		/// </summary>
-		/// <param name="sheet"></param>
-		/// <param name="cellValue"></param>
-		/// <param name="colnum"></param>
-		/// <param name="rownum"></param>
-		/// <param name="param"></param>
-		/// <exception cref="Exception"></exception>
-		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> style = null)
+		private void SetCellValueBasedOnType(ICell cell, object cellValue, CellValueActionType valueAction = null, ExcelColumns colnum = 0, int rownum = 1)
+		{
+			cellValue = valueAction?.Invoke(cell, cellValue, colnum, rownum) ?? cellValue;
+			bool isInt = true;
+			bool isDouble = true;
+			bool isDateTime = true;
+			if (cellValue == DBNull.Value) return;
+
+			if (!int.TryParse(cellValue.ToString(), out int i)) isInt = false;
+
+			if (!double.TryParse(cellValue.ToString(), out double d)) isDouble = false;
+
+			if (!DateTime.TryParse(cellValue.ToString(), out DateTime dt)) isDateTime = false;
+
+			// 動態調整型別
+			if (isInt)
+			{
+				var intValue = SetDefaultIntCellValue(i);
+				cell.SetCellValue(intValue);
+			}
+			else if (isDouble)
+			{
+				var doubleValue = SetDefaultDoubleCellValue(d);
+				cell.SetCellValue(doubleValue);
+			}
+			else if (isDateTime)
+			{
+				var dateValue = SetDefaultDateTimeCellValue(dt);
+				cell.SetCellValue(dateValue);
+			}
+			else
+			{
+				var stringValue = SetDefaultStringCellValue(cellValue?.ToString());
+				cell.SetCellValue(stringValue);
+			}
+		}
+
+
+		public void SetExcelCell<T>(ISheet sheet, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = null)
 		{
 			if (rownum < 1) rownum = 1;
 			var sheetName = sheet.SheetName;
 			var key = $"SetCell{sheetName}_{colnum}{rownum}";
-			if (style != null)
+			if (colStyle != null && rowStyle != null)
 			{
 				if (_cellStylesCached.FirstOrDefault(s => s.GroupName == key) == null)
 				{
@@ -206,21 +200,40 @@ namespace NPOIPlus
 					});
 				}
 			}
+			SetExcelCell(sheet, key, cellValue, colnum, rownum, colStyle, rowStyle, cellValueAction, isFormula);
+		}
+		/// <summary>
+		/// For set single cell
+		/// </summary>
+		/// <param name="sheet"></param>
+		/// <param name="cellValue"></param>
+		/// <param name="colnum"></param>
+		/// <param name="rownum"></param>
+		/// <param name="param"></param>
+		/// <exception cref="Exception"></exception>
+		private void SetExcelCell<T>(ISheet sheet, string groupKey, T cellValue, ExcelColumns colnum, int rownum, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = null)
+		{
 			int zeroBaseIndex = rownum - 1;
 			IRow row = sheet.GetRow(zeroBaseIndex) ?? sheet.CreateRow(zeroBaseIndex);
 			ICell cell = row.CreateCell((int)colnum);
-			SetCellStyle(key, cell, cellValue, style, null, colnum, rownum);
-			SetCellValueBasedOnType(cell, cellValue);
+
+			//var newValue = dataTable.Columns.Contains(tableColName) ? dataTable.Rows?[tableIndex]?[tableColName] : cellValue;
+			SetCellStyle(groupKey, cell, cellValue, colStyle, rowStyle, colnum, rownum);
+			if (isFormula.HasValue)
+			{
+				if (isFormula.Value)
+				{
+					string newCellValue = cellValueAction?.Invoke(cell, cellValue, colnum, rownum);
+					cell.SetCellFormula(newCellValue);
+					return;
+				}
+			}
+			SetCellValueBasedOnType(cell, cellValue, null, colnum, rownum);
 		}
 
-		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, bool? isFormula = null)
+		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, int rownum = 1, Action<ICellStyle> colStyle = null, bool? isFormula = null)
 		{
-			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, cellValue, colStyle, null, null, isFormula);
-		}
-
-		public void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns column, CellValueActionType cellValueAction, int rownum = 1, Action<ICellStyle> colStyle = null, bool? isFormula = null)
-		{
-			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, cellValueAction, isFormula);
+			SetExcelCell(sheet, dataTable, tableIndex, tableColName, column, rownum, null, colStyle, null, null, isFormula);
 		}
 
 		private void SetExcelCell(ISheet sheet, DataTable dataTable, int tableIndex, string tableColName, ExcelColumns colnum, int rownum = 1, object cellValue = null, Action<ICellStyle> colStyle = null, Action<ICellStyle> rowStyle = null, CellValueActionType cellValueAction = null, bool? isFormula = false)
@@ -247,19 +260,19 @@ namespace NPOIPlus
 			if (rownum < 1) rownum = 1;
 			IRow row = sheet.GetExcelRowOrCreate(rownum);
 			ICell cell = row.CreateCell((int)colnum);
-			var newValue = cellValueAction ?? cellValue ?? dataTable.Rows[tableIndex][tableColName];
+			var newValue = dataTable.Columns.Contains(tableColName) ? dataTable.Rows?[tableIndex]?[tableColName] : cellValue;
 			SetCellStyle(groupKey, cell, newValue, colStyle, rowStyle, colnum, rownum);
 			if (isFormula.HasValue)
 			{
 				if (isFormula.Value)
 				{
-					string newCellValue = cellValueAction?.Invoke(cell, cellValue, rownum, colnum);
+					string newCellValue = cellValueAction?.Invoke(cell, cellValue, colnum, rownum);
 					cell.SetCellFormula(newCellValue);
 					return;
 				}
 			}
 
-			SetCellValueBasedOnType(cell, newValue, cellValueAction);
+			SetCellValueBasedOnType(cell, newValue, cellValueAction, colnum, rownum);
 		}
 
 		public void SetColExcelCells(ISheet sheet, DataTable dataTable, int tableIndex, List<ExcelCellParam> param, ExcelColumns startColnum, int rownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
@@ -287,6 +300,7 @@ namespace NPOIPlus
 				SetExcelCell(sheet, groupKey, dataTable, tableIndex, col.ColumnName, colnum, rownum, col.CellValue, col.CellStyle, rowStyle, col.CellValueAction, isFormulaValue);
 			}
 		}
+
 
 		public void SetRowExcelCells(ISheet sheet, DataTable dataTable, List<ExcelCellParam> param, ExcelColumns startColnum, int startRownum = 1, Action<ICellStyle> rowStyle = null, bool? isFormula = null)
 		{
