@@ -1,0 +1,14 @@
+{
+    "folders": [
+        {
+            "path": "NPOIPlus"
+        },
+        {
+            "path": "NPOIPlusConsoleExample"
+        },
+        {
+            "path": "NPOIPlusUnitTest"
+        }
+    ],
+    "settings": {}
+}
