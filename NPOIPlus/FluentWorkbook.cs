@@ -28,7 +28,7 @@ namespace NPOIPlus
 
 	public interface ISheetStage
 	{
-		ISheetStage SetupGlobalCachedCellStyles(Action<ICellStyle> styles);
+		ISheetStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles);
 		ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
 		ICellStage SetCell(ExcelColumns startCol, int startRow);
 	}
@@ -37,7 +37,7 @@ namespace NPOIPlus
 	public interface ITableStage
 	{
 		// ITableStage SetCell(string cellName, object value);
-		ITableStage AddCellByName(string cellName, Func<object, object> value = null);
+		ITableStage MapCellByName(string cellName, Func<object, object> value = null);
 		ITableStage SetRow();
 		FluentMemoryStream Save();
 		IWorkbook Save(string filePath);
@@ -132,7 +132,7 @@ namespace NPOIPlus
 		private ISheet _sheet;
 		private IWorkbook _workbook;
 		private Dictionary<string, ICellStyle> _cellStylesCached = new Dictionary<string, ICellStyle>();
-		private Action<ICellStyle> _globalCellStylesAction;
+		private Action<IWorkbook, ICellStyle> _globalCellStylesAction;
 		public FluentSheet(IWorkbook workbook, ISheet sheet)
 		{
 			_workbook = workbook;
@@ -150,12 +150,14 @@ namespace NPOIPlus
 
 		public ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow)
 		{
-			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, _globalCellStylesAction);
+			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached);
 		}
 
-		public ISheetStage SetupGlobalCachedCellStyles(Action<ICellStyle> styles)
+		public ISheetStage SetupGlobalCachedCellStyles(Action<IWorkbook, ICellStyle> styles)
 		{
-			_globalCellStylesAction = styles;
+			ICellStyle newCellStyle = _workbook.CreateCellStyle();
+			styles(_workbook, newCellStyle);
+			_cellStylesCached.Add("global", newCellStyle);
 			return this;
 		}
 	}
@@ -170,10 +172,9 @@ namespace NPOIPlus
 		private ExcelColumns _startCol;
 		private int _startRow;
 		private List<TableCellNameMap> _cellNameMaps = new List<TableCellNameMap>();
-		private Dictionary<string, ICellStyle> _cellStylesCached; 
-		private Action<ICellStyle> _globalCellStylesAction;
-		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table, 
-		ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached, Action<ICellStyle> globalCellStylesAction)
+		private Dictionary<string, ICellStyle> _cellStylesCached;
+		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
+		ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached)
 		{
 			_workbook = workbook;
 			_sheet = sheet;
@@ -181,7 +182,6 @@ namespace NPOIPlus
 			_startCol = NormalizeStartCol(startCol);
 			_startRow = NormalizeStartRow(startRow);
 			_cellStylesCached = cellStylesCached;
-			_globalCellStylesAction = globalCellStylesAction;
 		}
 
 		private ExcelColumns NormalizeStartCol(ExcelColumns col)
@@ -296,20 +296,21 @@ namespace NPOIPlus
 
 		private void SetCellStyle(ICell cell, TableCellNameMap cellNameMap)
 		{
-			if (string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey)) return;
-
-			if (_cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
+			if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
 			{
 				cell.CellStyle = _cellStylesCached[cellNameMap.CellStyleKey];
 			}
-			else
+			else if (string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) &&
+					 _cellStylesCached.ContainsKey("global") &&
+					 cellNameMap.SetCellStyleAction == null)
+			{
+				cell.CellStyle = _cellStylesCached["global"];
+			}
+			else if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && cellNameMap.SetCellStyleAction != null)
 			{
 				ICellStyle newCellStyle = _workbook.CreateCellStyle();
-				if (_globalCellStylesAction != null)
-				{
-					_globalCellStylesAction(newCellStyle);
-				}
 				cellNameMap.SetCellStyleAction(newCellStyle);
+				cellNameMap.CellStyleKey = cellNameMap.CellStyleKey;
 				_cellStylesCached.Add(cellNameMap.CellStyleKey, newCellStyle);
 				cell.CellStyle = newCellStyle;
 			}
@@ -346,7 +347,7 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public ITableStage AddCellByName(string cellName, Func<object, object> value = null)
+		public ITableStage MapCellByName(string cellName, Func<object, object> value = null)
 		{
 			_cellNameMaps.Add(new TableCellNameMap { CellName = cellName, SetValueAction = value });
 			return this;

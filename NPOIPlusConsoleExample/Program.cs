@@ -28,10 +28,16 @@ namespace NPOIPlusConsoleExample
 				var workbook = new FluentWorkbook(new XSSFWorkbook(filePath))
 				.ReadExcelFile(filePath)
 				.UseSheet("Sheet1")
+				.SetupGlobalCachedCellStyles((workbook, style) =>
+				{
+					style.SetAligment(HorizontalAlignment.Center);
+					style.SetBorderAllStyle(BorderStyle.None);
+					style.SetFontInfo(workbook, "Calibri", 10);
+				})
 				.SetTable(testData, ExcelColumns.A, 1)
-				.AddCellByName("ID")
-				.AddCellByName("Name")
-				.AddCellByName("DateOfBirth")
+				.MapCellByName("ID")
+				.MapCellByName("Name", (value) => $"Name: {value}")
+				.MapCellByName("DateOfBirth")
 				.SetRow()
 				.Save(outputPath);
 
