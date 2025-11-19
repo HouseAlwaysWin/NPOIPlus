@@ -28,7 +28,7 @@ namespace NPOIPlusConsoleExample
 				var workbook = new FluentWorkbook(new XSSFWorkbook(filePath))
 				.ReadExcelFile(filePath)
 				.UseSheet("Sheet1")
-				.SetTable<ExampleData>(testData, ExcelColumns.A, 1)
+				.SetTable(testData, ExcelColumns.A, 1)
 				.AddCellByName("ID")
 				.AddCellByName("Name")
 				.AddCellByName("DateOfBirth")

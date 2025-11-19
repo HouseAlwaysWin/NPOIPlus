@@ -28,7 +28,7 @@ namespace NPOIPlus
 
 	public interface ISheetStage
 	{
-		ISheetStage SetupGlobalCachedCellStyles(string key, Action<ICellStyle> styles);
+		ISheetStage SetupGlobalCachedCellStyles(Action<ICellStyle> styles);
 		ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
 		ICellStage SetCell(ExcelColumns startCol, int startRow);
 	}
@@ -132,6 +132,7 @@ namespace NPOIPlus
 		private ISheet _sheet;
 		private IWorkbook _workbook;
 		private Dictionary<string, ICellStyle> _cellStylesCached = new Dictionary<string, ICellStyle>();
+		private Action<ICellStyle> _globalCellStylesAction;
 		public FluentSheet(IWorkbook workbook, ISheet sheet)
 		{
 			_workbook = workbook;
@@ -149,14 +150,12 @@ namespace NPOIPlus
 
 		public ITableStage SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow)
 		{
-			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached);
+			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, _globalCellStylesAction);
 		}
 
-		public ISheetStage SetupGlobalCachedCellStyles(string key, Action<ICellStyle> styles)
+		public ISheetStage SetupGlobalCachedCellStyles(Action<ICellStyle> styles)
 		{
-			ICellStyle newCellStyle = _workbook.CreateCellStyle();
-			styles(newCellStyle);
-			_cellStylesCached.Add(key, newCellStyle);
+			_globalCellStylesAction = styles;
 			return this;
 		}
 	}
@@ -172,15 +171,17 @@ namespace NPOIPlus
 		private int _startRow;
 		private List<TableCellNameMap> _cellNameMaps = new List<TableCellNameMap>();
 		private Dictionary<string, ICellStyle> _cellStylesCached; 
+		private Action<ICellStyle> _globalCellStylesAction;
 		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table, 
-		ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached)
+		ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached, Action<ICellStyle> globalCellStylesAction)
 		{
 			_workbook = workbook;
 			_sheet = sheet;
 			_table = table;
 			_startCol = NormalizeStartCol(startCol);
 			_startRow = NormalizeStartRow(startRow);
-			_cellStylesCached = new Dictionary<string, ICellStyle>();
+			_cellStylesCached = cellStylesCached;
+			_globalCellStylesAction = globalCellStylesAction;
 		}
 
 		private ExcelColumns NormalizeStartCol(ExcelColumns col)
@@ -304,6 +305,10 @@ namespace NPOIPlus
 			else
 			{
 				ICellStyle newCellStyle = _workbook.CreateCellStyle();
+				if (_globalCellStylesAction != null)
+				{
+					_globalCellStylesAction(newCellStyle);
+				}
 				cellNameMap.SetCellStyleAction(newCellStyle);
 				_cellStylesCached.Add(cellNameMap.CellStyleKey, newCellStyle);
 				cell.CellStyle = newCellStyle;
