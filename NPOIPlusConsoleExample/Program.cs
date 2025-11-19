@@ -18,7 +18,8 @@ namespace NPOIPlusConsoleExample
 			try
 			{
 				var filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test.xlsx";
-				Stream stream = new FluentWorkbook(new XSSFWorkbook(filePath))
+				var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2.xlsx";
+				var workbook = new FluentWorkbook(new XSSFWorkbook(filePath))
 				.ReadExcelFile(filePath)
 				.UseSheet("Sheet1")
 				.SetTable<ExampleData>(new List<ExampleData>(){
@@ -30,8 +31,7 @@ namespace NPOIPlusConsoleExample
 				.AddCellByName("Name")
 				.AddCellByName("DateOfBirth")
 				.SetRow()
-				.Save();
-				
+				.Save(outputPath);
 
 				// 打開 Excel 文件
 				// using (FileStream file = new FileStream(filePath, FileMode.Open, FileAccess.Read))

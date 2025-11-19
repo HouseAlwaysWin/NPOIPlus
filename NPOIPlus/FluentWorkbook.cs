@@ -40,6 +40,7 @@ namespace NPOIPlus
 		ITableStage AddCellByName(string cellName, object value = null);
 		ITableStage SetRow();
 		FluentMemoryStream Save();
+		IWorkbook Save(string filePath);
 	}
 
 	public interface ITableCellStage<T>
@@ -350,7 +351,15 @@ namespace NPOIPlus
 			return ms;
 		}
 
-	}
+        public IWorkbook Save(string filePath)
+        {
+			using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+			{
+				_workbook.Write(outFile);
+			}
+			return _workbook;
+        }
+    }
 
 	public class FluentMemoryStream : MemoryStream
 	{
