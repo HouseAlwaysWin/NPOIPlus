@@ -24,6 +24,7 @@ namespace NPOIPlus
 		ISheetStage UseSheet(string sheetName, bool createIfMissing = true);
 		ISheetStage UseSheet(ISheet sheet);
 		ISheetStage UseSheetAt(int index, bool createIfMissing = false);
+		IWorkbook GetWorkbook();
 	}
 
 	public interface ISheetStage
@@ -131,6 +132,11 @@ namespace NPOIPlus
 				_currentSheet = _workbook.CreateSheet();
 			}
 			return new FluentSheet(_workbook, _currentSheet);
+		}
+
+		public IWorkbook GetWorkbook()
+		{
+			return _workbook;
 		}
 	}
 
