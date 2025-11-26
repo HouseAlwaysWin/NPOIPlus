@@ -81,6 +81,13 @@ namespace NPOIPlusConsoleExample
 					style.FillPattern = FillPattern.SolidForeground;
 					style.SetCellFillForegroundColor(IndexedColors.LightCornflowerBlue);
 				})
+				.SetupCellStyle("BodyGreen", (workbook, style) =>
+				{
+					style.SetBorderAllStyle(BorderStyle.Thin);
+					style.SetAligment(HorizontalAlignment.Center);
+					style.FillPattern = FillPattern.SolidForeground;
+					style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+				})
 				// 金額格式
 				.SetupCellStyle("AmountCurrency", (workbook, style) =>
 				{
@@ -94,74 +101,35 @@ namespace NPOIPlusConsoleExample
 					style.SetCellFillForegroundColor(IndexedColors.Yellow);
 				});
 
-				// 第一組：ExampleData（A 欄開始）
-				sheet
-				.SetTable(testData, ExcelColumns.A, 1)
-				.BeginMapCell("ID").SetValue((value) => $"ID: {value.CellValue}, Col: {value.ColNum}, Row: {value.RowNum}").SetCellStyle("HeaderBlue").End()
-				.BeginMapCell("Name").SetCellStyle("HeaderBlue").End()
-				.BeginMapCell("DateOfBirth").SetCellStyle("DateOfBirth").End()
-				.SetRow();
-
-				// 在 F 欄開始放入混合型別資料，測試更多型別與公式
-				sheet
-				.SetTable(mixedData, ExcelColumns.F, 1)
-				.BeginMapCell("ID").End()
-				.BeginMapCell("Name").SetCellStyle("HighlightYellow").End()
-				.BeginMapCell("DateOfBirth").SetCellStyle("DateOfBirth").End()
-				.BeginMapCell("IsActive").SetCellType(CellType.Boolean).End()
-				.BeginMapCell("Score").SetCellType(CellType.Numeric).End()
-				.BeginMapCell("Amount").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-				.BeginMapCell("Notes").SetCellType(CellType.String).End()
-				// 單次內嵌樣式（橘底），使用唯一鍵避免覆寫快取
-				.BeginMapCell("FormulaVal").SetCellType(CellType.Formula).SetCellStyle("InlineOrangeFormula", (p, s) =>
+				// 準備更多欄位類型的示範資料（由 ExampleData 擴充為動態欄位）
+				var extended = testData.Select(d => new Dictionary<string, object>
 				{
-					s.FillPattern = FillPattern.SolidForeground;
-					s.SetCellFillForegroundColor(IndexedColors.Orange);
-				}).End()
-				.SetRow();
-
-				// 第三組：DataTable 測試（K 欄開始）
-				var dataTable = new DataTable("DtSample");
-				dataTable.Columns.Add("ID", typeof(int));
-				dataTable.Columns.Add("Name", typeof(string));
-				dataTable.Columns.Add("DateOfBirth", typeof(DateTime));
-				dataTable.Columns.Add("IsActive", typeof(bool));
-				dataTable.Columns.Add("Score", typeof(double));
-				dataTable.Columns.Add("Amount", typeof(decimal));
-				dataTable.Columns.Add("MaybeNull", typeof(object));
-				dataTable.Columns.Add("FormulaVal", typeof(string));
-
-				dataTable.Rows.Add(2001, "DT-Alice", new DateTime(1981, 1, 2), true, 88.5, 321.09m, DBNull.Value, "SUM(K2:K4)");
-				dataTable.Rows.Add(2002, "DT-Bob", new DateTime(1979, 6, 30), false, 77.75, 0m, "not null", "L2*2");
-				dataTable.Rows.Add(2003, "DT-Carol", new DateTime(2002, 11, 5), true, 0.0, -999.99m, DBNull.Value, "AVERAGE(M2:M4)");
-
-				var dtList = dataTable.AsEnumerable().Select(r => new Dictionary<string, object>
-				{
-					{ "ID", r["ID"] },
-					{ "Name", r["Name"] },
-					{ "DateOfBirth", r["DateOfBirth"] },
-					{ "IsActive", r["IsActive"] },
-					{ "Score", r["Score"] },
-					{ "Amount", r["Amount"] },
-					{ "MaybeNull", r["MaybeNull"] },
-					{ "FormulaVal", r["FormulaVal"] },
+					{ "ID", d.ID },
+					{ "Name", d.Name },
+					{ "DateOfBirth", d.DateOfBirth },
+					{ "IsActive", d.ID % 2 == 0 },                // bool
+					{ "Score", (double)(d.ID * 12.5) },           // double
+					{ "Amount", d.ID * 1000.75m },                // decimal
+					{ "Notes", d.Name.Length > 10 ? "LongName" : "Short" }, // string
+					{ "MaybeNull", d.ID % 3 == 0 ? DBNull.Value : (object)"OK" } // null/object
 				}).ToList();
 
+				// Sheet1：只放一個表（A 欄開始），並有抬頭（標題列），涵蓋多種欄位型別
 				sheet
-				.SetTable(dtList, ExcelColumns.K, 1)
-				.BeginMapCell("ID").SetCellStyle("HeaderBlue").End()
-				.BeginMapCell("Name").SetCellStyle("HighlightYellow").End()
-				.BeginMapCell("DateOfBirth").SetCellStyle("DateOfBirth").End()
-				.BeginMapCell("IsActive").SetCellType(CellType.Boolean).End()
-				.BeginMapCell("Score").SetCellType(CellType.Numeric).End()
-				.BeginMapCell("Amount").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-				.BeginMapCell("MaybeNull").End()
-				.BeginMapCell("FormulaVal").SetCellType(CellType.Formula).SetCellStyle("InlineOrangeFormulaDT", (p, s) =>
-				{
-					s.FillPattern = FillPattern.SolidForeground;
-					s.SetCellFillForegroundColor(IndexedColors.LightOrange);
-				}).End()
+				.SetTable(extended, ExcelColumns.A, 1)
+				.BeginTitleSet("ID").SetCellStyle("HeaderBlue").BeginBodySet("ID").SetCellStyle("BodyGreen").End()
+				.BeginTitleSet("名稱").SetCellStyle("HeaderBlue").BeginBodySet("Name").SetCellStyle("BodyGreen").End()
+				.BeginTitleSet("生日").SetCellStyle("HeaderBlue").BeginBodySet("DateOfBirth").SetCellStyle("DateOfBirth").SetCellStyle("BodyGreen").End()
+				.BeginTitleSet("是否活躍").SetCellStyle("HeaderBlue").BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
+				.BeginTitleSet("分數").BeginBodySet("Score").SetCellType(CellType.Numeric).End()
+				.BeginTitleSet("金額").SetCellStyle("HeaderBlue").BeginBodySet("Amount").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
+				.BeginTitleSet("備註").SetCellStyle("HeaderBlue").BeginBodySet("Notes").SetCellType(CellType.String).End()
+				.BeginTitleSet("可能為空").SetCellStyle("HeaderBlue").BeginBodySet("MaybeNull").End()
 				.SetRow();
+
+				//（已移除）其他示範，保留 Sheet1 僅一個表
+
+				//（已移除）其他示範，保留 Sheet1 僅一個表
 
 				// 第二個分頁（Summary）：不同資料與樣式示範
 				var sheet2Data = new List<Dictionary<string, object>>
@@ -205,11 +173,11 @@ namespace NPOIPlusConsoleExample
 
 				sheet2
 				.SetTable(sheet2Data, ExcelColumns.A, 1)
-				.BeginMapCell("Title").SetCellStyle("HeaderBlue").End()
-				.BeginMapCell("Value").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-				.BeginMapCell("AsOfDate").SetCellStyle("DateStyle").End()
-				.BeginMapCell("IsOk").SetCellType(CellType.Boolean).End()
-				.BeginMapCell("FormulaVal").SetCellType(CellType.Formula).End()
+				.BeginCellSet("Title").SetCellStyle("HeaderBlue").End()
+				.BeginCellSet("Value").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
+				.BeginCellSet("AsOfDate").SetCellStyle("DateStyle").End()
+				.BeginCellSet("IsOk").SetCellType(CellType.Boolean).End()
+				.BeginCellSet("FormulaVal").SetCellType(CellType.Formula).End()
 				.SetRow()
 				.Save(outputPath);
 
