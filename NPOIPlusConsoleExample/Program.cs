@@ -179,7 +179,7 @@ namespace NPOIPlusConsoleExample
 				.BeginCellSet("IsOk").SetCellType(CellType.Boolean).End()
 				.BeginCellSet("FormulaVal").SetCellType(CellType.Formula).End()
 				.SetRow()
-				.Save(outputPath);
+				.SaveToPath(outputPath);
 
 			}
 			catch (Exception ex)

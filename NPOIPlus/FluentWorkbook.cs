@@ -43,7 +43,7 @@ namespace NPOIPlus
 		ITableHeaderStage BeginTitleSet(string title);
 		ITableStage SetRow();
 		FluentMemoryStream ToStream();
-		IWorkbook Save(string filePath);
+		IWorkbook SaveToPath(string filePath);
 	}
 
 
@@ -442,8 +442,8 @@ namespace NPOIPlus
 			if (_cellTitleSets != null && _cellTitleSets.Count > 0)
 			{
 				var titleRowObj = _sheet.GetRow(_startRow) ?? _sheet.CreateRow(_startRow);
-				// targetRowIndex++;
 				SetCellAction(_cellTitleSets, titleRowObj, colIndex, _startRow, item);
+				targetRowIndex++;
 			}
 
 			var rowObj = _sheet.GetRow(targetRowIndex) ?? _sheet.CreateRow(targetRowIndex);
@@ -571,7 +571,7 @@ namespace NPOIPlus
 			return ms;
 		}
 
-		public IWorkbook Save(string filePath)
+		public IWorkbook SaveToPath(string filePath)
 		{
 			using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
 			{
