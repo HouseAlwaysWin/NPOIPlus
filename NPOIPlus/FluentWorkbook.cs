@@ -59,6 +59,7 @@ namespace NPOIPlus
 		ITableHeaderStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
 		ITableHeaderStage SetCellStyle(string cellStyleKey);
 		ITableHeaderStage SetCellType(CellType cellType);
+		ITableHeaderStage CopyStyleFromCell(ExcelColumns col, int rowIndex);
 	}
 
 	public interface ITableCellStage
@@ -69,6 +70,7 @@ namespace NPOIPlus
 		ITableCellStage SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
 		ITableCellStage SetCellStyle(string cellStyleKey);
 		ITableCellStage SetCellType(CellType cellType);
+		ITableCellStage CopyStyleFromCell(ExcelColumns col, int rowIndex);
 		ITableStage End();
 	}
 
@@ -89,6 +91,7 @@ namespace NPOIPlus
 		ITableHeaderStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
 		ITableHeaderStage<T> SetCellStyle(string cellStyleKey);
 		ITableHeaderStage<T> SetCellType(CellType cellType);
+		ITableHeaderStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex);
 	}
 	public interface ITableCellStage<T>
 	{
@@ -98,6 +101,7 @@ namespace NPOIPlus
 		ITableCellStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction);
 		ITableCellStage<T> SetCellStyle(string cellStyleKey);
 		ITableCellStage<T> SetCellType(CellType cellType);
+		ITableCellStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex);
 		ITableStage<T> End();
 	}
 
@@ -770,7 +774,34 @@ namespace NPOIPlus
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
 			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
 		}
+
+	public ITableHeaderStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
+	{
+		string key = $"{col}{rowIndex}";
+		ICell cell = _sheet.GetExcelCell(col, rowIndex);
+		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+		{
+			SetCellStyle(key, (styleParams, style) =>
+			{
+				style.CloneStyleFrom(cell.CellStyle);
+			});
+		}
+		return this;
 	}
+	ITableHeaderStage<T> ITableHeaderStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
+	{
+		string key = $"{col}{rowIndex}";
+		ICell cell = _sheet.GetExcelCell(col, rowIndex);
+		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+		{
+			SetCellStyle(key, (styleParams, style) =>
+			{
+				style.CloneStyleFrom(cell.CellStyle);
+			});
+		}
+		return this;
+	}
+}
 
 	public class FluentTableCellStage<T> : ITableCellStage, ITableCellStage<T>
 	{
@@ -869,18 +900,45 @@ namespace NPOIPlus
 			_cellSet.SetCellStyleAction = cellStyleAction;
 			return this;
 		}
-		public ITableCellStage SetCellType(CellType cellType)
-		{
-			_cellSet.CellType = cellType;
-			return this;
-		}
-		ITableCellStage<T> ITableCellStage<T>.SetCellType(CellType cellType)
-		{
-			_cellSet.CellType = cellType;
-			return this;
-		}
+	public ITableCellStage SetCellType(CellType cellType)
+	{
+		_cellSet.CellType = cellType;
+		return this;
+	}
+	ITableCellStage<T> ITableCellStage<T>.SetCellType(CellType cellType)
+	{
+		_cellSet.CellType = cellType;
+		return this;
+	}
 
-		public ITableStage End()
+	public ITableCellStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
+	{
+		string key = $"{col}{rowIndex}";
+		ICell cell = _sheet.GetExcelCell(col, rowIndex);
+		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+		{
+			SetCellStyle(key, (styleParams, style) =>
+			{
+				style.CloneStyleFrom(cell.CellStyle);
+			});
+		}
+		return this;
+	}
+	ITableCellStage<T> ITableCellStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
+	{
+		string key = $"{col}{rowIndex}";
+		ICell cell = _sheet.GetExcelCell(col, rowIndex);
+		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+		{
+			SetCellStyle(key, (styleParams, style) =>
+			{
+				style.CloneStyleFrom(cell.CellStyle);
+			});
+		}
+		return this;
+	}
+
+	public ITableStage End()
 		{
 			return new FluentTable<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, _cellTitleSets, _cellBodySets);
 		}

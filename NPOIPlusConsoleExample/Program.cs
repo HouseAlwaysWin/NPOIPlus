@@ -128,18 +128,53 @@ namespace NPOIPlusConsoleExample
 					},
 				};
 
-				var sheet2 = fluent
-				.UseSheet("Summary", true);
+			var sheet2 = fluent
+			.UseSheet("Summary", true);
 
-				sheet2
-				.SetTable(sheet2Data, ExcelColumns.A, 1)
-				.BeginCellSet("Title").SetCellStyle("HeaderBlue").End()
-				.BeginCellSet("Value").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
-				.BeginCellSet("AsOfDate").SetCellStyle("DateStyle").End()
-				.BeginCellSet("IsOk").SetCellType(CellType.Boolean).End()
-				.BeginCellSet("FormulaVal").SetCellType(CellType.Formula).End()
-				.SetRow()
-				.SaveToPath(outputPath);
+			sheet2
+			.SetTable(sheet2Data, ExcelColumns.A, 1)
+			.BeginCellSet("Title").SetCellStyle("HeaderBlue").End()
+			.BeginCellSet("Value").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
+			.BeginCellSet("AsOfDate").SetCellStyle("DateStyle").End()
+			.BeginCellSet("IsOk").SetCellType(CellType.Boolean).End()
+			.BeginCellSet("FormulaVal").SetCellType(CellType.Formula).End()
+			.SetRow();
+
+			// Sheet3：展示 CopyStyleFromCell 功能
+			// 從 Sheet1 的樣式複製到新的資料表
+			var sheet3Data = new List<Dictionary<string, object>>
+			{
+				new Dictionary<string, object> {
+					{ "Product", "筆記本" }, { "Quantity", 100 }, { "Price", 25.50m }, { "InStock", true }
+				},
+				new Dictionary<string, object> {
+					{ "Product", "原子筆" }, { "Quantity", 500 }, { "Price", 5.00m }, { "InStock", true }
+				},
+				new Dictionary<string, object> {
+					{ "Product", "計算機" }, { "Quantity", 50 }, { "Price", 120.00m }, { "InStock", false }
+				},
+			};
+
+			fluent.UseSheet("CopyStyleExample", true)
+			.SetColumnWidth(ExcelColumns.A, ExcelColumns.D, 20)
+			.SetTable(sheet3Data, ExcelColumns.A, 1)
+			// 從 Sheet1 的 A1 (ID標題) 複製樣式到 Product 標題
+			.BeginTitleSet("Product").CopyStyleFromCell(ExcelColumns.A, 1)
+			.BeginBodySet("Product").CopyStyleFromCell(ExcelColumns.A, 2).End()
+			
+			// 從 Sheet1 的 E1 (分數標題) 複製樣式到 Quantity 標題
+			.BeginTitleSet("Quantity").CopyStyleFromCell(ExcelColumns.E, 1)
+			.BeginBodySet("Quantity").SetCellType(CellType.Numeric).CopyStyleFromCell(ExcelColumns.E, 2).End()
+			
+			// 從 Sheet1 的 F1 (金額標題) 複製樣式到 Price 標題
+			.BeginTitleSet("Price").CopyStyleFromCell(ExcelColumns.F, 1)
+			.BeginBodySet("Price").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
+			
+			// 從 Sheet1 的 D1 (是否活躍標題) 複製樣式到 InStock 標題
+			.BeginTitleSet("InStock").CopyStyleFromCell(ExcelColumns.D, 1)
+			.BeginBodySet("InStock").SetCellType(CellType.Boolean).CopyStyleFromCell(ExcelColumns.D, 2).End()
+			.SetRow()
+			.SaveToPath(outputPath);
 
 			}
 			catch (Exception ex)
