@@ -601,13 +601,13 @@ namespace NPOIPlus
 		protected ExcelColumns _startCol;
 		protected int _startRow;
 		protected Dictionary<string, ICellStyle> _cellStylesCached;
-
-		protected abstract TableCellSet CurrentCellSet { get; }
+		protected TableCellSet _currentCellSet;
 
 		protected FluentTableBase(
 			IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
 			ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
-			List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
+			List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets,
+			TableCellSet currentCellSet)
 		{
 			_workbook = workbook;
 			_sheet = sheet;
@@ -617,22 +617,23 @@ namespace NPOIPlus
 			_cellStylesCached = cellStylesCached;
 			_cellBodySets = cellBodySets;
 			_cellTitleSets = cellTitleSets;
+			_currentCellSet = currentCellSet;
 		}
 
 		protected void SetCellStyleInternal(string cellStyleKey)
 		{
-			CurrentCellSet.CellStyleKey = cellStyleKey;
+			_currentCellSet.CellStyleKey = cellStyleKey;
 		}
 
 		protected void SetCellStyleInternal(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
 		{
-			CurrentCellSet.CellStyleKey = cellStyleKey;
-			CurrentCellSet.SetCellStyleAction = cellStyleAction;
+			_currentCellSet.CellStyleKey = cellStyleKey;
+			_currentCellSet.SetCellStyleAction = cellStyleAction;
 		}
 
 		protected void SetCellTypeInternal(CellType cellType)
 		{
-			CurrentCellSet.CellType = cellType;
+			_currentCellSet.CellType = cellType;
 		}
 
 		protected void CopyStyleFromCellInternal(ExcelColumns col, int rowIndex)
@@ -644,58 +645,54 @@ namespace NPOIPlus
 				ICellStyle newCellStyle = _workbook.CreateCellStyle();
 				newCellStyle.CloneStyleFrom(cell.CellStyle);
 				_cellStylesCached.Add(key, newCellStyle);
-				CurrentCellSet.CellStyleKey = key;
+				_currentCellSet.CellStyleKey = key;
 			}
 		}
 	}
 
 	public class FluentTableHeaderStage<T> : FluentTableBase<T>
 	{
-		private TableCellSet _cellTitleSet;
-
-		protected override TableCellSet CurrentCellSet => _cellTitleSet;
-
 		public FluentTableHeaderStage(
 			IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
 			ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
 			string title,
 			List<TableCellSet> titleCellSets, List<TableCellSet> cellBodySets)
-			: base(workbook, sheet, table, startCol, startRow, cellStylesCached, titleCellSets, cellBodySets)
+			: base(workbook, sheet, table, startCol, startRow, cellStylesCached, titleCellSets, cellBodySets,
+				  titleCellSets.FirstOrDefault(c => c.CellName == $"{title}_TITLE"))
 		{
-			_cellTitleSet = titleCellSets.FirstOrDefault(c => c.CellName == $"{title}_TITLE");
-			_cellTitleSet.CellValue = _cellTitleSet.CellValue;
+			_currentCellSet.CellValue = _currentCellSet.CellValue;
 		}
 		public FluentTableHeaderStage<T> SetValue(Func<TableCellParams, object> valueAction)
 		{
-			_cellTitleSet.SetValueAction = valueAction;
+			_currentCellSet.SetValueAction = valueAction;
 			return this;
 		}
 		
 		public FluentTableHeaderStage<T> SetValue(Func<TableCellParams<T>, object> valueAction)
 		{
-			_cellTitleSet.SetValueActionGeneric = valueAction;
+			_currentCellSet.SetValueActionGeneric = valueAction;
 			return this;
 		}
 
 
 		public FluentTableHeaderStage<T> SetFormulaValue(object value)
 		{
-			_cellTitleSet.CellValue = value;
-			_cellTitleSet.CellType = CellType.Formula;
+			_currentCellSet.CellValue = value;
+			_currentCellSet.CellType = CellType.Formula;
 			return this;
 		}
 
 		public FluentTableHeaderStage<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
 		{
-			_cellTitleSet.SetFormulaValueAction = valueAction;
-			_cellTitleSet.CellType = CellType.Formula;
+			_currentCellSet.SetFormulaValueAction = valueAction;
+			_currentCellSet.CellType = CellType.Formula;
 			return this;
 		}
 		
 		public FluentTableHeaderStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
 		{
-			_cellTitleSet.SetFormulaValueActionGeneric = valueAction;
-			_cellTitleSet.CellType = CellType.Formula;
+			_currentCellSet.SetFormulaValueActionGeneric = valueAction;
+			_currentCellSet.CellType = CellType.Formula;
 			return this;
 		}
 
@@ -731,58 +728,54 @@ namespace NPOIPlus
 
 	public class FluentTableCellStage<T> : FluentTableBase<T>
 	{
-		private TableCellSet _cellSet;
-
-		protected override TableCellSet CurrentCellSet => _cellSet;
-
 		public FluentTableCellStage(
 			IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
 			ExcelColumns startCol, int startRow,
 			Dictionary<string, ICellStyle> cellStylesCached,
 			string cellName,
 			List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
-			: base(workbook, sheet, table, startCol, startRow, cellStylesCached, cellTitleSets, cellBodySets)
+			: base(workbook, sheet, table, startCol, startRow, cellStylesCached, cellTitleSets, cellBodySets,
+				  cellBodySets.First(c => c.CellName == cellName))
 		{
-			_cellSet = cellBodySets.First(c => c.CellName == cellName);
 		}
 
 		public FluentTableCellStage<T> SetValue(object value)
 		{
-			_cellSet.CellValue = value;
+			_currentCellSet.CellValue = value;
 			return this;
 		}
 
 		public FluentTableCellStage<T> SetValue(Func<TableCellParams, object> valueAction)
 		{
-			_cellSet.SetValueAction = valueAction;
+			_currentCellSet.SetValueAction = valueAction;
 			return this;
 		}
 		
 		public FluentTableCellStage<T> SetValue(Func<TableCellParams<T>, object> valueAction)
 		{
-			_cellSet.SetValueActionGeneric = valueAction;
+			_currentCellSet.SetValueActionGeneric = valueAction;
 			return this;
 		}
 
 
 		public FluentTableCellStage<T> SetFormulaValue(object value)
 		{
-			_cellSet.CellValue = value;
-			_cellSet.CellType = CellType.Formula;
+			_currentCellSet.CellValue = value;
+			_currentCellSet.CellType = CellType.Formula;
 			return this;
 		}
 
 		public FluentTableCellStage<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
 		{
-			_cellSet.SetFormulaValueAction = valueAction;
-			_cellSet.CellType = CellType.Formula;
+			_currentCellSet.SetFormulaValueAction = valueAction;
+			_currentCellSet.CellType = CellType.Formula;
 			return this;
 		}
 		
 		public FluentTableCellStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
 		{
-			_cellSet.SetFormulaValueActionGeneric = valueAction;
-			_cellSet.CellType = CellType.Formula;
+			_currentCellSet.SetFormulaValueActionGeneric = valueAction;
+			_currentCellSet.CellType = CellType.Formula;
 			return this;
 		}
 
