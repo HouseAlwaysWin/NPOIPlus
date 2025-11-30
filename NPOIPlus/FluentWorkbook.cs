@@ -79,7 +79,7 @@ namespace NPOIPlus
 	{
 		ITableCellStage<T> BeginCellSet(string cellName);
 		ITableHeaderStage<T> BeginTitleSet(string title);
-		ITableStage<T> SetRow();
+		ITableStage<T> BuildRows();
 		FluentMemoryStream ToStream();
 		IWorkbook SaveToPath(string filePath);
 	}
@@ -631,7 +631,7 @@ namespace NPOIPlus
 			}
 			return this;
 		}
-		ITableStage<T> ITableStage<T>.SetRow()
+		ITableStage<T> ITableStage<T>.BuildRows()
 		{
 			for (int i = 0; i < _table.Count(); i++)
 			{

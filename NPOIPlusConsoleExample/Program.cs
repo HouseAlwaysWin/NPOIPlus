@@ -112,7 +112,7 @@ namespace NPOIPlusConsoleExample
 
 				.BeginTitleSet("可能為空").SetCellStyle("HeaderBlue")
 				.BeginBodySet("MaybeNull").End()
-				.SetRow();
+				.BuildRows();
 
 				// 第二個分頁（Summary）：不同資料與樣式示範
 				var sheet2Data = new List<Dictionary<string, object>>
@@ -138,7 +138,7 @@ namespace NPOIPlusConsoleExample
 				.BeginCellSet("AsOfDate").SetCellStyle("DateStyle").End()
 				.BeginCellSet("IsOk").SetCellType(CellType.Boolean).End()
 				.BeginCellSet("FormulaVal").SetCellType(CellType.Formula).End()
-				.SetRow();
+				.BuildRows();
 
 				// Sheet3：展示 CopyStyleFromCell 功能
 				// 從 Sheet1 的樣式複製到新的資料表
@@ -169,7 +169,7 @@ namespace NPOIPlusConsoleExample
 					style.SetBorderAllStyle(BorderStyle.Thin);
 				})
 				.End()
-				.SetRow()
+				.BuildRows()
 
 				// 從 Sheet1 的 E1 (分數標題) 複製樣式到 Quantity 標題
 				.BeginTitleSet("Quantity")
@@ -184,7 +184,7 @@ namespace NPOIPlusConsoleExample
 				// 從 Sheet1 的 D1 (是否活躍標題) 複製樣式到 InStock 標題
 				.BeginTitleSet("InStock")
 				.BeginBodySet("InStock").SetCellType(CellType.Boolean).End()
-				.SetRow()
+				.BuildRows()
 				.SaveToPath(outputPath);
 
 			}
