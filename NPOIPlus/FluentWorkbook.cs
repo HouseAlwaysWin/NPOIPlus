@@ -45,7 +45,7 @@ namespace NPOIPlus
 		// ITableStage SetCell(string cellName, object value);
 		ITableCellStage BeginCellSet(string cellName);
 		ITableHeaderStage BeginTitleSet(string title);
-		ITableStage SetRow();
+		ITableStage BuildRows();
 		FluentMemoryStream ToStream();
 		IWorkbook SaveToPath(string filePath);
 	}
@@ -103,6 +103,314 @@ namespace NPOIPlus
 		ITableCellStage<T> SetCellType(CellType cellType);
 		ITableCellStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex);
 		ITableStage<T> End();
+	}
+
+	public abstract class FluentSheetBase
+	{
+		protected Dictionary<string, ICellStyle> _cellStylesCached;
+		protected IWorkbook _workbook;
+		public FluentSheetBase(
+			IWorkbook workbook,
+			Dictionary<string, ICellStyle> cellStylesCached)
+		{
+			_cellStylesCached = cellStylesCached;
+			_workbook = workbook;
+		}
+		protected ExcelColumns NormalizeStartCol(ExcelColumns col)
+		{
+			int idx = (int)col;
+			if (idx < 0) idx = 0;
+			return (ExcelColumns)idx;
+		}
+
+		protected int NormalizeStartRow(int row)
+		{
+			// 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
+			if (row < 1) return 0;
+			return row - 1;
+		}
+
+		protected void SetCellStyle(ICell cell, TableCellSet cellNameMap, TableCellStyleParams cellStyleParams)
+		{
+			if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
+			{
+				cell.CellStyle = _cellStylesCached[cellNameMap.CellStyleKey];
+			}
+			else if (string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) &&
+					 _cellStylesCached.ContainsKey("global") &&
+					 cellNameMap.SetCellStyleAction == null)
+			{
+				cell.CellStyle = _cellStylesCached["global"];
+			}
+			else if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && cellNameMap.SetCellStyleAction != null)
+			{
+				ICellStyle newCellStyle = _workbook.CreateCellStyle();
+				cellNameMap.SetCellStyleAction(cellStyleParams, newCellStyle);
+				cellNameMap.CellStyleKey = cellNameMap.CellStyleKey;
+				_cellStylesCached.Add(cellNameMap.CellStyleKey, newCellStyle);
+				cell.CellStyle = newCellStyle;
+			}
+		}
+
+
+
+		protected object GetTableCellValue(string cellName, object item)
+		{
+			if (string.IsNullOrWhiteSpace(cellName) || item == null) return default;
+
+			object value = null;
+
+			if (item is DataRow dr)
+			{
+				if (dr.Table != null && dr.Table.Columns.Contains(cellName))
+					value = dr[cellName];
+			}
+			else if (item is IDictionary<string, object> dictObj)
+			{
+				dictObj.TryGetValue(cellName, out value);
+			}
+			else if (item is IDictionary<string, string> dictStr)
+			{
+				if (dictStr.TryGetValue(cellName, out var s))
+					value = s;
+			}
+			else
+			{
+				var type = item.GetType();
+				var prop = type.GetProperty(cellName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+				if (prop != null)
+				{
+					value = prop.GetValue(item);
+				}
+				else
+				{
+					var field = type.GetField(cellName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+					if (field != null)
+						value = field.GetValue(item);
+				}
+			}
+
+			if (value == null || value == DBNull.Value) return default;
+			return value;
+		}
+
+		protected void SetCellValue(ICell cell, object value)
+		{
+			if (value is bool b)
+			{
+				cell.SetCellValue(b);
+				return;
+			}
+			if (value is DateTime dt)
+			{
+				cell.SetCellValue(dt);
+				return;
+			}
+			if (value is int i)
+			{
+				cell.SetCellValue((double)i);
+				return;
+			}
+			if (value is long l)
+			{
+				cell.SetCellValue((double)l);
+				return;
+			}
+			if (value is float f)
+			{
+				cell.SetCellValue((double)f);
+				return;
+			}
+			if (value is double d)
+			{
+				cell.SetCellValue(d);
+				return;
+			}
+			if (value is decimal m)
+			{
+				cell.SetCellValue((double)m);
+				return;
+			}
+
+			cell.SetCellValue(value.ToString());
+		}
+
+		protected void SetCellValue(ICell cell, object value, CellType cellType)
+		{
+			if (cell == null)
+				return;
+
+			if (value == null || value == DBNull.Value)
+			{
+				cell.SetCellValue(string.Empty);
+				return;
+			}
+
+			// 1) 先依據 value 的實際型別寫入
+			SetCellValue(cell, value);
+
+			// 2) 若指定了 CellType（且非 Unknown），以 CellType 覆寫
+			if (cellType == CellType.Unknown) return;
+			if (cellType == CellType.Formula)
+			{
+				SetFormulaValue(cell, value);
+				return;
+			}
+
+			var text = value.ToString();
+			switch (cellType)
+			{
+				case CellType.Boolean:
+					{
+						if (bool.TryParse(text, out var bv)) { cell.SetCellValue(bv); return; }
+						if (int.TryParse(text, out var iv)) { cell.SetCellValue(iv != 0); return; }
+						cell.SetCellValue(!string.IsNullOrEmpty(text));
+						return;
+					}
+				case CellType.Numeric:
+					{
+						if (double.TryParse(text, out var dv)) { cell.SetCellValue(dv); return; }
+						if (DateTime.TryParse(text, out var dtv)) { cell.SetCellValue(dtv); return; }
+						// 若無法轉換為數值/日期則保留前一步的寫入結果
+						return;
+					}
+				case CellType.String:
+					{
+						cell.SetCellValue(text);
+						return;
+					}
+				case CellType.Blank:
+					{
+						cell.SetCellValue(string.Empty);
+						return;
+					}
+				case CellType.Error:
+					{
+						// NPOI 錯誤型別無從 object 直接設定，退為字串呈現
+						cell.SetCellValue(text);
+						return;
+					}
+				default:
+					return;
+			}
+		}
+
+		protected void SetFormulaValue(ICell cell, object value)
+		{
+			if (cell == null) return;
+			if (value == null || value == DBNull.Value) return;
+
+			var formula = value.ToString();
+			if (string.IsNullOrWhiteSpace(formula)) return;
+
+			// NPOI SetCellFormula 需要純公式字串（不含 '='）
+			if (formula.StartsWith("=")) formula = formula.Substring(1);
+
+			cell.SetCellFormula(formula);
+		}
+
+		protected void SetCellAction(List<TableCellSet> cellSets, IRow rowObj, int colIndex, int targetRowIndex, object item)
+		{
+			foreach (var cellset in cellSets)
+			{
+				var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
+
+				// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
+				Func<TableCellParams, object> setValueAction = cellset.SetValueAction;
+				Func<TableCellParams, object> setFormulaValueAction = cellset.SetFormulaValueAction;
+
+				TableCellParams cellParams = new TableCellParams
+				{
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex,
+					RowItem = item
+				};
+				object value = cellset.CellValue ?? GetTableCellValue(cellset.CellName, item);
+				cellParams.CellValue = value;
+
+				// 準備泛型參數（供泛型委派使用）
+				var cellParamsT = new TableCellParams<T>
+				{
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex,
+					RowItem = item is T tItem ? tItem : default,
+					CellValue = value
+				};
+
+				TableCellStyleParams cellStyleParams =
+				new TableCellStyleParams
+				{
+					Workbook = _workbook,
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex,
+				};
+				SetCellStyle(cell, cellset, cellStyleParams);
+
+				if (cellset.CellType == CellType.Formula)
+				{
+					if (cellset.SetFormulaValueActionGeneric != null)
+					{
+						if (cellset.SetFormulaValueActionGeneric is Func<TableCellParams<T>, object> gFormula)
+						{
+							value = gFormula(cellParamsT);
+						}
+						else
+						{
+							value = cellset.SetFormulaValueActionGeneric.DynamicInvoke(cellParamsT);
+						}
+					}
+					else if (setFormulaValueAction != null)
+					{
+						value = setFormulaValueAction(cellParams);
+					}
+					SetFormulaValue(cell, value);
+				}
+				else
+				{
+					if (cellset.SetValueActionGeneric != null)
+					{
+						if (cellset.SetValueActionGeneric is Func<TableCellParams<T>, object> gValue)
+						{
+							value = gValue(cellParamsT);
+						}
+						else
+						{
+							value = cellset.SetValueActionGeneric.DynamicInvoke(cellParamsT);
+						}
+					}
+					else if (setValueAction != null)
+					{
+						value = setValueAction(cellParams);
+					}
+					SetCellValue(cell, value, cellset.CellType);
+				}
+
+
+				colIndex++;
+			}
+		}
+
+		public FluentMemoryStream ToStream()
+		{
+			var ms = new FluentMemoryStream();
+			ms.AllowClose = false;
+			_workbook.Write(ms);
+			ms.Flush();
+			ms.Seek(0, SeekOrigin.Begin);
+			ms.AllowClose = true;
+			return ms;
+		}
+
+		public IWorkbook SaveToPath(string filePath)
+		{
+			using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+			{
+				_workbook.Write(outFile);
+			}
+			return _workbook;
+		}
+
+
 	}
 
 	public interface ICellStage
@@ -206,17 +514,13 @@ namespace NPOIPlus
 
 	}
 
-	public class FluentSheet : ISheetStage
+	public class FluentSheet : FluentSheetBase, ISheetStage
 	{
 		private ISheet _sheet;
-		private IWorkbook _workbook;
-		private Dictionary<string, ICellStyle> _cellStylesCached;
-
 		public FluentSheet(IWorkbook workbook, ISheet sheet, Dictionary<string, ICellStyle> cellStylesCached)
+		: base(workbook, cellStylesCached)
 		{
-			_workbook = workbook;
 			_sheet = sheet;
-			_cellStylesCached = cellStylesCached;
 		}
 
 		public ISheet GetSheet()
@@ -268,234 +572,33 @@ namespace NPOIPlus
 		}
 	}
 
-
-	public class FluentTable<T> : ITableStage, ITableStage<T>
+	public class FluentTable<T> : FluentSheetBase, ITableStage, ITableStage<T>
 	{
 		private ISheet _sheet;
-		private IWorkbook _workbook;
 		private IEnumerable<T> _table;
-		private IList<T> _itemsCache;
+		// private IList<T> _itemsCache;
 		private ExcelColumns _startCol;
 		private int _startRow;
 		private List<TableCellSet> _cellBodySets;
 		private List<TableCellSet> _cellTitleSets;
-		private Dictionary<string, ICellStyle> _cellStylesCached;
 		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
-		ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached, List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
+		ExcelColumns startCol, int startRow,
+		Dictionary<string, ICellStyle> cellStylesCached, List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
+		: base(workbook, cellStylesCached)
 		{
-			_workbook = workbook;
 			_sheet = sheet;
 			_table = table;
 			_startCol = NormalizeStartCol(startCol);
 			_startRow = NormalizeStartRow(startRow);
-			_cellStylesCached = cellStylesCached;
 			_cellTitleSets = cellTitleSets;
 			_cellBodySets = cellBodySets;
 		}
 
-		private ExcelColumns NormalizeStartCol(ExcelColumns col)
-		{
-			int idx = (int)col;
-			if (idx < 0) idx = 0;
-			return (ExcelColumns)idx;
-		}
-
-		private int NormalizeStartRow(int row)
-		{
-			// 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
-			if (row < 1) return 0;
-			return row - 1;
-		}
-
-		private IList<T> GetItems()
-		{
-			if (_itemsCache != null) return _itemsCache;
-			_itemsCache = _table as IList<T> ?? _table?.ToList() ?? new List<T>();
-			return _itemsCache;
-		}
-
 		private T GetItemAt(int index)
 		{
-			var items = GetItems();
+			var items = _table as IList<T> ?? _table?.ToList() ?? new List<T>();
 			if (index < 0 || index >= items.Count) return default;
 			return items[index];
-		}
-
-		private object GetTableCellValue(string cellName, object item)
-		{
-			if (string.IsNullOrWhiteSpace(cellName) || item == null) return default;
-
-			object value = null;
-
-			if (item is DataRow dr)
-			{
-				if (dr.Table != null && dr.Table.Columns.Contains(cellName))
-					value = dr[cellName];
-			}
-			else if (item is IDictionary<string, object> dictObj)
-			{
-				dictObj.TryGetValue(cellName, out value);
-			}
-			else if (item is IDictionary<string, string> dictStr)
-			{
-				if (dictStr.TryGetValue(cellName, out var s))
-					value = s;
-			}
-			else
-			{
-				var type = item.GetType();
-				var prop = type.GetProperty(cellName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-				if (prop != null)
-				{
-					value = prop.GetValue(item);
-				}
-				else
-				{
-					var field = type.GetField(cellName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-					if (field != null)
-						value = field.GetValue(item);
-				}
-			}
-
-			if (value == null || value == DBNull.Value) return default;
-			return value;
-		}
-
-		private void SetCellValue(ICell cell, object value)
-		{
-			if (value is bool b)
-			{
-				cell.SetCellValue(b);
-				return;
-			}
-			if (value is DateTime dt)
-			{
-				cell.SetCellValue(dt);
-				return;
-			}
-			if (value is int i)
-			{
-				cell.SetCellValue((double)i);
-				return;
-			}
-			if (value is long l)
-			{
-				cell.SetCellValue((double)l);
-				return;
-			}
-			if (value is float f)
-			{
-				cell.SetCellValue((double)f);
-				return;
-			}
-			if (value is double d)
-			{
-				cell.SetCellValue(d);
-				return;
-			}
-			if (value is decimal m)
-			{
-				cell.SetCellValue((double)m);
-				return;
-			}
-
-			cell.SetCellValue(value.ToString());
-		}
-
-		private void SetCellValue(ICell cell, object value, CellType cellType)
-		{
-			if (cell == null)
-				return;
-
-			if (value == null || value == DBNull.Value)
-			{
-				cell.SetCellValue(string.Empty);
-				return;
-			}
-
-			// 1) 先依據 value 的實際型別寫入
-			SetCellValue(cell, value);
-
-			// 2) 若指定了 CellType（且非 Unknown），以 CellType 覆寫
-			if (cellType == CellType.Unknown) return;
-			if (cellType == CellType.Formula)
-			{
-				SetFormulaValue(cell, value);
-				return;
-			}
-
-			var text = value.ToString();
-			switch (cellType)
-			{
-				case CellType.Boolean:
-					{
-						if (bool.TryParse(text, out var bv)) { cell.SetCellValue(bv); return; }
-						if (int.TryParse(text, out var iv)) { cell.SetCellValue(iv != 0); return; }
-						cell.SetCellValue(!string.IsNullOrEmpty(text));
-						return;
-					}
-				case CellType.Numeric:
-					{
-						if (double.TryParse(text, out var dv)) { cell.SetCellValue(dv); return; }
-						if (DateTime.TryParse(text, out var dtv)) { cell.SetCellValue(dtv); return; }
-						// 若無法轉換為數值/日期則保留前一步的寫入結果
-						return;
-					}
-				case CellType.String:
-					{
-						cell.SetCellValue(text);
-						return;
-					}
-				case CellType.Blank:
-					{
-						cell.SetCellValue(string.Empty);
-						return;
-					}
-				case CellType.Error:
-					{
-						// NPOI 錯誤型別無從 object 直接設定，退為字串呈現
-						cell.SetCellValue(text);
-						return;
-					}
-				default:
-					return;
-			}
-		}
-
-		private void SetFormulaValue(ICell cell, object value)
-		{
-			if (cell == null) return;
-			if (value == null || value == DBNull.Value) return;
-
-			var formula = value.ToString();
-			if (string.IsNullOrWhiteSpace(formula)) return;
-
-			// NPOI SetCellFormula 需要純公式字串（不含 '='）
-			if (formula.StartsWith("=")) formula = formula.Substring(1);
-
-			cell.SetCellFormula(formula);
-		}
-
-		private void SetCellStyle(ICell cell, TableCellSet cellNameMap, TableCellStyleParams cellStyleParams)
-		{
-			if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && _cellStylesCached.ContainsKey(cellNameMap.CellStyleKey))
-			{
-				cell.CellStyle = _cellStylesCached[cellNameMap.CellStyleKey];
-			}
-			else if (string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) &&
-					 _cellStylesCached.ContainsKey("global") &&
-					 cellNameMap.SetCellStyleAction == null)
-			{
-				cell.CellStyle = _cellStylesCached["global"];
-			}
-			else if (!string.IsNullOrWhiteSpace(cellNameMap.CellStyleKey) && cellNameMap.SetCellStyleAction != null)
-			{
-				ICellStyle newCellStyle = _workbook.CreateCellStyle();
-				cellNameMap.SetCellStyleAction(cellStyleParams, newCellStyle);
-				cellNameMap.CellStyleKey = cellNameMap.CellStyleKey;
-				_cellStylesCached.Add(cellNameMap.CellStyleKey, newCellStyle);
-				cell.CellStyle = newCellStyle;
-			}
 		}
 
 		private ITableStage SetRow(int rowOffset = 0)
@@ -520,87 +623,6 @@ namespace NPOIPlus
 			return this;
 		}
 
-		private void SetCellAction(List<TableCellSet> cellSets, IRow rowObj, int colIndex, int targetRowIndex, object item)
-		{
-			foreach (var cellset in cellSets)
-			{
-				var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
-
-				// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
-				Func<TableCellParams, object> setValueAction = cellset.SetValueAction;
-				Func<TableCellParams, object> setFormulaValueAction = cellset.SetFormulaValueAction;
-
-				TableCellParams cellParams = new TableCellParams
-				{
-					ColNum = (ExcelColumns)colIndex,
-					RowNum = targetRowIndex,
-					RowItem = item
-				};
-				object value = cellset.CellValue ?? GetTableCellValue(cellset.CellName, item);
-				cellParams.CellValue = value;
-
-				// 準備泛型參數（供泛型委派使用）
-				var cellParamsT = new TableCellParams<T>
-				{
-					ColNum = (ExcelColumns)colIndex,
-					RowNum = targetRowIndex,
-					RowItem = item is T tItem ? tItem : default,
-					CellValue = value
-				};
-
-				TableCellStyleParams cellStyleParams =
-				new TableCellStyleParams
-				{
-					Workbook = _workbook,
-					ColNum = (ExcelColumns)colIndex,
-					RowNum = targetRowIndex,
-				};
-				SetCellStyle(cell, cellset, cellStyleParams);
-
-				if (cellset.CellType == CellType.Formula)
-				{
-					if (cellset.SetFormulaValueActionGeneric != null)
-					{
-						if (cellset.SetFormulaValueActionGeneric is Func<TableCellParams<T>, object> gFormula)
-						{
-							value = gFormula(cellParamsT);
-						}
-						else
-						{
-							value = cellset.SetFormulaValueActionGeneric.DynamicInvoke(cellParamsT);
-						}
-					}
-					else if (setFormulaValueAction != null)
-					{
-						value = setFormulaValueAction(cellParams);
-					}
-					SetFormulaValue(cell, value);
-				}
-				else
-				{
-					if (cellset.SetValueActionGeneric != null)
-					{
-						if (cellset.SetValueActionGeneric is Func<TableCellParams<T>, object> gValue)
-						{
-							value = gValue(cellParamsT);
-						}
-						else
-						{
-							value = cellset.SetValueActionGeneric.DynamicInvoke(cellParamsT);
-						}
-					}
-					else if (setValueAction != null)
-					{
-						value = setValueAction(cellParams);
-					}
-					SetCellValue(cell, value, cellset.CellType);
-				}
-
-
-				colIndex++;
-			}
-		}
-
 		public ITableCellStage BeginCellSet(string cellName)
 		{
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
@@ -623,7 +645,7 @@ namespace NPOIPlus
 			return new FluentTableHeaderStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, title, _cellTitleSets, _cellBodySets);
 		}
 
-		public ITableStage SetRow()
+		public ITableStage BuildRows()
 		{
 			for (int i = 0; i < _table.Count(); i++)
 			{
@@ -640,29 +662,11 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public FluentMemoryStream ToStream()
-		{
-			var ms = new FluentMemoryStream();
-			ms.AllowClose = false;
-			_workbook.Write(ms);
-			ms.Flush();
-			ms.Seek(0, SeekOrigin.Begin);
-			ms.AllowClose = true;
-			return ms;
-		}
 		FluentMemoryStream ITableStage<T>.ToStream()
 		{
 			return ToStream();
 		}
 
-		public IWorkbook SaveToPath(string filePath)
-		{
-			using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-			{
-				_workbook.Write(outFile);
-			}
-			return _workbook;
-		}
 		IWorkbook ITableStage<T>.SaveToPath(string filePath)
 		{
 			return SaveToPath(filePath);
@@ -671,10 +675,10 @@ namespace NPOIPlus
 
 	public class FluentTableHeaderStage<T> : ITableHeaderStage, ITableHeaderStage<T>
 	{
+		private IWorkbook _workbook;
 		private List<TableCellSet> _cellBodySets;
 		private List<TableCellSet> _cellTitleSets;
 		private TableCellSet _cellTitleSet;
-		private IWorkbook _workbook;
 		private ISheet _sheet;
 		private IEnumerable<T> _table;
 		private ExcelColumns _startCol;
@@ -775,40 +779,40 @@ namespace NPOIPlus
 			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
 		}
 
-	public ITableHeaderStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
-	{
-		string key = $"{_sheet.SheetName}_{col}{rowIndex}";
-		ICell cell = _sheet.GetExcelCell(col, rowIndex);
-		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+		public ITableHeaderStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
 		{
-			SetCellStyle(key, (styleParams, style) =>
+			string key = $"{_sheet.SheetName}_{col}{rowIndex}";
+			ICell cell = _sheet.GetExcelCell(col, rowIndex);
+			if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
 			{
-				style.CloneStyleFrom(cell.CellStyle);
-			});
+				SetCellStyle(key, (styleParams, style) =>
+				{
+					style.CloneStyleFrom(cell.CellStyle);
+				});
+			}
+			return this;
 		}
-		return this;
-	}
-	ITableHeaderStage<T> ITableHeaderStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
-	{
-		string key = $"{_sheet.SheetName}_{col}{rowIndex}";
-		ICell cell = _sheet.GetExcelCell(col, rowIndex);
-		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+		ITableHeaderStage<T> ITableHeaderStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
 		{
-			SetCellStyle(key, (styleParams, style) =>
+			string key = $"{_sheet.SheetName}_{col}{rowIndex}";
+			ICell cell = _sheet.GetExcelCell(col, rowIndex);
+			if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
 			{
-				style.CloneStyleFrom(cell.CellStyle);
-			});
+				SetCellStyle(key, (styleParams, style) =>
+				{
+					style.CloneStyleFrom(cell.CellStyle);
+				});
+			}
+			return this;
 		}
-		return this;
 	}
-}
 
 	public class FluentTableCellStage<T> : ITableCellStage, ITableCellStage<T>
 	{
+		private IWorkbook _workbook;
 		private List<TableCellSet> _cellTitleSets;
 		private List<TableCellSet> _cellBodySets;
 		private TableCellSet _cellSet;
-		private IWorkbook _workbook;
 		private ISheet _sheet;
 		private IEnumerable<T> _table;
 		private ExcelColumns _startCol;
@@ -823,11 +827,11 @@ namespace NPOIPlus
 			List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
 		{
 			_workbook = workbook;
+			_cellStylesCached = cellStylesCached;
 			_sheet = sheet;
 			_table = table;
 			_startCol = startCol;
 			_startRow = startRow;
-			_cellStylesCached = cellStylesCached;
 			_cellTitleSets = cellTitleSets;
 			_cellBodySets = cellBodySets;
 			_cellSet = cellBodySets.First(c => c.CellName == cellName);
@@ -900,45 +904,37 @@ namespace NPOIPlus
 			_cellSet.SetCellStyleAction = cellStyleAction;
 			return this;
 		}
-	public ITableCellStage SetCellType(CellType cellType)
-	{
-		_cellSet.CellType = cellType;
-		return this;
-	}
-	ITableCellStage<T> ITableCellStage<T>.SetCellType(CellType cellType)
-	{
-		_cellSet.CellType = cellType;
-		return this;
-	}
-
-	public ITableCellStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
-	{
-		string key = $"{_sheet.SheetName}_{col}{rowIndex}";
-		ICell cell = _sheet.GetExcelCell(col, rowIndex);
-		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+		public ITableCellStage SetCellType(CellType cellType)
 		{
-			SetCellStyle(key, (styleParams, style) =>
-			{
-				style.CloneStyleFrom(cell.CellStyle);
-			});
+			_cellSet.CellType = cellType;
+			return this;
 		}
-		return this;
-	}
-	ITableCellStage<T> ITableCellStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
-	{
-		string key = $"{_sheet.SheetName}_{col}{rowIndex}";
-		ICell cell = _sheet.GetExcelCell(col, rowIndex);
-		if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+		ITableCellStage<T> ITableCellStage<T>.SetCellType(CellType cellType)
 		{
-			SetCellStyle(key, (styleParams, style) =>
-			{
-				style.CloneStyleFrom(cell.CellStyle);
-			});
+			_cellSet.CellType = cellType;
+			return this;
 		}
-		return this;
-	}
 
-	public ITableStage End()
+		public ITableCellStage CopyStyleFromCell(ExcelColumns col, int rowIndex)
+		{
+			string key = $"{_sheet.SheetName}_{col}{rowIndex}";
+			ICell cell = _sheet.GetExcelCell(col, rowIndex);
+			if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(key))
+			{
+				SetCellStyle(key, (styleParams, style) =>
+				{
+					style.CloneStyleFrom(cell.CellStyle);
+				});
+			}
+			return this;
+		}
+		ITableCellStage<T> ITableCellStage<T>.CopyStyleFromCell(ExcelColumns col, int rowIndex)
+		{
+			CopyStyleFromCell(col, rowIndex);
+			return this;
+		}
+
+		public ITableStage End()
 		{
 			return new FluentTable<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, _cellTitleSets, _cellBodySets);
 		}

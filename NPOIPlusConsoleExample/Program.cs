@@ -183,6 +183,7 @@ namespace NPOIPlusConsoleExample
 
 				// 從 Sheet1 的 D1 (是否活躍標題) 複製樣式到 InStock 標題
 				.BeginTitleSet("InStock")
+				.SetCellStyle("ProductStyle")
 				.BeginBodySet("InStock").SetCellType(CellType.Boolean).End()
 				.BuildRows()
 				.SaveToPath(outputPath);
