@@ -17,23 +17,12 @@ namespace NPOIPlus
 			_cell = cell;
 		}
 
-		public FluentMemoryStream Save()
+		public ICellStage SetValue<T>(T value)
 		{
-			var ms = new FluentMemoryStream();
-			ms.AllowClose = false;
-			_workbook.Write(ms);
-			ms.Flush();
-			ms.Seek(0, System.IO.SeekOrigin.Begin);
-			ms.AllowClose = true;
-			return ms;
+			if (_cell == null) return this;
+			SetCellValue(_cell, value);
+			return this;
 		}
-
-	public ICellStage SetValue<T>(T value)
-	{
-		if (_cell == null) return this;
-		SetCellValue(_cell, value);
-		return this;
-	}
 	}
 }
 
