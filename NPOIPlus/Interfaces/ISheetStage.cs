@@ -8,7 +8,7 @@ namespace NPOIPlus
 	{
 		ISheet GetSheet();
 		ITableStage<T> SetTable<T>(IEnumerable<T> table, ExcelColumns startCol, int startRow);
-		ICellStage SetCellPosition(ExcelColumns startCol, int startRow);
+		FluentCell SetCellPosition(ExcelColumns startCol, int startRow);
 		ISheetStage SetColumnWidth(ExcelColumns col, int width);
 		ISheetStage SetColumnWidth(ExcelColumns startCol, ExcelColumns endCol, int width);
 		ISheetStage SetExcelCellMerge(ExcelColumns startCol, ExcelColumns endCol, int row);

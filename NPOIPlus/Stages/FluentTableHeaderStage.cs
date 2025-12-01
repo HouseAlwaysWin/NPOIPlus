@@ -22,34 +22,31 @@ namespace NPOIPlus
 
 		public FluentTableHeaderStage<T> SetValue(Func<TableCellParams, object> valueAction)
 		{
-			_currentCellSet.SetValueAction = valueAction;
+			SetValueActionInternal(valueAction);
 			return this;
 		}
 
 		public FluentTableHeaderStage<T> SetValue(Func<TableCellParams<T>, object> valueAction)
 		{
-			_currentCellSet.SetValueActionGeneric = valueAction;
+			SetValueActionGenericInternal(valueAction);
 			return this;
 		}
 
 		public FluentTableHeaderStage<T> SetFormulaValue(object value)
 		{
-			_currentCellSet.CellValue = value;
-			_currentCellSet.CellType = CellType.Formula;
+			SetFormulaValueInternal(value);
 			return this;
 		}
 
 		public FluentTableHeaderStage<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
 		{
-			_currentCellSet.SetFormulaValueAction = valueAction;
-			_currentCellSet.CellType = CellType.Formula;
+			SetFormulaValueActionInternal(valueAction);
 			return this;
 		}
 
 		public FluentTableHeaderStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
 		{
-			_currentCellSet.SetFormulaValueActionGeneric = valueAction;
-			_currentCellSet.CellType = CellType.Formula;
+			SetFormulaValueActionGenericInternal(valueAction);
 			return this;
 		}
 

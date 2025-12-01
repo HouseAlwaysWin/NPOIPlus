@@ -47,16 +47,16 @@ namespace NPOIPlus
 			return new FluentSheet(_workbook, _sheet, _cellStylesCached);
 		}
 
-		public ICellStage SetCellPosition(ExcelColumns col, int row)
+		public FluentCell SetCellPosition(ExcelColumns col, int row)
 		{
 			if (_sheet == null) throw new System.InvalidOperationException("No active sheet. Call UseSheet(...) first.");
 
 			var normalizedCol = NormalizeStartCol(col);
 			var normalizedRow = NormalizeStartRow(row);
 
-			var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
-			var cell = rowObj.GetCell((int)normalizedCol) ?? rowObj.CreateCell((int)normalizedCol);
-			return new FluentCell(_workbook, _sheet, cell);
+		var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
+		var cell = rowObj.GetCell((int)normalizedCol) ?? rowObj.CreateCell((int)normalizedCol);
+		return new FluentCell(_workbook, _sheet, cell, _cellStylesCached);
 		}
 
 		public ITableStage<T> SetTable<T>(System.Collections.Generic.IEnumerable<T> table, ExcelColumns startCol, int startRow)
