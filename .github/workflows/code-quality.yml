@@ -43,23 +43,29 @@ jobs:
         name: coverage-report
         path: ./coveragereport
     
-    - name: Code Coverage Summary
-      uses: irongut/CodeCoverageSummary@v1.3.0
-      with:
-        filename: ./coveragereport/Cobertura.xml
-        badge: true
-        fail_below_min: false
-        format: markdown
-        hide_branch_rate: false
-        hide_complexity: true
-        indicators: true
-        output: both
-        thresholds: '60 80'
+    - name: Generate Coverage Summary
+      if: always()
+      run: |
+        $coberturaFile = "./coveragereport/Cobertura.xml"
+        if (Test-Path $coberturaFile) {
+          Write-Host "## Code Coverage Summary" | Out-File -FilePath coverage-summary.md -Encoding utf8
+          Write-Host "" | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+          Write-Host "Coverage report generated successfully!" | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+          Write-Host "View full report in the coverage-report artifact." | Out-File -FilePath coverage-summary.md -Append -Encoding utf8
+        } else {
+          Write-Host "Coverage report not found. Skipping summary generation."
+        }
     
     - name: Add Coverage PR Comment
       uses: marocchino/sticky-pull-request-comment@v2
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' && always()
       with:
         recreate: true
-        path: code-coverage-results.md
+        path: coverage-summary.md
+        message: |
+          ## 📊 Code Coverage Report
+          
+          Coverage report has been generated. Download the `coverage-report` artifact to view the full HTML report.
+          
+          The report includes detailed coverage information for all test files.
 
