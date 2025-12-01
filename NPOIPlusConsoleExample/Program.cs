@@ -143,13 +143,15 @@ namespace NPOIPlusConsoleExample
 			// 展示 ID 欄位並套用自訂樣式
 			.BeginTitleSet("編號").SetCellStyle("HeaderBlue")
 			.BeginBodySet("ID")
-			.SetCellStyle((styleParams, style) =>
+			.SetCellStyle((styleParams) =>
 			{
-				style.SetAligment(HorizontalAlignment.Center);
-				style.FillPattern = FillPattern.SolidForeground;
-				style.SetCellFillForegroundColor(IndexedColors.LightGreen);
-				style.SetBorderAllStyle(BorderStyle.Thin);
-				return "IDStyle"; // 返回樣式鍵名
+				return new CellStyleConfig("IDStyle", style =>
+				{
+					style.SetAligment(HorizontalAlignment.Center);
+					style.FillPattern = FillPattern.SolidForeground;
+					style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+					style.SetBorderAllStyle(BorderStyle.Thin);
+				});
 			})
 			.End()
 
@@ -163,24 +165,31 @@ namespace NPOIPlusConsoleExample
 				.SetCellStyle("AmountCurrency")
 				.End()
 
-				// 展示活躍狀態欄位
-				.BeginTitleSet("活躍").SetCellStyle("HeaderBlue")
-				.BeginBodySet("IsActive").SetCellType(CellType.Boolean)
-				.SetCellStyle((styleParams, style) =>
+			// 展示活躍狀態欄位（根據數據動態變化樣式）
+			.BeginTitleSet("活躍").SetCellStyle("HeaderBlue")
+			.BeginBodySet("IsActive").SetCellType(CellType.Boolean)
+			.SetCellStyle((styleParams) =>
+			{
+				// ✅ 根據資料決定返回哪個樣式
+				if (styleParams.GetRowItem<ExampleData>().IsActive)
+				{
+					return new("IsActiveStyle1", style =>
+					{
+						style.SetAligment(HorizontalAlignment.Center);
+						style.FillPattern = FillPattern.SolidForeground;
+						style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+						style.SetBorderAllStyle(BorderStyle.Thin);
+					});
+				}
+				return new("IsActiveStyle2", style =>
 				{
 					style.SetAligment(HorizontalAlignment.Center);
 					style.FillPattern = FillPattern.SolidForeground;
-					style.SetBorderAllStyle(BorderStyle.Thin);
-
-					if (styleParams.GetRowItem<ExampleData>().IsActive)
-					{
-						style.SetCellFillForegroundColor(IndexedColors.LightGreen);
-						return "IsActiveStyle1";
-					}
 					style.SetCellFillForegroundColor(IndexedColors.LightYellow);
-					return "IsActiveStyle2"; // 返回樣式鍵名
-				})
-				.End()
+					style.SetBorderAllStyle(BorderStyle.Thin);
+				});
+			})
+			.End()
 
 				.BuildRows();
 

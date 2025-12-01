@@ -69,7 +69,7 @@ namespace NPOIPlus.Base
 		_currentCellSet.CellStyleKey = cellStyleKey;
 	}
 
-	protected void SetCellStyleInternal(Func<TableCellStyleParams, ICellStyle, string> cellStyleAction)
+	protected void SetCellStyleInternal(Func<TableCellStyleParams, CellStyleConfig> cellStyleAction)
 	{
 		_currentCellSet.SetCellStyleAction = cellStyleAction;
 	}

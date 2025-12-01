@@ -44,11 +44,10 @@ namespace NPOIPlus
 			return this;
 		}
 
-	public FluentCell SetCellStyle(Func<TableCellStyleParams, ICellStyle, string> cellStyleAction)
+	public FluentCell SetCellStyle(Func<TableCellStyleParams, CellStyleConfig> cellStyleAction)
 	{
 		if (_cell == null) return this;
 
-		ICellStyle newCellStyle = _workbook.CreateCellStyle();
 		var cellStyleParams = new TableCellStyleParams
 		{
 			Workbook = _workbook,
@@ -57,20 +56,27 @@ namespace NPOIPlus
 			RowItem = null
 		};
 		
-		string key = cellStyleAction(cellStyleParams, newCellStyle);
+		// ✅ 先調用函數獲取樣式配置
+		var config = cellStyleAction(cellStyleParams);
 		
-		if (!string.IsNullOrWhiteSpace(key))
+		if (!string.IsNullOrWhiteSpace(config.Key))
 		{
-			if (!_cellStylesCached.ContainsKey(key))
+			// ✅ 先檢查緩存
+			if (!_cellStylesCached.ContainsKey(config.Key))
 			{
-				_cellStylesCached.Add(key, newCellStyle);
+				// ✅ 只在不存在時才創建新樣式
+				ICellStyle newCellStyle = _workbook.CreateCellStyle();
+				config.StyleSetter(newCellStyle);
+				_cellStylesCached.Add(config.Key, newCellStyle);
 			}
-			_cell.CellStyle = _cellStylesCached[key];
+			_cell.CellStyle = _cellStylesCached[config.Key];
 		}
 		else
 		{
-			// 如果沒有返回 key，直接使用新建的樣式（不緩存）
-			_cell.CellStyle = newCellStyle;
+			// 如果沒有返回 key，創建臨時樣式（不緩存）
+			ICellStyle tempStyle = _workbook.CreateCellStyle();
+			config.StyleSetter(tempStyle);
+			_cell.CellStyle = tempStyle;
 		}
 		
 		return this;

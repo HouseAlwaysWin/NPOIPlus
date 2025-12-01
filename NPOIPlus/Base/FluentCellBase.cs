@@ -38,21 +38,28 @@ namespace NPOIPlus.Base
 		// 如果有動態樣式設置函數，優先使用
 		if (cellNameMap.SetCellStyleAction != null)
 		{
-			ICellStyle newCellStyle = _workbook.CreateCellStyle();
-			string key = cellNameMap.SetCellStyleAction(cellStyleParams, newCellStyle);
+			// ✅ 先調用函數獲取樣式配置
+			var config = cellNameMap.SetCellStyleAction(cellStyleParams);
 			
-			if (!string.IsNullOrWhiteSpace(key))
+			if (!string.IsNullOrWhiteSpace(config.Key))
 			{
-				if (!_cellStylesCached.ContainsKey(key))
+				// ✅ 先檢查緩存
+				if (!_cellStylesCached.ContainsKey(config.Key))
 				{
-					_cellStylesCached.Add(key, newCellStyle);
+					// ✅ 只在不存在時才創建新樣式
+					ICellStyle newCellStyle = _workbook.CreateCellStyle();
+					config.StyleSetter(newCellStyle);
+					_cellStylesCached.Add(config.Key, newCellStyle);
 				}
-				cell.CellStyle = _cellStylesCached[key];
+				// 始終使用緩存的樣式
+				cell.CellStyle = _cellStylesCached[config.Key];
 			}
 			else
 			{
-				// 如果沒有返回 key，直接使用新建的樣式（不緩存）
-				cell.CellStyle = newCellStyle;
+				// 如果沒有返回 key，創建臨時樣式（不緩存）
+				ICellStyle tempStyle = _workbook.CreateCellStyle();
+				config.StyleSetter(tempStyle);
+				cell.CellStyle = tempStyle;
 			}
 		}
 		// 如果有固定的樣式 key，使用緩存的樣式
