@@ -7,9 +7,9 @@ using System.Linq;
 
 namespace NPOIPlus
 {
-	public class FluentTableHeaderStage<T> : FluentTableBase<T>
+	public class FluentTableHeader<T> : FluentTableBase<T>
 	{
-		public FluentTableHeaderStage(
+		public FluentTableHeader(
 			IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
 			ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
 			string title,
@@ -20,61 +20,61 @@ namespace NPOIPlus
 			_currentCellSet.CellValue = _currentCellSet.CellValue;
 		}
 
-		public FluentTableHeaderStage<T> SetValue(Func<TableCellParams, object> valueAction)
+		public FluentTableHeader<T> SetValue(Func<TableCellParams, object> valueAction)
 		{
 			SetValueActionInternal(valueAction);
 			return this;
 		}
 
-		public FluentTableHeaderStage<T> SetValue(Func<TableCellParams<T>, object> valueAction)
+		public FluentTableHeader<T> SetValue(Func<TableCellParams<T>, object> valueAction)
 		{
 			SetValueActionGenericInternal(valueAction);
 			return this;
 		}
 
-		public FluentTableHeaderStage<T> SetFormulaValue(object value)
+		public FluentTableHeader<T> SetFormulaValue(object value)
 		{
 			SetFormulaValueInternal(value);
 			return this;
 		}
 
-		public FluentTableHeaderStage<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
+		public FluentTableHeader<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
 		{
 			SetFormulaValueActionInternal(valueAction);
 			return this;
 		}
 
-		public FluentTableHeaderStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
+		public FluentTableHeader<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
 		{
 			SetFormulaValueActionGenericInternal(valueAction);
 			return this;
 		}
 
-		public FluentTableHeaderStage<T> SetCellStyle(string cellStyleKey)
+		public FluentTableHeader<T> SetCellStyle(string cellStyleKey)
 		{
 			SetCellStyleInternal(cellStyleKey);
 			return this;
 		}
 
-		public FluentTableHeaderStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+		public FluentTableHeader<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
 		{
 			SetCellStyleInternal(cellStyleKey, cellStyleAction);
 			return this;
 		}
 
-		public FluentTableHeaderStage<T> SetCellType(CellType cellType)
+		public FluentTableHeader<T> SetCellType(CellType cellType)
 		{
 			SetCellTypeInternal(cellType);
 			return this;
 		}
 
-		public FluentTableCellStage<T> BeginBodySet(string cellName)
+		public FluentTableCell<T> BeginBodySet(string cellName)
 		{
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
-			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
+			return new FluentTableCell<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
 		}
 
-		public FluentTableHeaderStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex)
+		public FluentTableHeader<T> CopyStyleFromCell(ExcelColumns col, int rowIndex)
 		{
 			CopyStyleFromCellInternal(col, rowIndex);
 			return this;

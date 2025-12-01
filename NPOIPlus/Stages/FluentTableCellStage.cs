@@ -7,9 +7,9 @@ using System.Linq;
 
 namespace NPOIPlus
 {
-	public class FluentTableCellStage<T> : FluentTableBase<T>
+	public class FluentTableCell<T> : FluentTableBase<T>
 	{
-		public FluentTableCellStage(
+		public FluentTableCell(
 			IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
 			ExcelColumns startCol, int startRow,
 			Dictionary<string, ICellStyle> cellStylesCached,
@@ -20,61 +20,61 @@ namespace NPOIPlus
 		{
 		}
 
-	public FluentTableCellStage<T> SetValue(object value)
+	public FluentTableCell<T> SetValue(object value)
 	{
 		SetValueInternal(value);
 		return this;
 	}
 
-	public FluentTableCellStage<T> SetValue(Func<TableCellParams, object> valueAction)
+	public FluentTableCell<T> SetValue(Func<TableCellParams, object> valueAction)
 	{
 		SetValueActionInternal(valueAction);
 		return this;
 	}
 
-	public FluentTableCellStage<T> SetValue(Func<TableCellParams<T>, object> valueAction)
+	public FluentTableCell<T> SetValue(Func<TableCellParams<T>, object> valueAction)
 	{
 		SetValueActionGenericInternal(valueAction);
 		return this;
 	}
 
-	public FluentTableCellStage<T> SetFormulaValue(object value)
+	public FluentTableCell<T> SetFormulaValue(object value)
 	{
 		SetFormulaValueInternal(value);
 		return this;
 	}
 
-	public FluentTableCellStage<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
+	public FluentTableCell<T> SetFormulaValue(Func<TableCellParams, object> valueAction)
 	{
 		SetFormulaValueActionInternal(valueAction);
 		return this;
 	}
 
-	public FluentTableCellStage<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
+	public FluentTableCell<T> SetFormulaValue(Func<TableCellParams<T>, object> valueAction)
 	{
 		SetFormulaValueActionGenericInternal(valueAction);
 		return this;
 	}
 
-	public FluentTableCellStage<T> SetCellStyle(string cellStyleKey)
+	public FluentTableCell<T> SetCellStyle(string cellStyleKey)
 	{
 		SetCellStyleInternal(cellStyleKey);
 		return this;
 	}
 
-	public FluentTableCellStage<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
+	public FluentTableCell<T> SetCellStyle(string cellStyleKey, Action<TableCellStyleParams, ICellStyle> cellStyleAction)
 	{
 		SetCellStyleInternal(cellStyleKey, cellStyleAction);
 		return this;
 	}
 
-	public FluentTableCellStage<T> SetCellType(CellType cellType)
+	public FluentTableCell<T> SetCellType(CellType cellType)
 	{
 		SetCellTypeInternal(cellType);
 		return this;
 	}
 
-		public FluentTableCellStage<T> CopyStyleFromCell(ExcelColumns col, int rowIndex)
+		public FluentTableCell<T> CopyStyleFromCell(ExcelColumns col, int rowIndex)
 		{
 			CopyStyleFromCellInternal(col, rowIndex);
 			return this;

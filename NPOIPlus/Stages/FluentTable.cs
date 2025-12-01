@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace NPOIPlus
 {
-	public class FluentTable<T> : FluentSheetBase, ITableStage<T>
+	public class FluentTable<T> : FluentSheetBase
 	{
 		private ISheet _sheet;
 		private IEnumerable<T> _table;
@@ -138,16 +138,16 @@ namespace NPOIPlus
 			return this;
 		}
 
-		public FluentTableCellStage<T> BeginBodySet(string cellName)
+		public FluentTableCell<T> BeginBodySet(string cellName)
 		{
 			_cellBodySets.Add(new TableCellSet { CellName = cellName });
-			return new FluentTableCellStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
+			return new FluentTableCell<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
 		}
 
-		public FluentTableHeaderStage<T> BeginTitleSet(string title)
+		public FluentTableHeader<T> BeginTitleSet(string title)
 		{
 			_cellTitleSets.Add(new TableCellSet { CellName = $"{title}_TITLE", CellValue = title });
-			return new FluentTableHeaderStage<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, title, _cellTitleSets, _cellBodySets);
+			return new FluentTableHeader<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, title, _cellTitleSets, _cellBodySets);
 		}
 
 		public FluentTable<T> BuildRows()

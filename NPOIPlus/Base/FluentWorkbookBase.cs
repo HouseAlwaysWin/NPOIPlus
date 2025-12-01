@@ -12,12 +12,17 @@ namespace NPOIPlus.Base
 		{
 		}
 
-		protected FluentWorkbookBase(IWorkbook workbook)
-		{
-			_workbook = workbook;
-		}
+	protected FluentWorkbookBase(IWorkbook workbook)
+	{
+		_workbook = workbook;
+	}
 
-		public FluentMemoryStream ToStream()
+	public IWorkbook GetWorkbook()
+	{
+		return _workbook;
+	}
+
+	public FluentMemoryStream ToStream()
 		{
 			var ms = new FluentMemoryStream();
 			ms.AllowClose = false;
