@@ -99,41 +99,61 @@ jobs:
         Write-Host "Pushing $($nupkgFiles.Count) package(s) to NuGet.org..."
         foreach ($file in $nupkgFiles) {
           Write-Host "Pushing: $($file.FullName)"
-          $pushOutput = dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json 2>&1
+          
+          # 從文件名提取包名（例如：NPOIPlusLib.1.0.0.nupkg -> NPOIPlusLib）
+          $packageName = $file.BaseName -replace '\.\d+\.\d+\.\d+.*$', ''
+          Write-Host "Package name: $packageName"
+          
+          # 嘗試使用 v2 API 端點直接推送
+          Write-Host "Attempting push to NuGet.org v2 API..."
+          $pushOutput = dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://www.nuget.org/api/v2/package 2>&1 | Tee-Object -Variable fullOutput
           $pushExitCode = $LASTEXITCODE
           
+          # 顯示完整輸出
+          Write-Host "Full push output:"
+          Write-Host $fullOutput
+          
           # 檢查輸出中是否包含衝突信息
-          if ($pushOutput -match "already exists" -or $pushOutput -match "Conflict") {
-            Write-Warning "Package $($file.Name) already exists. This might mean:"
-            Write-Warning "  1. The package was already published successfully"
-            Write-Warning "  2. The package name is taken by another user"
-            Write-Warning "  3. There's a caching issue on NuGet.org"
-            Write-Host "Checking if package exists on NuGet.org..."
+          if ($fullOutput -match "already exists" -or $fullOutput -match "Conflict" -or $fullOutput -match "409") {
+            Write-Warning "Package $($file.Name) conflict detected. Checking if package exists..."
             
-            # 嘗試查詢包是否存在
-            $packageName = "NPOIPlus"
-            $checkUrl = "https://api.nuget.org/v3-flatcontainer/$packageName/index.json"
+            # 嘗試查詢包是否存在（使用小寫包名）
+            $checkUrl = "https://api.nuget.org/v3-flatcontainer/$($packageName.ToLower())/index.json"
+            Write-Host "Checking package existence at: $checkUrl"
             try {
               $response = Invoke-RestMethod -Uri $checkUrl -ErrorAction Stop
               Write-Host "✅ Package exists on NuGet.org with versions:" -ForegroundColor Green
               $response.versions | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
+              Write-Warning "Package already exists. If this is unexpected, there may be a caching issue."
             } catch {
               if ($_.Exception.Response.StatusCode -eq 404) {
-                Write-Warning "⚠️ Package does NOT exist on NuGet.org (404). The conflict might be a false positive."
-                Write-Warning "This could indicate an issue with the NuGet API or your API key permissions."
+                Write-Warning "⚠️ Package does NOT exist on NuGet.org (404)."
+                Write-Warning "This suggests a false positive conflict, possibly due to:"
+                Write-Warning "  1. API Key permission issues"
+                Write-Warning "  2. NuGet.org service-side caching"
+                Write-Warning "  3. Temporary service issues"
+                Write-Host "`nTrying alternative: using --skip-duplicate flag..."
+                
+                # 嘗試使用 --skip-duplicate
+                $retryOutput = dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://www.nuget.org/api/v2/package --skip-duplicate 2>&1
+                $retryExitCode = $LASTEXITCODE
+                Write-Host "Retry output: $retryOutput"
+                
+                if ($retryExitCode -eq 0) {
+                  Write-Host "✅ Push succeeded with --skip-duplicate" -ForegroundColor Green
+                } else {
+                  Write-Error "Push failed even with --skip-duplicate. Exit code: $retryExitCode"
+                  exit 1
+                }
               } else {
                 Write-Warning "Could not verify package existence: $_"
+                Write-Error "Push failed with exit code $pushExitCode"
+                exit 1
               }
-            }
-            
-            # 即使有衝突，如果包不存在，我們仍然視為失敗
-            if ($pushExitCode -ne 0) {
-              Write-Error "Push failed with exit code $pushExitCode"
-              exit 1
             }
           } elseif ($pushExitCode -ne 0) {
             Write-Error "Failed to push $($file.Name) with exit code $pushExitCode"
-            Write-Host "Push output: $pushOutput"
+            Write-Host "Full error output: $fullOutput"
             exit 1
           } else {
             Write-Host "✅ Successfully pushed $($file.Name)" -ForegroundColor Green
