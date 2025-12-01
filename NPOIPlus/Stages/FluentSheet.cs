@@ -47,7 +47,7 @@ namespace NPOIPlus
 			return new FluentSheet(_workbook, _sheet, _cellStylesCached);
 		}
 
-		public ICellStage SetCell(ExcelColumns col, int row)
+		public ICellStage SetCellPosition(ExcelColumns col, int row)
 		{
 			if (_sheet == null) throw new System.InvalidOperationException("No active sheet. Call UseSheet(...) first.");
 

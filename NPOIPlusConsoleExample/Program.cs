@@ -192,7 +192,7 @@ namespace NPOIPlusConsoleExample
 				.SaveToPath(outputPath);
 
 				fluent.UseSheet("SetCellValueExample", true)
-				.SetCell(ExcelColumns.A, 1)
+				.SetCellPosition(ExcelColumns.A, 1)
 				.SetValue("Hello, World!");
 
 				fluent.SaveToPath(outputPath);
