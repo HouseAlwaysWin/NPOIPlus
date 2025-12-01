@@ -36,6 +36,7 @@ namespace NPOIPlusConsoleExample
 
 				var fluent = new FluentWorkbook(new XSSFWorkbook(filePath));
 
+
 				fluent
 				// .UseSheet("Sheet1")
 				// .SetColumnWidth(ExcelColumns.C, 20)
@@ -84,6 +85,7 @@ namespace NPOIPlusConsoleExample
 					style.SetCellFillForegroundColor(IndexedColors.Yellow);
 				});
 
+			
 
 				// Sheet1：只放一個表（A 欄開始），並有抬頭（標題列），涵蓋多種欄位型別
 				fluent.UseSheet("Sheet1")
