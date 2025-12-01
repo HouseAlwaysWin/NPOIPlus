@@ -5,18 +5,17 @@ using System.Collections.Generic;
 
 namespace NPOIPlus.Base
 {
-	public abstract class FluentCellBase
+	public abstract class FluentCellBase : FluentWorkbookBase
 	{
 		protected Dictionary<string, ICellStyle> _cellStylesCached;
-		protected IWorkbook _workbook;
 
 		protected FluentCellBase()
 		{
 		}
 
 		protected FluentCellBase(IWorkbook workbook, Dictionary<string, ICellStyle> cellStylesCached)
+			: base(workbook)
 		{
-			_workbook = workbook;
 			_cellStylesCached = cellStylesCached;
 		}
 

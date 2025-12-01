@@ -26,14 +26,14 @@ namespace NPOIPlus.Base
 			return (ExcelColumns)idx;
 		}
 
-	protected int NormalizeStartRow(int row)
-	{
-		// 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
-		if (row < 1) return 0;
-		return row - 1;
-	}
+		protected int NormalizeStartRow(int row)
+		{
+			// 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
+			if (row < 1) return 0;
+			return row - 1;
+		}
 
-	protected object GetTableCellValue(string cellName, object item)
+		protected object GetTableCellValue(string cellName, object item)
 		{
 			if (string.IsNullOrWhiteSpace(cellName) || item == null) return default;
 
@@ -72,26 +72,6 @@ namespace NPOIPlus.Base
 		if (value == null || value == DBNull.Value) return default;
 		return value;
 	}
-
-	public FluentMemoryStream ToStream()
-		{
-			var ms = new FluentMemoryStream();
-			ms.AllowClose = false;
-			_workbook.Write(ms);
-			ms.Flush();
-			ms.Seek(0, SeekOrigin.Begin);
-			ms.AllowClose = true;
-			return ms;
-		}
-
-		public IWorkbook SaveToPath(string filePath)
-		{
-			using (FileStream outFile = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-			{
-				_workbook.Write(outFile);
-			}
-			return _workbook;
-		}
-	}
+}
 }
 

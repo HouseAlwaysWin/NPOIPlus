@@ -5,9 +5,8 @@ using System.Collections.Generic;
 
 namespace NPOIPlus.Base
 {
-	public abstract class FluentTableBase<T>
+	public abstract class FluentTableBase<T> : FluentWorkbookBase
 	{
-		protected IWorkbook _workbook;
 		protected List<TableCellSet> _cellBodySets;
 		protected List<TableCellSet> _cellTitleSets;
 		protected ISheet _sheet;
@@ -22,8 +21,8 @@ namespace NPOIPlus.Base
 			ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
 			List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets,
 			TableCellSet currentCellSet)
+			: base(workbook)
 		{
-			_workbook = workbook;
 			_sheet = sheet;
 			_table = table;
 			_startCol = startCol;
