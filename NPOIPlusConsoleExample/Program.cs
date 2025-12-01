@@ -193,11 +193,155 @@ namespace NPOIPlusConsoleExample
 
 				.BuildRows();
 
+				// Sheet4：使用 DataTable 作為資料來源
+				DataTable dataTable = new DataTable("StudentData");
+				dataTable.Columns.Add("StudentID", typeof(int));
+				dataTable.Columns.Add("StudentName", typeof(string));
+				dataTable.Columns.Add("BirthDate", typeof(DateTime));
+				dataTable.Columns.Add("IsEnrolled", typeof(bool));
+				dataTable.Columns.Add("GPA", typeof(double));
+				dataTable.Columns.Add("Tuition", typeof(decimal));
+				dataTable.Columns.Add("Department", typeof(string));
+
+				// 添加資料
+				dataTable.Rows.Add(101, "張三", new DateTime(1998, 3, 15), true, 3.8, 25000m, "資訊工程");
+				dataTable.Rows.Add(102, "李四", new DateTime(1999, 7, 20), true, 3.5, 22000m, "電機工程");
+				dataTable.Rows.Add(103, "王五", new DateTime(1997, 11, 5), false, 2.9, 20000m, "機械工程");
+				dataTable.Rows.Add(104, "趙六", new DateTime(2000, 1, 30), true, 3.9, 28000m, "資訊工程");
+				dataTable.Rows.Add(105, "陳七", new DateTime(1998, 9, 12), true, 3.6, 23000m, "企業管理");
+				dataTable.Rows.Add(106, "林八", new DateTime(1999, 5, 8), false, 3.2, 21000m, "財務金融");
+
+				fluent.UseSheet("DataTableExample", true)
+				.SetColumnWidth(ExcelColumns.A, ExcelColumns.G, 20)
+				.SetTable<DataRow>(dataTable.Rows.Cast<DataRow>(), ExcelColumns.A, 1)
+				
+				.BeginTitleSet("學號").SetCellStyle("HeaderBlue")
+				.BeginBodySet("StudentID").SetCellType(CellType.Numeric).End()
+				
+				.BeginTitleSet("姓名").SetCellStyle("HeaderBlue")
+				.BeginBodySet("StudentName").SetCellType(CellType.String).End()
+				
+				.BeginTitleSet("出生日期").SetCellStyle("HeaderBlue")
+				.BeginBodySet("BirthDate").SetCellStyle("DateOfBirth").End()
+				
+				.BeginTitleSet("在學中").SetCellStyle("HeaderBlue")
+				.BeginBodySet("IsEnrolled").SetCellType(CellType.Boolean).End()
+				
+				.BeginTitleSet("GPA").SetCellStyle("HeaderBlue")
+				.BeginBodySet("GPA").SetCellType(CellType.Numeric).End()
+				
+				.BeginTitleSet("學費").SetCellStyle("HeaderBlue")
+				.BeginBodySet("Tuition").SetCellType(CellType.Numeric).SetCellStyle("AmountCurrency").End()
+				
+				.BeginTitleSet("科系").SetCellStyle("HeaderBlue")
+				.BeginBodySet("Department").SetCellType(CellType.String)
+				.SetCellStyle((styleParams) =>
+				{
+					// 根據科系動態設定顏色
+					var row = styleParams.RowItem as DataRow;
+					var dept = row?["Department"]?.ToString() ?? "";
+					
+					if (dept == "資訊工程")
+					{
+						return new("DeptIT", style =>
+						{
+							style.SetAligment(HorizontalAlignment.Center);
+							style.FillPattern = FillPattern.SolidForeground;
+							style.SetCellFillForegroundColor(IndexedColors.LightBlue);
+							style.SetBorderAllStyle(BorderStyle.Thin);
+						});
+					}
+					else if (dept == "電機工程")
+					{
+						return new("DeptEE", style =>
+						{
+							style.SetAligment(HorizontalAlignment.Center);
+							style.FillPattern = FillPattern.SolidForeground;
+							style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+							style.SetBorderAllStyle(BorderStyle.Thin);
+						});
+					}
+					return new("DeptOther", style =>
+					{
+						style.SetAligment(HorizontalAlignment.Center);
+						style.FillPattern = FillPattern.SolidForeground;
+						style.SetCellFillForegroundColor(IndexedColors.Grey25Percent);
+						style.SetBorderAllStyle(BorderStyle.Thin);
+					});
+				})
+				.End()
+				
+				.BuildRows();
+
 				fluent.UseSheet("SetCellValueExample", true)
 				.SetCellPosition(ExcelColumns.A, 1)
 				.SetValue("Hello, World!");
 
 				fluent.SaveToPath(outputPath);
+
+				// ========== 讀取 Excel 示例 ==========
+				Console.WriteLine("\n========== 讀取 Excel 數據示例 ==========");
+				
+				// 1. 讀取 Sheet1 的資料
+				var sheet1 = fluent.UseSheet("Sheet1");
+				
+				// 讀取標題行
+				Console.WriteLine("\n【Sheet1 標題行】:");
+				for (ExcelColumns col = ExcelColumns.A; col <= ExcelColumns.H; col++)
+				{
+					var headerValue = sheet1.GetCellValue<string>(col, 1);
+					Console.Write($"{headerValue}\t");
+				}
+				Console.WriteLine();
+				
+				// 讀取資料行（第2行開始）
+				Console.WriteLine("\n【Sheet1 前3筆資料】:");
+				for (int row = 2; row <= 4; row++)
+				{
+					var id = sheet1.GetCellValue<int>(ExcelColumns.A, row);
+					var name = sheet1.GetCellValue<string>(ExcelColumns.B, row);
+					var dateOfBirth = sheet1.GetCellValue<DateTime>(ExcelColumns.C, row);
+					var isActive = sheet1.GetCellValue<bool>(ExcelColumns.D, row);
+					var score = sheet1.GetCellValue<double>(ExcelColumns.E, row);
+					var amount = sheet1.GetCellValue<double>(ExcelColumns.F, row);
+					var notes = sheet1.GetCellValue<string>(ExcelColumns.G, row);
+					
+					Console.WriteLine($"Row {row}: ID={id}, Name={name}, Birth={dateOfBirth:yyyy-MM-dd}, Active={isActive}, Score={score}, Amount={amount:C}, Notes={notes}");
+				}
+
+				// 2. 讀取 DataTableExample 的資料
+				Console.WriteLine("\n【DataTableExample 前3筆資料】:");
+				var dtSheet = fluent.UseSheet("DataTableExample");
+				for (int row = 2; row <= 4; row++)
+				{
+					var studentId = dtSheet.GetCellValue<int>(ExcelColumns.A, row);
+					var studentName = dtSheet.GetCellValue<string>(ExcelColumns.B, row);
+					var birthDate = dtSheet.GetCellValue<DateTime>(ExcelColumns.C, row);
+					var isEnrolled = dtSheet.GetCellValue<bool>(ExcelColumns.D, row);
+					var gpa = dtSheet.GetCellValue<double>(ExcelColumns.E, row);
+					var tuition = dtSheet.GetCellValue<double>(ExcelColumns.F, row);
+					var department = dtSheet.GetCellValue<string>(ExcelColumns.G, row);
+					
+					Console.WriteLine($"Student {studentId}: {studentName}, {department}, GPA={gpa:F1}, 學費={tuition:C}");
+				}
+
+				// 3. 使用 FluentCell 讀取單個單元格
+				Console.WriteLine("\n【使用 FluentCell 讀取】:");
+				var cellA1 = sheet1.GetCellPosition(ExcelColumns.A, 1);
+				if (cellA1 != null)
+				{
+					var value = cellA1.GetValue();
+					var cellType = cellA1.GetCell().CellType;
+					Console.WriteLine($"A1 單元格: 值={value}, 類型={cellType}");
+				}
+
+				// 4. 讀取 SetCellValueExample
+				Console.WriteLine("\n【SetCellValueExample 示例】:");
+				var exampleSheet = fluent.UseSheet("SetCellValueExample");
+				var helloValue = exampleSheet.GetCellValue<string>(ExcelColumns.A, 1);
+				Console.WriteLine($"A1 值: {helloValue}");
+
+				Console.WriteLine("\n========== 讀取完成 ==========\n");
 
 			}
 			catch (Exception ex)

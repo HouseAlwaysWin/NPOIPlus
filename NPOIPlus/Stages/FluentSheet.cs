@@ -63,6 +63,73 @@ namespace NPOIPlus
 		{
 			return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
 		}
+
+		/// <summary>
+		/// 獲取指定位置單元格的值
+		/// </summary>
+		/// <param name="col">列位置</param>
+		/// <param name="row">行位置（1-based）</param>
+		/// <returns>單元格的值</returns>
+		public object GetCellValue(ExcelColumns col, int row)
+		{
+			var normalizedRow = NormalizeStartRow(row);
+			var rowObj = _sheet.GetRow(normalizedRow);
+			if (rowObj == null) return null;
+
+			var cell = rowObj.GetCell((int)col);
+			return GetCellValue(cell);
+		}
+
+		/// <summary>
+		/// 獲取指定位置單元格的值並轉換為指定類型
+		/// </summary>
+		/// <typeparam name="T">目標類型</typeparam>
+		/// <param name="col">列位置</param>
+		/// <param name="row">行位置（1-based）</param>
+		/// <returns>轉換後的值</returns>
+		public T GetCellValue<T>(ExcelColumns col, int row)
+		{
+			var normalizedRow = NormalizeStartRow(row);
+			var rowObj = _sheet.GetRow(normalizedRow);
+			if (rowObj == null) return default(T);
+
+			var cell = rowObj.GetCell((int)col);
+			return GetCellValue<T>(cell);
+		}
+
+		/// <summary>
+		/// 獲取指定位置單元格的公式字符串
+		/// </summary>
+		/// <param name="col">列位置</param>
+		/// <param name="row">行位置（1-based）</param>
+		/// <returns>公式字符串（不含 '=' 前綴）</returns>
+		public string GetCellFormula(ExcelColumns col, int row)
+		{
+			var normalizedRow = NormalizeStartRow(row);
+			var rowObj = _sheet.GetRow(normalizedRow);
+			if (rowObj == null) return null;
+
+			var cell = rowObj.GetCell((int)col);
+			return GetCellFormulaValue(cell);
+		}
+
+		/// <summary>
+		/// 獲取指定位置的單元格對象（用於更高級的讀取操作）
+		/// </summary>
+		/// <param name="col">列位置</param>
+		/// <param name="row">行位置（1-based）</param>
+		/// <returns>FluentCell 對象，可以鏈式調用讀取方法</returns>
+		public FluentCell GetCellPosition(ExcelColumns col, int row)
+		{
+			var normalizedRow = NormalizeStartRow(row);
+			var rowObj = _sheet.GetRow(normalizedRow);
+			if (rowObj == null) return null;
+
+			var cell = rowObj.GetCell((int)col);
+			if (cell == null) return null;
+
+			return new FluentCell(_workbook, _sheet, cell, _cellStylesCached);
+		}
 	}
 }
 

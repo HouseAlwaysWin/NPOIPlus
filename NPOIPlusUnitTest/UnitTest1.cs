@@ -321,5 +321,124 @@ namespace NPOIPlusUnitTest
 			var cell = sheet.GetRow(0)?.GetCell(0);
 			Assert.NotNull(cell);
 		}
+		[Fact]
+		public void GetCellValue_ShouldReturnCorrectValue()
+		{
+			// Arrange
+			var workbook = new XSSFWorkbook();
+			var fluentWorkbook = new FluentWorkbook(workbook);
+			
+			// 為日期單元格設置格式
+			fluentWorkbook.SetupCellStyle("DateFormat", (wb, style) =>
+			{
+				style.SetDataFormat(wb, "yyyy-MM-dd");
+			});
+			
+			var sheet = fluentWorkbook.UseSheet("TestSheet");
+
+			// 設置不同類型的值
+			sheet.SetCellPosition(ExcelColumns.A, 1).SetValue("Hello");
+			sheet.SetCellPosition(ExcelColumns.B, 1).SetValue(123);
+			sheet.SetCellPosition(ExcelColumns.C, 1).SetValue(45.67);
+			sheet.SetCellPosition(ExcelColumns.D, 1).SetValue(true);
+			
+			// 設置日期值並套用日期格式
+			sheet.SetCellPosition(ExcelColumns.E, 1)
+				.SetValue(new DateTime(2024, 1, 15))
+				.SetCellStyle("DateFormat");
+
+			// Act & Assert
+			var stringValue = sheet.GetCellValue<string>(ExcelColumns.A, 1);
+			Assert.Equal("Hello", stringValue);
+
+			var intValue = sheet.GetCellValue<int>(ExcelColumns.B, 1);
+			Assert.Equal(123, intValue);
+
+			var doubleValue = sheet.GetCellValue<double>(ExcelColumns.C, 1);
+			Assert.Equal(45.67, doubleValue, 2);
+
+			var boolValue = sheet.GetCellValue<bool>(ExcelColumns.D, 1);
+			Assert.True(boolValue);
+
+			var dateValue = sheet.GetCellValue<DateTime>(ExcelColumns.E, 1);
+			Assert.Equal(new DateTime(2024, 1, 15), dateValue);
+		}
+
+		[Fact]
+		public void GetCellValue_NonExistentCell_ShouldReturnDefault()
+		{
+			// Arrange
+			var workbook = new XSSFWorkbook();
+			var fluentWorkbook = new FluentWorkbook(workbook);
+			var sheet = fluentWorkbook.UseSheet("TestSheet");
+
+			// Act
+			var value = sheet.GetCellValue<string>(ExcelColumns.Z, 100);
+
+			// Assert
+			Assert.Null(value);
+		}
+
+		[Fact]
+		public void FluentCell_GetValue_ShouldReturnCorrectValue()
+		{
+			// Arrange
+			var workbook = new XSSFWorkbook();
+			var fluentWorkbook = new FluentWorkbook(workbook);
+			var sheet = fluentWorkbook.UseSheet("TestSheet");
+
+			// Act
+			sheet.SetCellPosition(ExcelColumns.A, 1).SetValue("Test Value");
+			var cell = sheet.GetCellPosition(ExcelColumns.A, 1);
+			var value = cell.GetValue<string>();
+
+			// Assert
+			Assert.Equal("Test Value", value);
+		}
+
+		[Fact]
+		public void SetAndGetFormula_ShouldWork()
+		{
+			// Arrange
+			var workbook = new XSSFWorkbook();
+			var fluentWorkbook = new FluentWorkbook(workbook);
+			var sheet = fluentWorkbook.UseSheet("TestSheet");
+
+			// 設置一些數值
+			sheet.SetCellPosition(ExcelColumns.A, 1).SetValue(10);
+			sheet.SetCellPosition(ExcelColumns.B, 1).SetValue(20);
+
+			// Act - 設置公式
+			sheet.SetCellPosition(ExcelColumns.C, 1).SetFormulaValue("=A1+B1");
+			
+			// 讀取公式
+			var formula = sheet.GetCellFormula(ExcelColumns.C, 1);
+
+			// Assert
+			Assert.Equal("A1+B1", formula);
+		}
+
+		[Fact]
+		public void GetCellValue_WithObject_ShouldReturnCorrectType()
+		{
+			// Arrange
+			var workbook = new XSSFWorkbook();
+			var fluentWorkbook = new FluentWorkbook(workbook);
+			var sheet = fluentWorkbook.UseSheet("TestSheet");
+
+			sheet.SetCellPosition(ExcelColumns.A, 1).SetValue(123);
+			sheet.SetCellPosition(ExcelColumns.B, 1).SetValue("Text");
+			sheet.SetCellPosition(ExcelColumns.C, 1).SetValue(true);
+
+			// Act
+			var numValue = sheet.GetCellValue(ExcelColumns.A, 1);
+			var textValue = sheet.GetCellValue(ExcelColumns.B, 1);
+			var boolValue = sheet.GetCellValue(ExcelColumns.C, 1);
+
+			// Assert
+			Assert.IsType<double>(numValue);
+			Assert.IsType<string>(textValue);
+			Assert.IsType<bool>(boolValue);
+		}
 	}
 }

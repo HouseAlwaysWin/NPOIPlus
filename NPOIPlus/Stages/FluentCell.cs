@@ -88,6 +88,43 @@ namespace NPOIPlus
 			_cell.SetCellType(cellType);
 			return this;
 		}
+
+		/// <summary>
+		/// 獲取當前單元格的值
+		/// </summary>
+		/// <returns>單元格的值（根據類型返回 bool, DateTime, double, string 或 null）</returns>
+		public object GetValue()
+		{
+			return GetCellValue(_cell);
+		}
+
+		/// <summary>
+		/// 獲取當前單元格的值並轉換為指定類型
+		/// </summary>
+		/// <typeparam name="T">目標類型</typeparam>
+		/// <returns>轉換後的值</returns>
+		public T GetValue<T>()
+		{
+			return GetCellValue<T>(_cell);
+		}
+
+		/// <summary>
+		/// 獲取當前單元格的公式字符串（如果是公式單元格）
+		/// </summary>
+		/// <returns>公式字符串（不含 '=' 前綴），如果不是公式則返回 null</returns>
+		public string GetFormula()
+		{
+			return GetCellFormulaValue(_cell);
+		}
+
+		/// <summary>
+		/// 獲取當前單元格對象
+		/// </summary>
+		/// <returns>NPOI ICell 對象</returns>
+		public ICell GetCell()
+		{
+			return _cell;
+		}
 	}
 }
 

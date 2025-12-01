@@ -186,8 +186,141 @@ namespace NPOIPlus.Base
 			// NPOI SetCellFormula 需要純公式字串（不含 '='）
 			if (formula.StartsWith("=")) formula = formula.Substring(1);
 
-			cell.SetCellFormula(formula);
+		cell.SetCellFormula(formula);
+	}
+
+	/// <summary>
+	/// 獲取單元格的值，根據單元格類型返回對應的 C# 類型
+	/// </summary>
+	/// <param name="cell">要讀取的單元格</param>
+	/// <returns>單元格的值（bool, DateTime, double, string 或 null）</returns>
+	protected object GetCellValue(ICell cell)
+	{
+		if (cell == null)
+			return null;
+
+		switch (cell.CellType)
+		{
+			case CellType.Boolean:
+				return cell.BooleanCellValue;
+
+			case CellType.Numeric:
+				// 檢查是否為日期格式
+				if (DateUtil.IsCellDateFormatted(cell))
+				{
+					return cell.DateCellValue;
+				}
+				return cell.NumericCellValue;
+
+			case CellType.String:
+				return cell.StringCellValue;
+
+			case CellType.Formula:
+				// 對於公式，返回計算後的值
+				return GetCellFormulaResultValue(cell);
+
+			case CellType.Blank:
+				return null;
+
+			case CellType.Error:
+				return $"ERROR:{cell.ErrorCellValue}";
+
+			default:
+				return null;
 		}
+	}
+
+	/// <summary>
+	/// 獲取單元格的值並轉換為指定類型
+	/// </summary>
+	/// <typeparam name="T">目標類型</typeparam>
+	/// <param name="cell">要讀取的單元格</param>
+	/// <returns>轉換後的值</returns>
+	protected T GetCellValue<T>(ICell cell)
+	{
+		var value = GetCellValue(cell);
+		
+		if (value == null)
+			return default(T);
+
+		try
+		{
+			// 如果類型已經匹配，直接返回
+			if (value is T result)
+				return result;
+
+			// 嘗試轉換
+			return (T)Convert.ChangeType(value, typeof(T));
+		}
+		catch
+		{
+			return default(T);
+		}
+	}
+
+	/// <summary>
+	/// 獲取單元格的公式字符串
+	/// </summary>
+	/// <param name="cell">要讀取的單元格</param>
+	/// <returns>公式字符串（不含 '=' 前綴），如果不是公式單元格則返回 null</returns>
+	protected string GetCellFormulaValue(ICell cell)
+	{
+		if (cell == null)
+			return null;
+
+		if (cell.CellType == CellType.Formula)
+		{
+			return cell.CellFormula;
+		}
+
+		return null;
+	}
+
+	/// <summary>
+	/// 獲取公式單元格的計算結果值
+	/// </summary>
+	/// <param name="cell">公式單元格</param>
+	/// <returns>公式計算後的值</returns>
+	private object GetCellFormulaResultValue(ICell cell)
+	{
+		if (cell == null || cell.CellType != CellType.Formula)
+			return null;
+
+		try
+		{
+			switch (cell.CachedFormulaResultType)
+			{
+				case CellType.Boolean:
+					return cell.BooleanCellValue;
+
+				case CellType.Numeric:
+					if (DateUtil.IsCellDateFormatted(cell))
+					{
+						return cell.DateCellValue;
+					}
+					return cell.NumericCellValue;
+
+				case CellType.String:
+					return cell.StringCellValue;
+
+				case CellType.Blank:
+					return null;
+
+				case CellType.Error:
+					return $"ERROR:{cell.ErrorCellValue}";
+
+				default:
+					return null;
+			}
+		}
+		catch
+		{
+			// 如果無法獲取計算結果，返回 null
+			return null;
+		}
+	}
+	
+	
 	}
 }
 
