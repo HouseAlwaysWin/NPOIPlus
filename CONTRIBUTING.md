@@ -249,7 +249,7 @@ NPOIPlus/
 
 - GitHub Issues: [提出問題](../../issues)
 - GitHub Discussions: [參與討論](../../discussions)
-- Email: your-email@example.com
+- Email: martinwang7963@gmail.com
 
 ---
 
@@ -354,7 +354,7 @@ dotnet run
 
 - GitHub Issues: [Create Issue](../../issues)
 - GitHub Discussions: [Join Discussion](../../discussions)
-- Email: your-email@example.com
+- Email: martinwang7963@gmail.com
 
 ---
 

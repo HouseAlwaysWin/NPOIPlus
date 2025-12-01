@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          6.0.x
+          7.0.x
+          8.0.x
+    
+    - name: Display .NET info
+      run: dotnet --info
+    
+    - name: Restore dependencies
+      run: dotnet restore NPOIPlus/NPOIPlus.csproj
+    
+    - name: Build NPOIPlus
+      run: dotnet build NPOIPlus/NPOIPlus.csproj --configuration Release --no-restore
+    
+    - name: Build Console Example
+      run: dotnet build NPOIPlusConsoleExample/NPOIPlusConsoleExample.csproj --configuration Release --no-restore
+    
+    - name: Build Unit Tests
+      run: dotnet build NPOIPlusUnitTest/NPOIPlusUnitTest.csproj --configuration Release --no-restore
+    
+    - name: Run Unit Tests
+      run: dotnet test NPOIPlusUnitTest/NPOIPlusUnitTest.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+    
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Test Results
+        path: '**/test-results.trx'
+        reporter: dotnet-trx
+    
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          NPOIPlus/bin/Release/
+          NPOIPlusConsoleExample/bin/Release/
+

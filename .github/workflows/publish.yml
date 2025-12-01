@@ -1,0 +1,59 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Build and Publish
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore NPOIPlus/NPOIPlus.csproj
+    
+    - name: Build
+      run: dotnet build NPOIPlus/NPOIPlus.csproj --configuration Release --no-restore
+    
+    - name: Run Tests
+      run: dotnet test NPOIPlusUnitTest/NPOIPlusUnitTest.csproj --configuration Release --no-build --verbosity normal
+    
+    - name: Set Version (from release)
+      if: github.event_name == 'release'
+      run: |
+        $version = "${{ github.event.release.tag_name }}".TrimStart('v')
+        echo "VERSION=$version" >> $env:GITHUB_ENV
+    
+    - name: Set Version (manual)
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        echo "VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
+    
+    - name: Pack NuGet Package
+      run: dotnet pack NPOIPlus/NPOIPlus.csproj --configuration Release --no-build --output ./artifacts /p:PackageVersion=${{ env.VERSION }}
+    
+    - name: Upload Package Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: ./artifacts/*.nupkg
+    
+    - name: Push to NuGet
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+

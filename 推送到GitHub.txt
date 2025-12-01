@@ -1,0 +1,126 @@
+═══════════════════════════════════════════════════════
+        NPOIPlus - GitHub 推送指南
+═══════════════════════════════════════════════════════
+
+✅ 你的配置信息已设置完成：
+   GitHub 用户名: HouseAlwaysWin
+   邮箱: martinwang7963@gmail.com
+
+═══════════════════════════════════════════════════════
+第一步：在 GitHub 创建仓库（如果还没有）
+═══════════════════════════════════════════════════════
+
+1. 前往: https://github.com/new
+2. 仓库名称: NPOIPlus
+3. 描述: A fluent API wrapper for NPOI to simplify Excel operations in .NET
+4. 选择: Public 或 Private
+5. 不要勾选任何选项（README, .gitignore, License）
+6. 点击 "Create repository"
+
+═══════════════════════════════════════════════════════
+第二步：推送到 GitHub（简单方式）
+═══════════════════════════════════════════════════════
+
+在 PowerShell 中运行以下命令：
+
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+    .\push-to-github.ps1
+
+然后按照提示操作即可！
+
+═══════════════════════════════════════════════════════
+第二步：推送到 GitHub（手动方式）
+═══════════════════════════════════════════════════════
+
+在终端中依次执行：
+
+1. 初始化 Git 仓库：
+   git init
+
+2. 配置用户信息：
+   git config user.name "HouseAlwaysWin"
+   git config user.email "martinwang7963@gmail.com"
+
+3. 添加所有文件：
+   git add .
+
+4. 提交：
+   git commit -m "feat: initial commit with CI/CD setup"
+
+5. 添加远程仓库：
+   git remote add origin https://github.com/HouseAlwaysWin/NPOIPlus.git
+
+6. 推送：
+   git branch -M main
+   git push -u origin main
+
+═══════════════════════════════════════════════════════
+第三步：设置 NuGet API Key（重要！）
+═══════════════════════════════════════════════════════
+
+推送成功后，必须设置 NuGet API Key 才能自动发布：
+
+1. 获取 API Key：
+   前往: https://www.nuget.org/
+   登录 → Account Settings → API Keys → Create
+
+2. 在 GitHub 添加 Secret：
+   前往: https://github.com/HouseAlwaysWin/NPOIPlus/settings/secrets/actions
+   点击: New repository secret
+   名称: NUGET_API_KEY
+   值: 粘贴你的 NuGet API Key
+
+═══════════════════════════════════════════════════════
+验证推送成功
+═══════════════════════════════════════════════════════
+
+1. 查看仓库:
+   https://github.com/HouseAlwaysWin/NPOIPlus
+
+2. 查看 CI 状态:
+   https://github.com/HouseAlwaysWin/NPOIPlus/actions
+
+3. 确认所有检查通过（绿色勾）
+
+═══════════════════════════════════════════════════════
+可能遇到的问题
+═══════════════════════════════════════════════════════
+
+问题1: 推送要求密码
+解决: GitHub 不再支持密码，需要使用 Personal Access Token
+      前往: https://github.com/settings/tokens
+      创建 token 并在推送时作为密码使用
+
+问题2: 仓库不存在
+解决: 确保已在 GitHub 创建仓库
+
+问题3: CI 工作流失败
+解决: 查看 Actions 标签的详细日志
+      本地运行测试: .\build.ps1 -Task Test
+
+═══════════════════════════════════════════════════════
+推送后可做的事（可选）
+═══════════════════════════════════════════════════════
+
+□ 启用分支保护规则
+□ 添加仓库描述和标签
+□ 启用 GitHub Discussions
+□ 创建第一个 Release
+□ 在 README 中添加状态徽章
+
+详细说明请查看: GITHUB_PUSH_GUIDE.md
+
+═══════════════════════════════════════════════════════
+获取帮助
+═══════════════════════════════════════════════════════
+
+查看完整文档:
+- GITHUB_PUSH_GUIDE.md - 完整推送指南
+- CI_CD_SETUP.md - CI/CD 详细说明
+- BUILD_GUIDE.md - 构建指南
+
+═══════════════════════════════════════════════════════
+
+祝你推送顺利！🚀
+
+

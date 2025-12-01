@@ -176,6 +176,6 @@ Thanks to all contributors who helped build NPOIPlus!
 
 - Report bugs: [GitHub Issues](../../issues)
 - Ask questions: [GitHub Discussions](../../discussions)
-- Email: [your-email@example.com]
+- Email: [martinwang7963@gmail.com]
 
 
