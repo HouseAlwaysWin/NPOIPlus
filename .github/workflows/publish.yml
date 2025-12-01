@@ -113,6 +113,18 @@ jobs:
           Write-Host "Full push output:"
           Write-Host $fullOutput
           
+          # 檢查是否為保留的包名錯誤
+          if ($fullOutput -match "reserved" -or $fullOutput -match "reserved namespace" -or $fullOutput -match "reserved prefix") {
+            Write-Error "❌ Package ID '$packageName' has been RESERVED by another user/organization."
+            Write-Error "This means the package name prefix is protected and you need permission to use it."
+            Write-Host "`nSolutions:" -ForegroundColor Yellow
+            Write-Host "1. Request access from the owner of the reserved prefix" -ForegroundColor Cyan
+            Write-Host "   Visit: https://docs.microsoft.com/nuget/reference/id-prefix-reservation" -ForegroundColor Cyan
+            Write-Host "2. Use a different package name (e.g., HouseAlwaysWin.NPOIPlus)" -ForegroundColor Cyan
+            Write-Host "3. Contact NuGet support for assistance" -ForegroundColor Cyan
+            exit 1
+          }
+          
           # 檢查輸出中是否包含衝突信息
           if ($fullOutput -match "already exists" -or $fullOutput -match "Conflict" -or $fullOutput -match "409") {
             Write-Warning "Package $($file.Name) conflict detected. Checking if package exists..."
@@ -124,27 +136,26 @@ jobs:
               $response = Invoke-RestMethod -Uri $checkUrl -ErrorAction Stop
               Write-Host "✅ Package exists on NuGet.org with versions:" -ForegroundColor Green
               $response.versions | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
-              Write-Warning "Package already exists. If this is unexpected, there may be a caching issue."
+              Write-Host "Package already exists. Using --skip-duplicate to continue..." -ForegroundColor Yellow
+              
+              # 如果包確實存在，使用 --skip-duplicate 是合理的
+              $retryOutput = dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://www.nuget.org/api/v2/package --skip-duplicate 2>&1
+              $retryExitCode = $LASTEXITCODE
+              
+              if ($retryExitCode -eq 0) {
+                Write-Host "✅ Push succeeded (package already exists, skipped)" -ForegroundColor Green
+              } else {
+                Write-Error "Push failed even with --skip-duplicate. Exit code: $retryExitCode"
+                exit 1
+              }
             } catch {
               if ($_.Exception.Response.StatusCode -eq 404) {
-                Write-Warning "⚠️ Package does NOT exist on NuGet.org (404)."
-                Write-Warning "This suggests a false positive conflict, possibly due to:"
-                Write-Warning "  1. API Key permission issues"
-                Write-Warning "  2. NuGet.org service-side caching"
-                Write-Warning "  3. Temporary service issues"
-                Write-Host "`nTrying alternative: using --skip-duplicate flag..."
-                
-                # 嘗試使用 --skip-duplicate
-                $retryOutput = dotnet nuget push $file.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://www.nuget.org/api/v2/package --skip-duplicate 2>&1
-                $retryExitCode = $LASTEXITCODE
-                Write-Host "Retry output: $retryOutput"
-                
-                if ($retryExitCode -eq 0) {
-                  Write-Host "✅ Push succeeded with --skip-duplicate" -ForegroundColor Green
-                } else {
-                  Write-Error "Push failed even with --skip-duplicate. Exit code: $retryExitCode"
-                  exit 1
-                }
+                Write-Error "⚠️ Package does NOT exist on NuGet.org (404), but push returned Conflict."
+                Write-Error "This indicates the package name may be RESERVED."
+                Write-Host "`nPlease check:" -ForegroundColor Yellow
+                Write-Host "1. Visit: https://docs.microsoft.com/nuget/reference/id-prefix-reservation" -ForegroundColor Cyan
+                Write-Host "2. Consider using a different package name" -ForegroundColor Cyan
+                exit 1
               } else {
                 Write-Warning "Could not verify package existence: $_"
                 Write-Error "Push failed with exit code $pushExitCode"
