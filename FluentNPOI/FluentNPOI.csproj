@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="NPOI" Version="2.7.1" />
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
   </ItemGroup>
 
   <!-- Include README.md in NuGet package -->
