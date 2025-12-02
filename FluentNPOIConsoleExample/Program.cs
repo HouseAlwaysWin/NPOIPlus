@@ -329,22 +329,47 @@ namespace FluentNPOIConsoleExample
         static void CreateCellStyleRangeExample(FluentWorkbook fluent)
         {
             fluent.UseSheet("CellStyleRangeDemo")
-                .SetCellStyleRange("HighlightYellow",
-                    ExcelColumns.A, ExcelColumns.D, 1, 3)
-                .SetCellStyleRange(new CellStyleConfig("HighlightRed",
+                .SetCellStyleRange(new CellStyleConfig("HighlightRed", style =>
+                {
+                    style.FillPattern = FillPattern.SolidForeground;
+                    style.SetCellFillForegroundColor(IndexedColors.Red);
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                }), ExcelColumns.A, ExcelColumns.D, 1, 3)
+                .SetCellStyleRange(new CellStyleConfig("HighlightOrange",
                     style =>
                     {
                         style.FillPattern = FillPattern.SolidForeground;
-                        style.SetCellFillForegroundColor(IndexedColors.Red);
+                        style.SetCellFillForegroundColor(IndexedColors.Orange);
                         style.SetBorderAllStyle(BorderStyle.Thin);
                     }), ExcelColumns.A, ExcelColumns.D, 4, 6)
+                .SetCellStyleRange(new CellStyleConfig("HighlightYellow",
+                    style =>
+                    {
+                        style.FillPattern = FillPattern.SolidForeground;
+                        style.SetCellFillForegroundColor(IndexedColors.Yellow);
+                        style.SetBorderAllStyle(BorderStyle.Thin);
+                    }), ExcelColumns.A, ExcelColumns.D, 7, 9)
                 .SetCellStyleRange(new CellStyleConfig("HighlightGreen",
                     style =>
                     {
                         style.FillPattern = FillPattern.SolidForeground;
                         style.SetCellFillForegroundColor(IndexedColors.Green);
                         style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelColumns.A, ExcelColumns.D, 7, 9);
+                    }), ExcelColumns.A, ExcelColumns.D, 10, 12)
+                .SetCellStyleRange(new CellStyleConfig("HighlightBlue",
+                    style =>
+                    {
+                        style.FillPattern = FillPattern.SolidForeground;
+                        style.SetCellFillForegroundColor(IndexedColors.Blue);
+                        style.SetBorderAllStyle(BorderStyle.Thin);
+                    }), ExcelColumns.A, ExcelColumns.D, 13, 15)
+                .SetCellStyleRange(new CellStyleConfig("HighlightPurple",
+                    style =>
+                    {
+                        style.FillPattern = FillPattern.SolidForeground;
+                        style.SetCellFillForegroundColor("#FF00FF");
+                        style.SetBorderAllStyle(BorderStyle.Thin);
+                    }), ExcelColumns.A, ExcelColumns.D, 16, 18);
 
 
         }
