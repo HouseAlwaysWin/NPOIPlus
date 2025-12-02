@@ -14,8 +14,9 @@ namespace FluentNPOI.Base
 	{
 		public FluentSheetBase(
 			IWorkbook workbook,
+			ISheet sheet,
 			Dictionary<string, ICellStyle> cellStylesCached)
-			: base(workbook, cellStylesCached)
+			: base(workbook, sheet, cellStylesCached)
 		{
 		}
 

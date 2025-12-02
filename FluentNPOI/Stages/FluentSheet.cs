@@ -7,12 +7,9 @@ namespace FluentNPOI
 {
 	public class FluentSheet : FluentSheetBase
 	{
-		private ISheet _sheet;
-
 		public FluentSheet(IWorkbook workbook, ISheet sheet, Dictionary<string, ICellStyle> cellStylesCached)
-			: base(workbook, cellStylesCached)
+			: base(workbook, sheet, cellStylesCached)
 		{
-			_sheet = sheet;
 		}
 
 		public ISheet GetSheet()

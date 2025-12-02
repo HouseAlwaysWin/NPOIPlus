@@ -9,7 +9,6 @@ namespace FluentNPOI.Base
 	{
 		protected List<TableCellSet> _cellBodySets;
 		protected List<TableCellSet> _cellTitleSets;
-		protected ISheet _sheet;
 		protected IEnumerable<T> _table;
 		protected ExcelColumns _startCol;
 		protected int _startRow;
@@ -20,9 +19,8 @@ namespace FluentNPOI.Base
 			ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
 			List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets,
 			TableCellSet currentCellSet)
-			: base(workbook, cellStylesCached)
+			: base(workbook, sheet, cellStylesCached)
 		{
-			_sheet = sheet;
 			_table = table;
 			_startCol = startCol;
 			_startRow = startRow;

@@ -9,7 +9,6 @@ namespace FluentNPOI
 {
 	public class FluentTable<T> : FluentSheetBase
 	{
-		private ISheet _sheet;
 		private IEnumerable<T> _table;
 		private ExcelColumns _startCol;
 		private int _startRow;
@@ -19,9 +18,8 @@ namespace FluentNPOI
 		public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
 			ExcelColumns startCol, int startRow,
 			Dictionary<string, ICellStyle> cellStylesCached, List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
-			: base(workbook, cellStylesCached)
+			: base(workbook, sheet, cellStylesCached)
 		{
-			_sheet = sheet;
 			_table = table;
 			_startCol = NormalizeStartCol(startCol);
 			_startRow = NormalizeStartRow(startRow);
@@ -29,93 +27,93 @@ namespace FluentNPOI
 			_cellBodySets = cellBodySets;
 		}
 
-	private T GetItemAt(int index)
-	{
-		var items = _table as IList<T> ?? _table?.ToList() ?? new List<T>();
-		if (index < 0 || index >= items.Count) return default;
-		return items[index];
-	}
-
-	private void SetCellAction(List<TableCellSet> cellSets, IRow rowObj, int colIndex, int targetRowIndex, object item)
-	{
-		foreach (var cellset in cellSets)
+		private T GetItemAt(int index)
 		{
-			var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
-
-			// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
-			Func<TableCellParams, object> setValueAction = cellset.SetValueAction;
-			Func<TableCellParams, object> setFormulaValueAction = cellset.SetFormulaValueAction;
-
-			TableCellParams cellParams = new TableCellParams
-			{
-				ColNum = (ExcelColumns)colIndex,
-				RowNum = targetRowIndex,
-				RowItem = item
-			};
-			object value = cellset.CellValue ?? GetTableCellValue(cellset.CellName, item);
-			cellParams.CellValue = value;
-
-			// 準備泛型參數（供泛型委派使用）
-			var cellParamsT = new TableCellParams<T>
-			{
-				ColNum = (ExcelColumns)colIndex,
-				RowNum = targetRowIndex,
-				RowItem = item is T tItem ? tItem : default,
-				CellValue = value
-			};
-
-		TableCellStyleParams cellStyleParams =
-		new TableCellStyleParams
-		{
-			Workbook = _workbook,
-			ColNum = (ExcelColumns)colIndex,
-			RowNum = targetRowIndex,
-			RowItem = item
-		};
-		SetCellStyle(cell, cellset, cellStyleParams);
-
-			if (cellset.CellType == CellType.Formula)
-			{
-				if (cellset.SetFormulaValueActionGeneric != null)
-				{
-					if (cellset.SetFormulaValueActionGeneric is Func<TableCellParams<T>, object> gFormula)
-					{
-						value = gFormula(cellParamsT);
-					}
-					else
-					{
-						value = cellset.SetFormulaValueActionGeneric.DynamicInvoke(cellParamsT);
-					}
-				}
-				else if (setFormulaValueAction != null)
-				{
-					value = setFormulaValueAction(cellParams);
-				}
-				SetFormulaValue(cell, value);
-			}
-			else
-			{
-				if (cellset.SetValueActionGeneric != null)
-				{
-					if (cellset.SetValueActionGeneric is Func<TableCellParams<T>, object> gValue)
-					{
-						value = gValue(cellParamsT);
-					}
-					else
-					{
-						value = cellset.SetValueActionGeneric.DynamicInvoke(cellParamsT);
-					}
-				}
-				else if (setValueAction != null)
-				{
-					value = setValueAction(cellParams);
-				}
-				SetCellValue(cell, value, cellset.CellType);
-			}
-
-			colIndex++;
+			var items = _table as IList<T> ?? _table?.ToList() ?? new List<T>();
+			if (index < 0 || index >= items.Count) return default;
+			return items[index];
 		}
-	}
+
+		private void SetCellAction(List<TableCellSet> cellSets, IRow rowObj, int colIndex, int targetRowIndex, object item)
+		{
+			foreach (var cellset in cellSets)
+			{
+				var cell = rowObj.GetCell(colIndex) ?? rowObj.CreateCell(colIndex);
+
+				// 優先使用 TableCellNameMap 中的 Value，如果沒有則從 item 中獲取
+				Func<TableCellParams, object> setValueAction = cellset.SetValueAction;
+				Func<TableCellParams, object> setFormulaValueAction = cellset.SetFormulaValueAction;
+
+				TableCellParams cellParams = new TableCellParams
+				{
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex,
+					RowItem = item
+				};
+				object value = cellset.CellValue ?? GetTableCellValue(cellset.CellName, item);
+				cellParams.CellValue = value;
+
+				// 準備泛型參數（供泛型委派使用）
+				var cellParamsT = new TableCellParams<T>
+				{
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex,
+					RowItem = item is T tItem ? tItem : default,
+					CellValue = value
+				};
+
+				TableCellStyleParams cellStyleParams =
+				new TableCellStyleParams
+				{
+					Workbook = _workbook,
+					ColNum = (ExcelColumns)colIndex,
+					RowNum = targetRowIndex,
+					RowItem = item
+				};
+				SetCellStyle(cell, cellset, cellStyleParams);
+
+				if (cellset.CellType == CellType.Formula)
+				{
+					if (cellset.SetFormulaValueActionGeneric != null)
+					{
+						if (cellset.SetFormulaValueActionGeneric is Func<TableCellParams<T>, object> gFormula)
+						{
+							value = gFormula(cellParamsT);
+						}
+						else
+						{
+							value = cellset.SetFormulaValueActionGeneric.DynamicInvoke(cellParamsT);
+						}
+					}
+					else if (setFormulaValueAction != null)
+					{
+						value = setFormulaValueAction(cellParams);
+					}
+					SetFormulaValue(cell, value);
+				}
+				else
+				{
+					if (cellset.SetValueActionGeneric != null)
+					{
+						if (cellset.SetValueActionGeneric is Func<TableCellParams<T>, object> gValue)
+						{
+							value = gValue(cellParamsT);
+						}
+						else
+						{
+							value = cellset.SetValueActionGeneric.DynamicInvoke(cellParamsT);
+						}
+					}
+					else if (setValueAction != null)
+					{
+						value = setValueAction(cellParams);
+					}
+					SetCellValue(cell, value, cellset.CellType);
+				}
+
+				colIndex++;
+			}
+		}
 
 		private FluentTable<T> SetRow(int rowOffset = 0)
 		{

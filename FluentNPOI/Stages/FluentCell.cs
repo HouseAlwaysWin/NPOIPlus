@@ -9,13 +9,11 @@ namespace FluentNPOI
 {
 	public class FluentCell : FluentCellBase
 	{
-		private ISheet _sheet;
 		private ICell _cell;
 
 		public FluentCell(IWorkbook workbook, ISheet sheet, ICell cell, Dictionary<string, ICellStyle> cellStylesCached = null)
-			: base(workbook, cellStylesCached ?? new Dictionary<string, ICellStyle>())
+			: base(workbook, sheet, cellStylesCached ?? new Dictionary<string, ICellStyle>())
 		{
-			_sheet = sheet;
 			_cell = cell;
 		}
 
