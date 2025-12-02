@@ -1,5 +1,6 @@
 # FluentNPOI
 
+[![CI](https://github.com/HouseAlwaysWin/NPOIPlus/workflows/CI/badge.svg)](https://github.com/HouseAlwaysWin/NPOIPlus/actions/workflows/ci.yml)
 [![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-blue.svg)](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -71,19 +72,19 @@ var data = new List<Student>
 
 fluent.UseSheet("Students")
     .SetTable(data, ExcelColumns.A, 1)
-    
+
     .BeginTitleSet("學號").SetCellStyle("HeaderStyle")
     .BeginBodySet("ID").SetCellType(CellType.Numeric).End()
-    
+
     .BeginTitleSet("姓名").SetCellStyle("HeaderStyle")
     .BeginBodySet("Name").End()
-    
+
     .BeginTitleSet("分數").SetCellStyle("HeaderStyle")
     .BeginBodySet("Score").SetCellType(CellType.Numeric).End()
-    
+
     .BeginTitleSet("狀態").SetCellStyle("HeaderStyle")
     .BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
-    
+
     .BuildRows();
 ```
 
@@ -141,7 +142,7 @@ fluent.SetupCellStyle("HeaderBlue", (workbook, style) =>
 .SetCellStyle((styleParams) =>
 {
     var item = styleParams.GetRowItem<Student>();
-    
+
     if (item.Score >= 90)
     {
         return new CellStyleConfig("HighScore", style =>
@@ -264,9 +265,9 @@ style.SetCellFillForegroundColor(IndexedColors.Red); // 預設顏色
 **字型設置**
 
 ```csharp
-style.SetFontInfo(workbook, 
-    fontFamily: "Arial", 
-    fontHeight: 12, 
+style.SetFontInfo(workbook,
+    fontFamily: "Arial",
+    fontHeight: 12,
     isBold: true,
     color: IndexedColors.Black);
 ```
@@ -303,13 +304,13 @@ style.SetDataFormat(workbook, "#,##0.00"); // 數字
 ```csharp
 fluent.UseSheet("Report")
     .SetTable(salesData, ExcelColumns.A, 1)
-    
+
     .BeginTitleSet("銷售額")
     .BeginBodySet("Amount")
     .SetCellStyle((styleParams) =>
     {
         var sale = styleParams.GetRowItem<Sale>();
-        
+
         if (sale.Amount > 10000)
             return new("HighSales", s => s.SetCellFillForegroundColor("#90EE90"));
         else if (sale.Amount > 5000)
@@ -318,7 +319,7 @@ fluent.UseSheet("Report")
             return new("LowSales", s => s.SetCellFillForegroundColor("#FFB6C1"));
     })
     .End()
-    
+
     .BuildRows();
 ```
 
@@ -327,11 +328,11 @@ fluent.UseSheet("Report")
 ```csharp
 fluent.UseSheet("Sheet2")
     .SetTable(data, ExcelColumns.A, 1)
-    
+
     // 從 Sheet1 的 A1 複製樣式
     .BeginTitleSet("標題").CopyStyleFromCell(ExcelColumns.A, 1)
     .BeginBodySet("Name").End()
-    
+
     .BuildRows();
 ```
 
@@ -362,64 +363,64 @@ fluent.SaveToPath("multi-sheet.xlsx");
 
 #### FluentWorkbook
 
-| 方法 | 說明 |
-|------|------|
-| `UseSheet(string name)` | 使用指定名稱的工作表 |
+| 方法                                            | 說明                           |
+| ----------------------------------------------- | ------------------------------ |
+| `UseSheet(string name)`                         | 使用指定名稱的工作表           |
 | `UseSheet(string name, bool createIfNotExists)` | 使用工作表，不存在時可選擇創建 |
-| `UseSheetAt(int index)` | 使用指定索引的工作表 |
-| `SetupGlobalCachedCellStyles(Action)` | 設置全局預設樣式 |
-| `SetupCellStyle(string key, Action)` | 註冊命名樣式 |
-| `GetWorkbook()` | 取得底層 NPOI IWorkbook 物件 |
-| `ToStream()` | 輸出為記憶體串流 |
-| `SaveToPath(string path)` | 儲存到檔案路徑 |
+| `UseSheetAt(int index)`                         | 使用指定索引的工作表           |
+| `SetupGlobalCachedCellStyles(Action)`           | 設置全局預設樣式               |
+| `SetupCellStyle(string key, Action)`            | 註冊命名樣式                   |
+| `GetWorkbook()`                                 | 取得底層 NPOI IWorkbook 物件   |
+| `ToStream()`                                    | 輸出為記憶體串流               |
+| `SaveToPath(string path)`                       | 儲存到檔案路徑                 |
 
 #### FluentSheet
 
-| 方法 | 說明 |
-|------|------|
-| `SetCellPosition(ExcelColumns col, int row)` | 設置當前操作的單元格位置 |
-| `GetCellPosition(ExcelColumns col, int row)` | 取得指定位置的 FluentCell 物件 |
-| `GetCellValue<T>(ExcelColumns col, int row)` | 讀取指定位置的值 |
-| `GetCellFormula(ExcelColumns col, int row)` | 讀取指定位置的公式 |
-| `SetTable<T>(IEnumerable<T>, ExcelColumns, int)` | 綁定資料表 |
-| `SetColumnWidth(ExcelColumns col, int width)` | 設置欄寬 |
-| `SetExcelCellMerge(...)` | 合併儲存格 |
-| `GetSheet()` | 取得底層 NPOI ISheet 物件 |
+| 方法                                             | 說明                           |
+| ------------------------------------------------ | ------------------------------ |
+| `SetCellPosition(ExcelColumns col, int row)`     | 設置當前操作的單元格位置       |
+| `GetCellPosition(ExcelColumns col, int row)`     | 取得指定位置的 FluentCell 物件 |
+| `GetCellValue<T>(ExcelColumns col, int row)`     | 讀取指定位置的值               |
+| `GetCellFormula(ExcelColumns col, int row)`      | 讀取指定位置的公式             |
+| `SetTable<T>(IEnumerable<T>, ExcelColumns, int)` | 綁定資料表                     |
+| `SetColumnWidth(ExcelColumns col, int width)`    | 設置欄寬                       |
+| `SetExcelCellMerge(...)`                         | 合併儲存格                     |
+| `GetSheet()`                                     | 取得底層 NPOI ISheet 物件      |
 
 #### FluentCell
 
-| 方法 | 說明 |
-|------|------|
-| `SetValue<T>(T value)` | 設置單元格值 |
-| `SetFormulaValue(object value)` | 設置公式 |
-| `SetCellStyle(string key)` | 套用命名樣式 |
-| `SetCellStyle(Func<...>)` | 套用動態樣式 |
-| `SetCellType(CellType type)` | 設置單元格類型 |
-| `GetValue()` | 讀取單元格值（返回 object） |
-| `GetValue<T>()` | 讀取單元格值（轉換為指定類型） |
-| `GetFormula()` | 讀取公式字串 |
-| `GetCell()` | 取得底層 NPOI ICell 物件 |
+| 方法                            | 說明                           |
+| ------------------------------- | ------------------------------ |
+| `SetValue<T>(T value)`          | 設置單元格值                   |
+| `SetFormulaValue(object value)` | 設置公式                       |
+| `SetCellStyle(string key)`      | 套用命名樣式                   |
+| `SetCellStyle(Func<...>)`       | 套用動態樣式                   |
+| `SetCellType(CellType type)`    | 設置單元格類型                 |
+| `GetValue()`                    | 讀取單元格值（返回 object）    |
+| `GetValue<T>()`                 | 讀取單元格值（轉換為指定類型） |
+| `GetFormula()`                  | 讀取公式字串                   |
+| `GetCell()`                     | 取得底層 NPOI ICell 物件       |
 
 #### FluentTable
 
-| 方法 | 說明 |
-|------|------|
-| `BeginTitleSet(string title)` | 開始設置表頭 |
-| `BeginBodySet(string propertyName)` | 開始設置資料欄位 |
-| `BuildRows()` | 執行資料綁定並生成列 |
+| 方法                                | 說明                 |
+| ----------------------------------- | -------------------- |
+| `BeginTitleSet(string title)`       | 開始設置表頭         |
+| `BeginBodySet(string propertyName)` | 開始設置資料欄位     |
+| `BuildRows()`                       | 執行資料綁定並生成列 |
 
 #### FluentTableHeader / FluentTableCell
 
-| 方法 | 說明 |
-|------|------|
-| `SetValue(object value)` | 設置固定值 |
-| `SetValue(Func<...>)` | 設置動態值 |
-| `SetFormulaValue(...)` | 設置公式 |
-| `SetCellStyle(string key)` | 套用命名樣式 |
-| `SetCellStyle(Func<...>)` | 套用動態樣式 |
-| `SetCellType(CellType type)` | 設置單元格類型 |
-| `CopyStyleFromCell(ExcelColumns col, int row)` | 從其他單元格複製樣式 |
-| `End()` | 結束當前設置並返回 FluentTable |
+| 方法                                           | 說明                           |
+| ---------------------------------------------- | ------------------------------ |
+| `SetValue(object value)`                       | 設置固定值                     |
+| `SetValue(Func<...>)`                          | 設置動態值                     |
+| `SetFormulaValue(...)`                         | 設置公式                       |
+| `SetCellStyle(string key)`                     | 套用命名樣式                   |
+| `SetCellStyle(Func<...>)`                      | 套用動態樣式                   |
+| `SetCellType(CellType type)`                   | 設置單元格類型                 |
+| `CopyStyleFromCell(ExcelColumns col, int row)` | 從其他單元格複製樣式           |
+| `End()`                                        | 結束當前設置並返回 FluentTable |
 
 ### 🔧 樣式緩存機制
 
@@ -456,6 +457,7 @@ FluentNPOI 實現了智能樣式緩存機制，避免 Excel 檔案樣式數量�
 ### 📝 範例專案
 
 完整範例請參考：
+
 - [FluentNPOIConsoleExample](NPOIPlusConsoleExample/Program.cs) - 控制台範例
 - [FluentNPOIUnitTest](NPOIPlusUnitTest/UnitTest1.cs) - 單元測試範例
 
@@ -531,19 +533,19 @@ var data = new List<Student>
 
 fluent.UseSheet("Students")
     .SetTable(data, ExcelColumns.A, 1)
-    
+
     .BeginTitleSet("ID").SetCellStyle("HeaderStyle")
     .BeginBodySet("ID").SetCellType(CellType.Numeric).End()
-    
+
     .BeginTitleSet("Name").SetCellStyle("HeaderStyle")
     .BeginBodySet("Name").End()
-    
+
     .BeginTitleSet("Score").SetCellStyle("HeaderStyle")
     .BeginBodySet("Score").SetCellType(CellType.Numeric).End()
-    
+
     .BeginTitleSet("Status").SetCellStyle("HeaderStyle")
     .BeginBodySet("IsActive").SetCellType(CellType.Boolean).End()
-    
+
     .BuildRows();
 ```
 
@@ -591,7 +593,7 @@ fluent.SetupCellStyle("HeaderBlue", (workbook, style) =>
 .SetCellStyle((styleParams) =>
 {
     var item = styleParams.GetRowItem<Student>();
-    
+
     if (item.Score >= 90)
     {
         return new CellStyleConfig("HighScore", style =>
@@ -658,5 +660,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [NPOI](https://github.com/dotnetcore/NPOI) - The underlying library
 - [Issues](../../issues) - Report bugs or request features
 - [Examples](NPOIPlusConsoleExample/Program.cs) - More code examples
-
-
