@@ -21,14 +21,14 @@ namespace FluentNPOI.Base
             _sheet = sheet;
         }
 
-        protected ExcelColumns NormalizeStartCol(ExcelColumns col)
+        protected ExcelColumns NormalizeCol(ExcelColumns col)
         {
             int idx = (int)col;
             if (idx < 0) idx = 0;
             return (ExcelColumns)idx;
         }
 
-        protected int NormalizeStartRow(int row)
+        protected int NormalizeRow(int row)
         {
             // 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
             if (row < 1) return 0;
@@ -335,19 +335,21 @@ namespace FluentNPOI.Base
         {
             int startColIndex = (int)startCol;
             int endColIndex = (int)endCol;
-            int startRowIndex = startRow < 1 ? 1 : startRow;
-            int endRowIndex = endRow < 1 ? 1 : endRow;
+            int startRowIndex = NormalizeRow(startRow);
+            int endRowIndex = NormalizeRow(endRow);
 
-
-            IRow row = _sheet.GetRow(startRow) ?? _sheet.CreateRow(startRow);
-            if (row != null)
+            for (int rowIndex = startRowIndex; rowIndex <= endRowIndex; rowIndex++)
             {
-                for (int i = startRow; i < endRow; i++)
+                IRow row = _sheet.GetRow(rowIndex) ?? _sheet.CreateRow(rowIndex);
+                if (row != null)
                 {
-                    ICell cell = row.GetCell(i) ?? row.CreateCell(i);
-                    ApplyCellStyleFromConfig(cell, cellStyleConfig);
-                }
+                    for (int colIndex = startColIndex; colIndex < endColIndex; colIndex++)
+                    {
+                        ICell cell = row.GetCell(colIndex) ?? row.CreateCell(colIndex);
+                        ApplyCellStyleFromConfig(cell, cellStyleConfig);
+                    }
 
+                }
             }
         }
     }
