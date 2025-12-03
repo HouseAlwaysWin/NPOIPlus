@@ -7,33 +7,15 @@ namespace FluentNPOI.Base
 {
     public abstract class FluentCellBase : FluentWorkbookBase
     {
-        protected Dictionary<string, ICellStyle> _cellStylesCached;
         protected ISheet _sheet;
 
-        protected FluentCellBase()
-        {
-        }
-
         protected FluentCellBase(IWorkbook workbook, ISheet sheet, Dictionary<string, ICellStyle> cellStylesCached)
-            : base(workbook)
+            : base(workbook, cellStylesCached)
         {
-            _cellStylesCached = cellStylesCached;
             _sheet = sheet;
         }
 
-        protected ExcelColumns NormalizeCol(ExcelColumns col)
-        {
-            int idx = (int)col;
-            if (idx < 0) idx = 0;
-            return (ExcelColumns)idx;
-        }
 
-        protected int NormalizeRow(int row)
-        {
-            // 將使用者常見的 1-based 列號轉為 0-based，並確保不為負數
-            if (row < 1) return 0;
-            return row - 1;
-        }
 
         protected void SetCellStyle(ICell cell, TableCellSet cellNameMap, TableCellStyleParams cellStyleParams)
         {
