@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-12-04
+
+### Added
+- ✨ **自動判斷最後一行功能**：`GetTable<T>` 方法新增重載，可自動檢測表格的最後一行，無需手動指定結束行
+  - 新增 `GetTable<T>(ExcelColumns startCol, int startRow)` 方法
+  - 自動從最後一行向上查找，找到第一個有數據的行
+  - 智能處理空行，自動跳過空白單元格
+  - 完全向後兼容，原有的 `GetTable<T>(ExcelColumns startCol, int startRow, int endRow)` 方法仍然可用
+
+### Changed
+- 📚 **文檔更新**：README.md 英文版已與中文版完全同步
+  - 補充了所有缺失的功能說明和範例
+  - 包含完整的 API 參考文檔
+  - 添加了進階範例和最佳實踐
+
+### Testing
+- ✅ 新增 9 個單元測試用例，全面測試自動判斷最後一行功能
+  - 基本功能測試
+  - 與手動指定結束行的對比測試
+  - 空行處理測試
+  - 中間空行處理測試
+  - 單行數據測試
+  - 空工作表測試
+  - 不同數據類型測試
+  - 大數據集測試（100行）
+
+### Examples
+- 📝 更新了控制台範例，展示自動判斷最後一行的使用方法
+
 ## [Unreleased]
 
 ### Added
