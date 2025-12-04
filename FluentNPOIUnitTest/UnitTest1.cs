@@ -47,7 +47,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             fluentWorkbook.UseSheet("Sheet1")
-                .SetCellPosition(ExcelColumns.A, 1)
+                .SetCellPosition(ExcelCol.A, 1)
                 .SetValue("Hello World");
 
             // Assert
@@ -66,7 +66,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             fluentWorkbook.UseSheet("Sheet1")
-                .SetColumnWidth(ExcelColumns.A, 30);
+                .SetColumnWidth(ExcelCol.A, 30);
 
             // Assert
             var sheet = workbook.GetSheet("Sheet1");
@@ -83,7 +83,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             fluentWorkbook.UseSheet("Sheet1")
-                .SetCellPosition(ExcelColumns.A, 1)
+                .SetCellPosition(ExcelCol.A, 1)
                 .SetValue(123);
 
             // Assert
@@ -117,7 +117,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("編號")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("姓名")
@@ -147,7 +147,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("姓名")
                 .BeginBodySet("Name").End()
                 .BuildRows();
@@ -216,7 +216,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("狀態")
                 .BeginBodySet("IsActive")
                 .SetCellStyle((styleParams) =>
@@ -264,7 +264,7 @@ namespace NPOIPlusUnitTest
                     style.FillForegroundColor = IndexedColors.Blue.Index;
                 })
                 .UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").SetCellStyle("FixedStyle").End()
                 .BuildRows();
@@ -295,7 +295,7 @@ namespace NPOIPlusUnitTest
 
             // Act - 使用 1-based 行號
             fluentWorkbook.UseSheet("Sheet1")
-                .SetCellPosition(ExcelColumns.A, 1)
+                .SetCellPosition(ExcelCol.A, 1)
                 .SetValue("Row 1");
 
             // Assert
@@ -314,7 +314,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             fluentWorkbook.UseSheet("Sheet1")
-                .SetCellPosition(ExcelColumns.A, -1)
+                .SetCellPosition(ExcelCol.A, -1)
                 .SetValue("Test");
 
             // Assert
@@ -338,30 +338,30 @@ namespace NPOIPlusUnitTest
             var sheet = fluentWorkbook.UseSheet("TestSheet");
 
             // 設置不同類型的值
-            sheet.SetCellPosition(ExcelColumns.A, 1).SetValue("Hello");
-            sheet.SetCellPosition(ExcelColumns.B, 1).SetValue(123);
-            sheet.SetCellPosition(ExcelColumns.C, 1).SetValue(45.67);
-            sheet.SetCellPosition(ExcelColumns.D, 1).SetValue(true);
+            sheet.SetCellPosition(ExcelCol.A, 1).SetValue("Hello");
+            sheet.SetCellPosition(ExcelCol.B, 1).SetValue(123);
+            sheet.SetCellPosition(ExcelCol.C, 1).SetValue(45.67);
+            sheet.SetCellPosition(ExcelCol.D, 1).SetValue(true);
 
             // 設置日期值並套用日期格式
-            sheet.SetCellPosition(ExcelColumns.E, 1)
+            sheet.SetCellPosition(ExcelCol.E, 1)
                 .SetValue(new DateTime(2024, 1, 15))
                 .SetCellStyle("DateFormat");
 
             // Act & Assert
-            var stringValue = sheet.GetCellValue<string>(ExcelColumns.A, 1);
+            var stringValue = sheet.GetCellValue<string>(ExcelCol.A, 1);
             Assert.Equal("Hello", stringValue);
 
-            var intValue = sheet.GetCellValue<int>(ExcelColumns.B, 1);
+            var intValue = sheet.GetCellValue<int>(ExcelCol.B, 1);
             Assert.Equal(123, intValue);
 
-            var doubleValue = sheet.GetCellValue<double>(ExcelColumns.C, 1);
+            var doubleValue = sheet.GetCellValue<double>(ExcelCol.C, 1);
             Assert.Equal(45.67, doubleValue, 2);
 
-            var boolValue = sheet.GetCellValue<bool>(ExcelColumns.D, 1);
+            var boolValue = sheet.GetCellValue<bool>(ExcelCol.D, 1);
             Assert.True(boolValue);
 
-            var dateValue = sheet.GetCellValue<DateTime>(ExcelColumns.E, 1);
+            var dateValue = sheet.GetCellValue<DateTime>(ExcelCol.E, 1);
             Assert.Equal(new DateTime(2024, 1, 15), dateValue);
         }
 
@@ -374,7 +374,7 @@ namespace NPOIPlusUnitTest
             var sheet = fluentWorkbook.UseSheet("TestSheet");
 
             // Act
-            var value = sheet.GetCellValue<string>(ExcelColumns.Z, 100);
+            var value = sheet.GetCellValue<string>(ExcelCol.Z, 100);
 
             // Assert
             Assert.Null(value);
@@ -389,8 +389,8 @@ namespace NPOIPlusUnitTest
             var sheet = fluentWorkbook.UseSheet("TestSheet");
 
             // Act
-            sheet.SetCellPosition(ExcelColumns.A, 1).SetValue("Test Value");
-            var cell = sheet.GetCellPosition(ExcelColumns.A, 1);
+            sheet.SetCellPosition(ExcelCol.A, 1).SetValue("Test Value");
+            var cell = sheet.GetCellPosition(ExcelCol.A, 1);
             var value = cell.GetValue<string>();
 
             // Assert
@@ -406,14 +406,14 @@ namespace NPOIPlusUnitTest
             var sheet = fluentWorkbook.UseSheet("TestSheet");
 
             // 設置一些數值
-            sheet.SetCellPosition(ExcelColumns.A, 1).SetValue(10);
-            sheet.SetCellPosition(ExcelColumns.B, 1).SetValue(20);
+            sheet.SetCellPosition(ExcelCol.A, 1).SetValue(10);
+            sheet.SetCellPosition(ExcelCol.B, 1).SetValue(20);
 
             // Act - 設置公式
-            sheet.SetCellPosition(ExcelColumns.C, 1).SetFormulaValue("=A1+B1");
+            sheet.SetCellPosition(ExcelCol.C, 1).SetFormulaValue("=A1+B1");
 
             // 讀取公式
-            var formula = sheet.GetCellFormula(ExcelColumns.C, 1);
+            var formula = sheet.GetCellFormula(ExcelCol.C, 1);
 
             // Assert
             Assert.Equal("A1+B1", formula);
@@ -427,14 +427,14 @@ namespace NPOIPlusUnitTest
             var fluentWorkbook = new FluentWorkbook(workbook);
             var sheet = fluentWorkbook.UseSheet("TestSheet");
 
-            sheet.SetCellPosition(ExcelColumns.A, 1).SetValue(123);
-            sheet.SetCellPosition(ExcelColumns.B, 1).SetValue("Text");
-            sheet.SetCellPosition(ExcelColumns.C, 1).SetValue(true);
+            sheet.SetCellPosition(ExcelCol.A, 1).SetValue(123);
+            sheet.SetCellPosition(ExcelCol.B, 1).SetValue("Text");
+            sheet.SetCellPosition(ExcelCol.C, 1).SetValue(true);
 
             // Act
-            var numValue = sheet.GetCellValue(ExcelColumns.A, 1);
-            var textValue = sheet.GetCellValue(ExcelColumns.B, 1);
-            var boolValue = sheet.GetCellValue(ExcelColumns.C, 1);
+            var numValue = sheet.GetCellValue(ExcelCol.A, 1);
+            var textValue = sheet.GetCellValue(ExcelCol.B, 1);
+            var boolValue = sheet.GetCellValue(ExcelCol.C, 1);
 
             // Assert
             Assert.IsType<double>(numValue);
@@ -462,7 +462,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            sheet.SetCellStyleRange("TestRangeStyle", ExcelColumns.A, ExcelColumns.C, 1, 3);
+            sheet.SetCellStyleRange("TestRangeStyle", ExcelCol.A, ExcelCol.C, 1, 3);
 
             // Assert
             var npoiSheet = workbook.GetSheet("Sheet1");
@@ -501,7 +501,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            sheet.SetCellStyleRange(styleConfig, ExcelColumns.B, ExcelColumns.D, 2, 4);
+            sheet.SetCellStyleRange(styleConfig, ExcelCol.B, ExcelCol.D, 2, 4);
 
             // Assert
             var npoiSheet = workbook.GetSheet("Sheet1");
@@ -539,7 +539,7 @@ namespace NPOIPlusUnitTest
 
             // Act - 只設置單個單元格 (A1)
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            sheet.SetCellStyleRange("SingleCellStyle", ExcelColumns.A, ExcelColumns.A, 1, 1);
+            sheet.SetCellStyleRange("SingleCellStyle", ExcelCol.A, ExcelCol.A, 1, 1);
 
             // Assert
             var npoiSheet = workbook.GetSheet("Sheet1");
@@ -567,12 +567,12 @@ namespace NPOIPlusUnitTest
             var sheet = fluentWorkbook.UseSheet("Sheet1");
 
             // 先設置一些值
-            sheet.SetCellPosition(ExcelColumns.A, 1).SetValue("Test1");
-            sheet.SetCellPosition(ExcelColumns.B, 1).SetValue(123);
-            sheet.SetCellPosition(ExcelColumns.C, 1).SetValue(true);
+            sheet.SetCellPosition(ExcelCol.A, 1).SetValue("Test1");
+            sheet.SetCellPosition(ExcelCol.B, 1).SetValue(123);
+            sheet.SetCellPosition(ExcelCol.C, 1).SetValue(true);
 
             // Act - 對這些已有值的單元格套用樣式
-            sheet.SetCellStyleRange("PreserveStyle", ExcelColumns.A, ExcelColumns.C, 1, 1);
+            sheet.SetCellStyleRange("PreserveStyle", ExcelCol.A, ExcelCol.C, 1, 1);
 
             // Assert - 驗證值被保留且樣式已套用
             var npoiSheet = workbook.GetSheet("Sheet1");
@@ -606,7 +606,7 @@ namespace NPOIPlusUnitTest
 
             // Act - 設置較大範圍 (A1:E10)
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            sheet.SetCellStyleRange(styleConfig, ExcelColumns.A, ExcelColumns.E, 1, 10);
+            sheet.SetCellStyleRange(styleConfig, ExcelCol.A, ExcelCol.E, 1, 10);
 
             // Assert
             var npoiSheet = workbook.GetSheet("Sheet1");
@@ -653,17 +653,17 @@ namespace NPOIPlusUnitTest
                 })
                 .UseSheet("Template");
 
-            templateSheet.SetCellPosition(ExcelColumns.B, 3)
+            templateSheet.SetCellPosition(ExcelCol.B, 3)
                 .SetCellStyle("templateStyle")
                 .SetValue("Template Cell");
 
             // Act - 從模板工作表複製樣式到工作簿層級
             var templateSheetRef = templateSheet.GetSheet();
-            fluentWorkbook.CopyStyleFromSheetCell("copiedFromTemplate", templateSheetRef, ExcelColumns.B, 3);
+            fluentWorkbook.CopyStyleFromSheetCell("copiedFromTemplate", templateSheetRef, ExcelCol.B, 3);
 
             // 在另一個工作表中使用該樣式
             var dataSheet = fluentWorkbook.UseSheet("Data");
-            dataSheet.SetCellPosition(ExcelColumns.A, 1)
+            dataSheet.SetCellPosition(ExcelCol.A, 1)
                 .SetCellStyle("copiedFromTemplate")
                 .SetValue("Using Copied Style");
 
@@ -697,20 +697,20 @@ namespace NPOIPlusUnitTest
                 })
                 .UseSheet("Sheet1");
 
-            sheet1.SetCellPosition(ExcelColumns.A, 1)
+            sheet1.SetCellPosition(ExcelCol.A, 1)
                 .SetCellStyle("originalStyle")
                 .SetValue("Source");
 
             var sheet1Ref = sheet1.GetSheet();
 
             // Act - 複製樣式並在多個工作表中使用
-            fluentWorkbook.CopyStyleFromSheetCell("sharedStyle", sheet1Ref, ExcelColumns.A, 1);
+            fluentWorkbook.CopyStyleFromSheetCell("sharedStyle", sheet1Ref, ExcelCol.A, 1);
 
             var sheet2 = fluentWorkbook.UseSheet("Sheet2");
-            sheet2.SetCellPosition(ExcelColumns.A, 1).SetCellStyle("sharedStyle").SetValue("Sheet2 Data");
+            sheet2.SetCellPosition(ExcelCol.A, 1).SetCellStyle("sharedStyle").SetValue("Sheet2 Data");
 
             var sheet3 = fluentWorkbook.UseSheet("Sheet3");
-            sheet3.SetCellPosition(ExcelColumns.A, 1).SetCellStyle("sharedStyle").SetValue("Sheet3 Data");
+            sheet3.SetCellPosition(ExcelCol.A, 1).SetCellStyle("sharedStyle").SetValue("Sheet3 Data");
 
             // Assert - 驗證所有工作表都使用了相同的樣式
             var npoiSheet2 = workbook.GetSheet("Sheet2");
@@ -736,11 +736,11 @@ namespace NPOIPlusUnitTest
             var emptySheet = fluentWorkbook.UseSheet("Empty").GetSheet();
 
             // Act - 嘗試從不存在的單元格複製樣式
-            fluentWorkbook.CopyStyleFromSheetCell("nonExistent", emptySheet, ExcelColumns.Z, 999);
+            fluentWorkbook.CopyStyleFromSheetCell("nonExistent", emptySheet, ExcelCol.Z, 999);
 
             // 嘗試使用該樣式 - 應該不會有特殊樣式
             var testSheet = fluentWorkbook.UseSheet("Test");
-            testSheet.SetCellPosition(ExcelColumns.A, 1)
+            testSheet.SetCellPosition(ExcelCol.A, 1)
                 .SetCellStyle("nonExistent")
                 .SetValue("Test");
 
@@ -768,7 +768,7 @@ namespace NPOIPlusUnitTest
                     style.FillForegroundColor = IndexedColors.Blue.Index;
                 })
                 .UseSheet("BluePalette");
-            blueSheet.SetCellPosition(ExcelColumns.A, 1).SetCellStyle("blue").SetValue("Blue");
+            blueSheet.SetCellPosition(ExcelCol.A, 1).SetCellStyle("blue").SetValue("Blue");
 
             var redSheet = fluentWorkbook
                 .SetupCellStyle("red", (wb, style) =>
@@ -777,20 +777,20 @@ namespace NPOIPlusUnitTest
                     style.FillForegroundColor = IndexedColors.Red.Index;
                 })
                 .UseSheet("RedPalette");
-            redSheet.SetCellPosition(ExcelColumns.A, 1).SetCellStyle("red").SetValue("Red");
+            redSheet.SetCellPosition(ExcelCol.A, 1).SetCellStyle("red").SetValue("Red");
 
             var blueSheetRef = blueSheet.GetSheet();
             var redSheetRef = redSheet.GetSheet();
 
             // Act - 第一次複製藍色樣式
-            fluentWorkbook.CopyStyleFromSheetCell("myColor", blueSheetRef, ExcelColumns.A, 1);
+            fluentWorkbook.CopyStyleFromSheetCell("myColor", blueSheetRef, ExcelCol.A, 1);
 
             // 第二次嘗試用相同的鍵複製紅色樣式 - 應該被忽略
-            fluentWorkbook.CopyStyleFromSheetCell("myColor", redSheetRef, ExcelColumns.A, 1);
+            fluentWorkbook.CopyStyleFromSheetCell("myColor", redSheetRef, ExcelCol.A, 1);
 
             // 使用該樣式
             var testSheet = fluentWorkbook.UseSheet("Test");
-            testSheet.SetCellPosition(ExcelColumns.A, 1)
+            testSheet.SetCellPosition(ExcelCol.A, 1)
                 .SetCellStyle("myColor")
                 .SetValue("Test");
 
@@ -819,23 +819,23 @@ namespace NPOIPlusUnitTest
                 .SetupCellStyle("style2", (wb, s) => s.FillForegroundColor = IndexedColors.Green.Index)
                 .SetupCellStyle("style3", (wb, s) => s.FillForegroundColor = IndexedColors.Orange.Index);
 
-            paletteSheet.SetCellPosition(ExcelColumns.A, 1).SetCellStyle("style1").SetValue("Style1");
-            paletteSheet.SetCellPosition(ExcelColumns.A, 2).SetCellStyle("style2").SetValue("Style2");
-            paletteSheet.SetCellPosition(ExcelColumns.A, 3).SetCellStyle("style3").SetValue("Style3");
+            paletteSheet.SetCellPosition(ExcelCol.A, 1).SetCellStyle("style1").SetValue("Style1");
+            paletteSheet.SetCellPosition(ExcelCol.A, 2).SetCellStyle("style2").SetValue("Style2");
+            paletteSheet.SetCellPosition(ExcelCol.A, 3).SetCellStyle("style3").SetValue("Style3");
 
             var paletteSheetRef = paletteSheet.GetSheet();
 
             // 鏈式調用複製所有樣式
             fluentWorkbook
-                .CopyStyleFromSheetCell("copied1", paletteSheetRef, ExcelColumns.A, 1)
-                .CopyStyleFromSheetCell("copied2", paletteSheetRef, ExcelColumns.A, 2)
-                .CopyStyleFromSheetCell("copied3", paletteSheetRef, ExcelColumns.A, 3);
+                .CopyStyleFromSheetCell("copied1", paletteSheetRef, ExcelCol.A, 1)
+                .CopyStyleFromSheetCell("copied2", paletteSheetRef, ExcelCol.A, 2)
+                .CopyStyleFromSheetCell("copied3", paletteSheetRef, ExcelCol.A, 3);
 
             // 使用複製的樣式
             var dataSheet = fluentWorkbook.UseSheet("Data");
-            dataSheet.SetCellPosition(ExcelColumns.B, 1).SetCellStyle("copied1").SetValue("Copy1");
-            dataSheet.SetCellPosition(ExcelColumns.B, 2).SetCellStyle("copied2").SetValue("Copy2");
-            dataSheet.SetCellPosition(ExcelColumns.B, 3).SetCellStyle("copied3").SetValue("Copy3");
+            dataSheet.SetCellPosition(ExcelCol.B, 1).SetCellStyle("copied1").SetValue("Copy1");
+            dataSheet.SetCellPosition(ExcelCol.B, 2).SetCellStyle("copied2").SetValue("Copy2");
+            dataSheet.SetCellPosition(ExcelCol.B, 3).SetCellStyle("copied3").SetValue("Copy3");
 
             // Assert
             var npoiDataSheet = workbook.GetSheet("Data");
@@ -879,7 +879,7 @@ namespace NPOIPlusUnitTest
 
             // 先寫入數據
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("Name")
@@ -892,7 +892,7 @@ namespace NPOIPlusUnitTest
 
             // Act - 使用自動判斷最後一行
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            var readData = sheet.GetTable<TestData>(ExcelColumns.A, 2); // 從第2行開始（跳過標題）
+            var readData = sheet.GetTable<TestData>(ExcelCol.A, 2); // 從第2行開始（跳過標題）
 
             // Assert
             Assert.Equal(3, readData.Count);
@@ -928,7 +928,7 @@ namespace NPOIPlusUnitTest
 
             // 先寫入數據
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("Name")
@@ -942,8 +942,8 @@ namespace NPOIPlusUnitTest
             var sheet = fluentWorkbook.UseSheet("Sheet1");
 
             // Act - 兩種方式讀取
-            var autoDetectData = sheet.GetTable<TestData>(ExcelColumns.A, 2); // 自動判斷
-            var manualData = sheet.GetTable<TestData>(ExcelColumns.A, 2, 5); // 手動指定結束行
+            var autoDetectData = sheet.GetTable<TestData>(ExcelCol.A, 2); // 自動判斷
+            var manualData = sheet.GetTable<TestData>(ExcelCol.A, 2, 5); // 手動指定結束行
 
             // Assert - 兩種方式應該讀取相同的數據
             Assert.Equal(manualData.Count, autoDetectData.Count);
@@ -970,7 +970,7 @@ namespace NPOIPlusUnitTest
 
             // 先寫入數據
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("Name")
@@ -988,7 +988,7 @@ namespace NPOIPlusUnitTest
 
             // Act - 自動判斷應該只讀取到有數據的最後一行
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            var readData = sheet.GetTable<TestData>(ExcelColumns.A, 2);
+            var readData = sheet.GetTable<TestData>(ExcelCol.A, 2);
 
             // Assert - 應該只讀取2行數據，忽略後面的空行
             Assert.Equal(2, readData.Count);
@@ -1010,7 +1010,7 @@ namespace NPOIPlusUnitTest
 
             // 先寫入數據
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("Name")
@@ -1029,7 +1029,7 @@ namespace NPOIPlusUnitTest
 
             // Act - 自動判斷應該讀取到最後一個有數據的行
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            var readData = sheet.GetTable<TestData>(ExcelColumns.A, 2);
+            var readData = sheet.GetTable<TestData>(ExcelCol.A, 2);
 
             // Assert - 應該讀取到第5行（因為A5有數據），但由於第4行是空的，可能只讀取2行
             // 實際行為：會讀取到最後一個A列有數據的行（第5行），但第4行因為是空的會被跳過
@@ -1051,7 +1051,7 @@ namespace NPOIPlusUnitTest
 
             // 先寫入數據
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("Name")
@@ -1064,7 +1064,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            var readData = sheet.GetTable<TestData>(ExcelColumns.A, 2);
+            var readData = sheet.GetTable<TestData>(ExcelCol.A, 2);
 
             // Assert
             Assert.Single(readData);
@@ -1081,7 +1081,7 @@ namespace NPOIPlusUnitTest
             var sheet = fluentWorkbook.UseSheet("EmptySheet");
 
             // Act - 從第2行開始讀取，但工作表是空的
-            var readData = sheet.GetTable<TestData>(ExcelColumns.A, 2);
+            var readData = sheet.GetTable<TestData>(ExcelCol.A, 2);
 
             // Assert
             Assert.Empty(readData);
@@ -1102,7 +1102,7 @@ namespace NPOIPlusUnitTest
 
             // 先寫入數據（ID在第一列，是數字類型）
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("Name")
@@ -1115,7 +1115,7 @@ namespace NPOIPlusUnitTest
 
             // Act - 從A列開始讀取（數字類型）
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            var readData = sheet.GetTable<TestData>(ExcelColumns.A, 2);
+            var readData = sheet.GetTable<TestData>(ExcelCol.A, 2);
 
             // Assert - 應該正確讀取所有行
             Assert.Equal(3, readData.Count);
@@ -1139,7 +1139,7 @@ namespace NPOIPlusUnitTest
 
             // 先寫入數據（Name在第二列，是字符串類型）
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("Name")
@@ -1155,7 +1155,7 @@ namespace NPOIPlusUnitTest
             var sheet = fluentWorkbook.UseSheet("Sheet1");
 
             // 創建一個只包含Name屬性的類來測試
-            var readData = sheet.GetTable<TestData>(ExcelColumns.A, 2);
+            var readData = sheet.GetTable<TestData>(ExcelCol.A, 2);
 
             // Assert - 應該正確讀取所有行
             Assert.Equal(3, readData.Count);
@@ -1183,7 +1183,7 @@ namespace NPOIPlusUnitTest
 
             // 先寫入數據
             fluentWorkbook.UseSheet("Sheet1")
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID")
                 .BeginBodySet("ID").End()
                 .BeginTitleSet("Name")
@@ -1196,7 +1196,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             var sheet = fluentWorkbook.UseSheet("Sheet1");
-            var readData = sheet.GetTable<TestData>(ExcelColumns.A, 2);
+            var readData = sheet.GetTable<TestData>(ExcelCol.A, 2);
 
             // Assert
             Assert.Equal(100, readData.Count);
@@ -1204,6 +1204,248 @@ namespace NPOIPlusUnitTest
             Assert.Equal(100, readData[99].ID);
             Assert.Equal("User1", readData[0].Name);
             Assert.Equal("User100", readData[99].Name);
+        }
+    }
+
+    public class CellMergeTests
+    {
+        [Fact]
+        public void SetExcelCellMerge_HorizontalMerge_ShouldMergeCellsInRow()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            // Act - 横向合并 A1 到 C1
+            fluentWorkbook.UseSheet("Sheet1")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 1);
+
+            // Assert
+            var sheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(1, sheet.NumMergedRegions);
+
+            var mergedRegion = sheet.GetMergedRegion(0);
+            Assert.Equal(0, mergedRegion.FirstRow); // 1-based to 0-based: row 1 -> 0
+            Assert.Equal(0, mergedRegion.LastRow);
+            Assert.Equal(0, mergedRegion.FirstColumn); // A -> 0
+            Assert.Equal(2, mergedRegion.LastColumn); // C -> 2
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_VerticalMerge_ShouldMergeCellsInColumn()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            // Act - 纵向合并 A1 到 A5
+            fluentWorkbook.UseSheet("Sheet1")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 1, 5);
+
+            // Assert
+            var sheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(1, sheet.NumMergedRegions);
+
+            var mergedRegion = sheet.GetMergedRegion(0);
+            Assert.Equal(0, mergedRegion.FirstRow); // row 1 -> 0
+            Assert.Equal(4, mergedRegion.LastRow); // row 5 -> 4
+            Assert.Equal(0, mergedRegion.FirstColumn); // A -> 0
+            Assert.Equal(0, mergedRegion.LastColumn); // A -> 0
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_RegionMerge_ShouldMergeCellRegion()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            // Act - 区域合并 A1 到 C3
+            fluentWorkbook.UseSheet("Sheet1")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 1, 3);
+
+            // Assert
+            var sheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(1, sheet.NumMergedRegions);
+
+            var mergedRegion = sheet.GetMergedRegion(0);
+            Assert.Equal(0, mergedRegion.FirstRow); // row 1 -> 0
+            Assert.Equal(2, mergedRegion.LastRow); // row 3 -> 2
+            Assert.Equal(0, mergedRegion.FirstColumn); // A -> 0
+            Assert.Equal(2, mergedRegion.LastColumn); // C -> 2
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_MultipleMerges_ShouldCreateMultipleRegions()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            // Act - 创建多个合并区域
+            fluentWorkbook.UseSheet("Sheet1")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 1) // 横向合并第1行
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 2, 5) // 纵向合并 A2-A5
+                .SetExcelCellMerge(ExcelCol.D, ExcelCol.F, 1, 3); // 区域合并 D1-F3
+
+            // Assert
+            var sheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(3, sheet.NumMergedRegions);
+
+            // 验证第一个合并区域（横向）
+            var region1 = sheet.GetMergedRegion(0);
+            Assert.Equal(0, region1.FirstRow);
+            Assert.Equal(0, region1.LastRow);
+            Assert.Equal(0, region1.FirstColumn); // A
+            Assert.Equal(2, region1.LastColumn); // C
+
+            // 验证第二个合并区域（纵向）
+            var region2 = sheet.GetMergedRegion(1);
+            Assert.Equal(1, region2.FirstRow); // row 2 -> 1
+            Assert.Equal(4, region2.LastRow); // row 5 -> 4
+            Assert.Equal(0, region2.FirstColumn); // A
+            Assert.Equal(0, region2.LastColumn); // A
+
+            // 验证第三个合并区域（区域）
+            var region3 = sheet.GetMergedRegion(2);
+            Assert.Equal(0, region3.FirstRow); // row 1 -> 0
+            Assert.Equal(2, region3.LastRow); // row 3 -> 2
+            Assert.Equal(3, region3.FirstColumn); // D -> 3
+            Assert.Equal(5, region3.LastColumn); // F -> 5
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_ChainedCalls_ShouldReturnFluentSheet()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            // Act - 链式调用
+            var result = fluentWorkbook.UseSheet("Sheet1")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.B, 1)
+                .SetExcelCellMerge(ExcelCol.C, ExcelCol.D, 2);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.IsType<FluentSheet>(result);
+            var sheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(2, sheet.NumMergedRegions);
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_SingleCell_ShouldThrowException()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            // Act & Assert - NPOI 不允许合并单个单元格，必须至少包含2个单元格
+            Assert.Throws<ArgumentException>(() =>
+            {
+                fluentWorkbook.UseSheet("Sheet1")
+                    .SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 1);
+            });
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_WithCellValues_ShouldPreserveFirstCellValue()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+            var sheet = fluentWorkbook.UseSheet("Sheet1");
+
+            // Act - 先设置值，再合并
+            sheet.SetCellPosition(ExcelCol.A, 1).SetValue("Merged Title");
+            sheet.SetCellPosition(ExcelCol.B, 1).SetValue("Will be merged");
+            sheet.SetCellPosition(ExcelCol.C, 1).SetValue("Also merged");
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 1);
+
+            // Assert
+            var npoiSheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(1, npoiSheet.NumMergedRegions);
+
+            // 验证合并后，只有第一个单元格有值
+            var firstCell = npoiSheet.GetRow(0)?.GetCell(0);
+            Assert.NotNull(firstCell);
+            Assert.Equal("Merged Title", firstCell.StringCellValue);
+
+            // 合并区域内的其他单元格应该为空或引用第一个单元格
+            var mergedRegion = npoiSheet.GetMergedRegion(0);
+            Assert.Equal(0, mergedRegion.FirstRow);
+            Assert.Equal(0, mergedRegion.LastRow);
+            Assert.Equal(0, mergedRegion.FirstColumn);
+            Assert.Equal(2, mergedRegion.LastColumn);
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_DifferentRows_ShouldMergeCorrectly()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            // Act - 合并不同行的区域
+            fluentWorkbook.UseSheet("Sheet1")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.B, 1, 3); // A1-B3
+
+            // Assert
+            var sheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(1, sheet.NumMergedRegions);
+
+            var mergedRegion = sheet.GetMergedRegion(0);
+            Assert.Equal(0, mergedRegion.FirstRow); // row 1 -> 0
+            Assert.Equal(2, mergedRegion.LastRow); // row 3 -> 2
+            Assert.Equal(0, mergedRegion.FirstColumn); // A -> 0
+            Assert.Equal(1, mergedRegion.LastColumn); // B -> 1
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_LargeRegion_ShouldHandleCorrectly()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+
+            // Act - 合并大区域 A1 到 Z10
+            fluentWorkbook.UseSheet("Sheet1")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.Z, 1, 10);
+
+            // Assert
+            var sheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(1, sheet.NumMergedRegions);
+
+            var mergedRegion = sheet.GetMergedRegion(0);
+            Assert.Equal(0, mergedRegion.FirstRow); // row 1 -> 0
+            Assert.Equal(9, mergedRegion.LastRow); // row 10 -> 9
+            Assert.Equal(0, mergedRegion.FirstColumn); // A -> 0
+            Assert.Equal(25, mergedRegion.LastColumn); // Z -> 25
+        }
+
+        [Fact]
+        public void SetExcelCellMerge_OverlappingRegions_ShouldThrowException()
+        {
+            // Arrange
+            var workbook = new XSSFWorkbook();
+            var fluentWorkbook = new FluentWorkbook(workbook);
+            var sheet = fluentWorkbook.UseSheet("Sheet1");
+
+            // Act - 创建第一个合并区域
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 1); // A1-C1
+
+            // Assert - NPOI 不允许重叠的合并区域，应该抛出异常
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                sheet.SetExcelCellMerge(ExcelCol.B, ExcelCol.D, 1); // B1-D1 (与第一个重叠)
+            });
+
+            // 验证第一个合并区域已创建
+            var npoiSheet = workbook.GetSheet("Sheet1");
+            Assert.Equal(1, npoiSheet.NumMergedRegions);
+            var region1 = npoiSheet.GetMergedRegion(0);
+            Assert.Equal(0, region1.FirstColumn); // A
+            Assert.Equal(2, region1.LastColumn); // C
         }
     }
 }

@@ -13,7 +13,7 @@ namespace FluentNPOI
 {
 	public static class FluentNPOIExtensions
 	{
-		public static ICell GetExcelCell(this ISheet sheet, ExcelColumns colIndex, int rowIndex)
+		public static ICell GetExcelCell(this ISheet sheet, ExcelCol colIndex, int rowIndex)
 		{
 			IRow row = sheet.GetExcellRow(rowIndex);
 			ICell cell = row.GetCell((int)colIndex);
@@ -126,7 +126,7 @@ namespace FluentNPOI
 			style.VerticalAlignment = vertical;
 		}
 
-		public static void SetExcelCellMerge(this ISheet sheet, ExcelColumns firstCol, ExcelColumns lastCol,
+		public static void SetExcelCellMerge(this ISheet sheet, ExcelCol firstCol, ExcelCol lastCol,
 			int firstRow = 1, int lastRow = 1)
 		{
 			if (firstRow < 1) firstRow = 1;
@@ -136,7 +136,7 @@ namespace FluentNPOI
 			sheet.AddMergedRegion(region);
 		}
 
-		public static void SetExcelCellMerge(this ISheet sheet, ExcelColumns firstCol, ExcelColumns lastCol, int row)
+		public static void SetExcelCellMerge(this ISheet sheet, ExcelCol firstCol, ExcelCol lastCol, int row)
 		{
 			if (row < 1) row = 1;
 
@@ -144,7 +144,7 @@ namespace FluentNPOI
 			sheet.AddMergedRegion(region);
 		}
 
-		public static void SetExcelCellMerge(this ISheet sheet, ExcelColumns col, int startRow, int endRow)
+		public static void SetExcelCellMerge(this ISheet sheet, ExcelCol col, int startRow, int endRow)
 		{
 			if (startRow < 1) startRow = 1;
 			if (endRow < 1) endRow = 1;
@@ -153,7 +153,7 @@ namespace FluentNPOI
 			sheet.AddMergedRegion(region);
 		}
 
-		public static void SetColumnWidth(this ISheet sheet, ExcelColumns startCol, ExcelColumns endCol, double width)
+		public static void SetColumnWidth(this ISheet sheet, ExcelCol startCol, ExcelCol endCol, double width)
 		{
 			for (int i = (int)startCol; i <= (int)endCol; i++)
 			{
@@ -161,7 +161,7 @@ namespace FluentNPOI
 			}
 		}
 
-		public static void SetColumnWidth(this ISheet sheet, ExcelColumns col, double width)
+		public static void SetColumnWidth(this ISheet sheet, ExcelCol col, double width)
 		{
 			sheet.SetColumnWidth((int)col, width * 256);
 		}
@@ -173,7 +173,7 @@ namespace FluentNPOI
 		/// <param name="colNum"></param>
 		/// <param name="rowNum"></param>
 		/// <returns></returns>
-		public static ICell GetCellValue(this ISheet sheet, ExcelColumns colNum, int rowNum = 1)
+		public static ICell GetCellValue(this ISheet sheet, ExcelCol colNum, int rowNum = 1)
 		{
 			if (rowNum < 1) rowNum = 1;
 			rowNum = rowNum - 1;

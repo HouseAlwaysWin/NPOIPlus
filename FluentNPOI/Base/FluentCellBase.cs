@@ -346,7 +346,7 @@ namespace FluentNPOI.Base
         /// <param name="endRow">結束行</param>   
         protected void SetCellStyleRange(
             CellStyleConfig cellStyleConfig,
-             ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow)
+             ExcelCol startCol, ExcelCol endCol, int startRow, int endRow)
         {
             int startColIndex = (int)startCol;
             int endColIndex = (int)endCol;

@@ -24,11 +24,11 @@ namespace FluentNPOI.Base
             return _workbook;
         }
 
-        protected ExcelColumns NormalizeCol(ExcelColumns col)
+        protected ExcelCol NormalizeCol(ExcelCol col)
         {
             int idx = (int)col;
             if (idx < 0) idx = 0;
-            return (ExcelColumns)idx;
+            return (ExcelCol)idx;
         }
 
         protected int NormalizeRow(int row)

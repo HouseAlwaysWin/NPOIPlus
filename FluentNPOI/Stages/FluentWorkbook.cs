@@ -53,7 +53,7 @@ namespace FluentNPOI.Stages
             return this;
         }
 
-        public FluentWorkbook CopyStyleFromSheetCell(string cellStyleKey, ISheet sheet, ExcelColumns col, int rowIndex)
+        public FluentWorkbook CopyStyleFromSheetCell(string cellStyleKey, ISheet sheet, ExcelCol col, int rowIndex)
         {
             ICell cell = sheet.GetExcelCell(col, rowIndex);
             if (cell != null && cell.CellStyle != null && !_cellStylesCached.ContainsKey(cellStyleKey))

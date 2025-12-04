@@ -17,7 +17,18 @@ namespace FluentNPOIConsoleExample
         public readonly string Notes;
         public readonly object MaybeNull;
 
-        public ExampleData(int id, string name, DateTime dateOfBirth, bool? isActive = null, double? score = null, decimal? amount = null, string notes = null, object maybeNull = null)
+        /// <summary>
+        /// 測試資料
+        /// </summary>
+        /// <param name="id">ID</param>
+        /// <param name="name">姓名</param>
+        /// <param name="dateOfBirth">生日</param>
+        /// <param name="isActive">是否活躍</param>
+        /// <param name="score">分數</param>
+        /// <param name="amount">金額</param>
+        /// <param name="notes">備註</param>
+        /// <param name="maybeNull">可能為空</param>
+        public ExampleData(int id, string name, DateTime dateOfBirth, bool? isActive = null, double? score = null, decimal? amount = null, string? notes = null, object? maybeNull = null)
         {
             ID = id;
             Name = name;

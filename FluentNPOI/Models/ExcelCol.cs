@@ -4,7 +4,10 @@ using System.Text;
 
 namespace FluentNPOI.Models
 {
-    public enum ExcelColumns
+    /// <summary>
+    /// Excel 列號
+    /// </summary>
+    public enum ExcelCol
     {
         A = 0,
         B = 1,

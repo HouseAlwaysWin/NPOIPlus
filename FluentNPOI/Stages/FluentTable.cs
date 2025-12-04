@@ -14,13 +14,13 @@ namespace FluentNPOI.Stages
     public class FluentTable<T> : FluentSheetBase
     {
         private IEnumerable<T> _table;
-        private ExcelColumns _startCol;
+        private ExcelCol _startCol;
         private int _startRow;
         private List<TableCellSet> _cellBodySets;
         private List<TableCellSet> _cellTitleSets;
 
         public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
-            ExcelColumns startCol, int startRow,
+            ExcelCol startCol, int startRow,
             Dictionary<string, ICellStyle> cellStylesCached, List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
             : base(workbook, sheet, cellStylesCached)
         {
@@ -50,7 +50,7 @@ namespace FluentNPOI.Stages
 
                 TableCellParams cellParams = new TableCellParams
                 {
-                    ColNum = (ExcelColumns)colIndex,
+                    ColNum = (ExcelCol)colIndex,
                     RowNum = targetRowIndex,
                     RowItem = item
                 };
@@ -60,7 +60,7 @@ namespace FluentNPOI.Stages
                 // 準備泛型參數（供泛型委派使用）
                 var cellParamsT = new TableCellParams<T>
                 {
-                    ColNum = (ExcelColumns)colIndex,
+                    ColNum = (ExcelCol)colIndex,
                     RowNum = targetRowIndex,
                     RowItem = item is T tItem ? tItem : default,
                     CellValue = value
@@ -70,7 +70,7 @@ namespace FluentNPOI.Stages
                 new TableCellStyleParams
                 {
                     Workbook = _workbook,
-                    ColNum = (ExcelColumns)colIndex,
+                    ColNum = (ExcelCol)colIndex,
                     RowNum = targetRowIndex,
                     RowItem = item
                 };

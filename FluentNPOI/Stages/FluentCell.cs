@@ -52,7 +52,7 @@ namespace FluentNPOI.Stages
             var cellStyleParams = new TableCellStyleParams
             {
                 Workbook = _workbook,
-                ColNum = (ExcelColumns)_cell.ColumnIndex,
+                ColNum = (ExcelCol)_cell.ColumnIndex,
                 RowNum = _cell.RowIndex,
                 RowItem = null
             };

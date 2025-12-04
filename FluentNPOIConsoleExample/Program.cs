@@ -33,6 +33,7 @@ namespace FluentNPOIConsoleExample
                 CreateDataTableExample(fluent);
                 CreateCellStyleRangeExample(fluent);
                 CreateSetCellValueExample(fluent);
+                CreateCellMergeExample(fluent);
 
                 // 儲存檔案
                 fluent.SaveToPath(outputPath);
@@ -126,8 +127,8 @@ namespace FluentNPOIConsoleExample
         static void CreateBasicTableExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             fluent.UseSheet("Sheet1")
-                .SetColumnWidth(ExcelColumns.A, ExcelColumns.H, 20)
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.H, 20)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("ID").SetCellStyle("HeaderBlue")
                 .BeginBodySet("ID").SetCellStyle("BodyGreen").End()
 
@@ -160,8 +161,8 @@ namespace FluentNPOIConsoleExample
         static void CreateSummaryExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             fluent.UseSheet("Summary", true)
-                .SetColumnWidth(ExcelColumns.A, ExcelColumns.E, 20)
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.E, 20)
+                .SetTable(testData, ExcelCol.A, 1)
                 .BeginTitleSet("姓名").SetCellStyle("HeaderBlue")
                 .BeginBodySet("Name").End()
 
@@ -185,8 +186,8 @@ namespace FluentNPOIConsoleExample
         static void CreateCopyStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             fluent.UseSheet("CopyStyleExample", true)
-                .SetColumnWidth(ExcelColumns.A, ExcelColumns.D, 20)
-                .SetTable(testData, ExcelColumns.A, 1)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
+                .SetTable(testData, ExcelCol.A, 1)
                 // 展示 ID 欄位並套用自訂樣式
                 .BeginTitleSet("編號").SetCellStyle("HeaderBlue")
                 .BeginBodySet("ID")
@@ -203,7 +204,7 @@ namespace FluentNPOIConsoleExample
                 .End()
 
                 // 從 Sheet1 的樣式複製
-                .BeginTitleSet("姓名").CopyStyleFromCell(ExcelColumns.A, 1)
+                .BeginTitleSet("姓名").CopyStyleFromCell(ExcelCol.A, 1)
                 .BeginBodySet("Name").SetCellType(CellType.String).End()
 
                 // 展示金額欄位並套用金額格式
@@ -263,8 +264,8 @@ namespace FluentNPOIConsoleExample
             dataTable.Rows.Add(106, "林八", new DateTime(1999, 5, 8), false, 3.2, 21000m, "財務金融");
 
             fluent.UseSheet("DataTableExample", true)
-                .SetColumnWidth(ExcelColumns.A, ExcelColumns.G, 20)
-                .SetTable<DataRow>(dataTable.Rows.Cast<DataRow>(), ExcelColumns.A, 1)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.G, 20)
+                .SetTable<DataRow>(dataTable.Rows.Cast<DataRow>(), ExcelCol.A, 1)
 
                 .BeginTitleSet("學號").SetCellStyle("HeaderBlue")
                 .BeginBodySet("StudentID").SetCellType(CellType.Numeric).End()
@@ -335,42 +336,42 @@ namespace FluentNPOIConsoleExample
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.Red);
                     style.SetBorderAllStyle(BorderStyle.Thin);
-                }), ExcelColumns.A, ExcelColumns.D, 1, 3)
+                }), ExcelCol.A, ExcelCol.D, 1, 3)
                 .SetCellStyleRange(new CellStyleConfig("HighlightOrange",
                     style =>
                     {
                         style.FillPattern = FillPattern.SolidForeground;
                         style.SetCellFillForegroundColor(IndexedColors.Orange);
                         style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelColumns.A, ExcelColumns.D, 4, 6)
+                    }), ExcelCol.A, ExcelCol.D, 4, 6)
                 .SetCellStyleRange(new CellStyleConfig("HighlightYellow",
                     style =>
                     {
                         style.FillPattern = FillPattern.SolidForeground;
                         style.SetCellFillForegroundColor(IndexedColors.Yellow);
                         style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelColumns.A, ExcelColumns.D, 7, 9)
+                    }), ExcelCol.A, ExcelCol.D, 7, 9)
                 .SetCellStyleRange(new CellStyleConfig("HighlightGreen",
                     style =>
                     {
                         style.FillPattern = FillPattern.SolidForeground;
                         style.SetCellFillForegroundColor(IndexedColors.Green);
                         style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelColumns.A, ExcelColumns.D, 10, 12)
+                    }), ExcelCol.A, ExcelCol.D, 10, 12)
                 .SetCellStyleRange(new CellStyleConfig("HighlightBlue",
                     style =>
                     {
                         style.FillPattern = FillPattern.SolidForeground;
                         style.SetCellFillForegroundColor(IndexedColors.Blue);
                         style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelColumns.A, ExcelColumns.D, 13, 15)
+                    }), ExcelCol.A, ExcelCol.D, 13, 15)
                 .SetCellStyleRange(new CellStyleConfig("HighlightPurple",
                     style =>
                     {
                         style.FillPattern = FillPattern.SolidForeground;
                         style.SetCellFillForegroundColor("#FF00FF");
                         style.SetBorderAllStyle(BorderStyle.Thin);
-                    }), ExcelColumns.A, ExcelColumns.D, 16, 18);
+                    }), ExcelCol.A, ExcelCol.D, 16, 18);
 
 
         }
@@ -381,10 +382,80 @@ namespace FluentNPOIConsoleExample
         static void CreateSetCellValueExample(FluentWorkbook fluent)
         {
             fluent.UseSheet("SetCellValueExample", true)
-                .SetColumnWidth(ExcelColumns.A, 20)
-                .SetCellPosition(ExcelColumns.A, 1)
+                .SetColumnWidth(ExcelCol.A, 20)
+                .SetCellPosition(ExcelCol.A, 1)
                 .SetValue("Hello, World!")
                 .SetCellStyle("HighlightYellow");
+        }
+
+        /// <summary>
+        /// 範例7：合併儲存格示例
+        /// </summary>
+        static void CreateCellMergeExample(FluentWorkbook fluent)
+        {
+            var sheet = fluent.UseSheet("CellMergeExample", true);
+
+            // 設置欄寬
+            sheet.SetColumnWidth(ExcelCol.A, ExcelCol.E, 15);
+
+            // 1. 橫向合併（標題行）
+            sheet.SetCellPosition(ExcelCol.A, 1)
+                .SetValue("銷售報表")
+                .SetCellStyle("HeaderBlue");
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 1); // 合併 A1-E1
+
+            // 2. 設置子標題
+            sheet.SetCellPosition(ExcelCol.A, 2).SetValue("產品名稱");
+            sheet.SetCellPosition(ExcelCol.B, 2).SetValue("銷售量");
+            sheet.SetCellPosition(ExcelCol.C, 2).SetValue("單價");
+            sheet.SetCellPosition(ExcelCol.D, 2).SetValue("總金額");
+            sheet.SetCellPosition(ExcelCol.E, 2).SetValue("備註");
+
+            // 為標題行設置樣式
+            for (ExcelCol col = ExcelCol.A; col <= ExcelCol.E; col++)
+            {
+                sheet.SetCellPosition(col, 2).SetCellStyle("HeaderBlue");
+            }
+
+            // 3. 縱向合併（用於分類）
+            sheet.SetCellPosition(ExcelCol.A, 3).SetValue("電子產品");
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 3, 5); // 合併 A3-A5
+
+            sheet.SetCellPosition(ExcelCol.B, 3).SetValue(100);
+            sheet.SetCellPosition(ExcelCol.C, 3).SetValue(5000);
+            sheet.SetCellPosition(ExcelCol.D, 3).SetValue(500000);
+            sheet.SetCellPosition(ExcelCol.E, 3).SetValue("熱銷");
+
+            sheet.SetCellPosition(ExcelCol.B, 4).SetValue(80);
+            sheet.SetCellPosition(ExcelCol.C, 4).SetValue(3000);
+            sheet.SetCellPosition(ExcelCol.D, 4).SetValue(240000);
+            sheet.SetCellPosition(ExcelCol.E, 4).SetValue("穩定");
+
+            sheet.SetCellPosition(ExcelCol.B, 5).SetValue(50);
+            sheet.SetCellPosition(ExcelCol.C, 5).SetValue(2000);
+            sheet.SetCellPosition(ExcelCol.D, 5).SetValue(100000);
+            sheet.SetCellPosition(ExcelCol.E, 5).SetValue("一般");
+
+            // 4. 區域合併（用於總計）
+            sheet.SetCellPosition(ExcelCol.A, 6).SetValue("總計");
+            sheet.SetCellPosition(ExcelCol.D, 6).SetValue(840000);
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 6); // 合併 A6-C6（橫向）
+            sheet.SetCellPosition(ExcelCol.A, 6).SetCellStyle("HighlightYellow");
+
+            // 5. 多個合併區域示例
+            sheet.SetCellPosition(ExcelCol.A, 8).SetValue("部門A");
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 8, 10); // 縱向合併 A8-A10
+
+            sheet.SetCellPosition(ExcelCol.B, 8).SetValue("部門B");
+            sheet.SetExcelCellMerge(ExcelCol.B, ExcelCol.B, 8, 10); // 縱向合併 B8-B10
+
+            sheet.SetCellPosition(ExcelCol.C, 8).SetValue("部門C");
+            sheet.SetExcelCellMerge(ExcelCol.C, ExcelCol.C, 8, 10); // 縱向合併 C8-C10
+
+            // 6. 區域合併示例（多行多列）
+            sheet.SetCellPosition(ExcelCol.A, 12).SetValue("重要通知");
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 12, 14); // 合併 A12-E14（區域）
+            sheet.SetCellPosition(ExcelCol.A, 12).SetCellStyle("HighlightYellow");
         }
 
         #endregion
@@ -400,6 +471,7 @@ namespace FluentNPOIConsoleExample
             ReadFluentCellExample(fluent);
             ReadSetCellValueExample(fluent);
             ReadGetTableExample(fluent);
+            ReadCellMergeExample(fluent);
 
             Console.WriteLine("\n========== 讀取完成 ==========\n");
         }
@@ -413,7 +485,7 @@ namespace FluentNPOIConsoleExample
 
             // 讀取標題行
             Console.WriteLine("\n【Sheet1 標題行】:");
-            for (ExcelColumns col = ExcelColumns.A; col <= ExcelColumns.H; col++)
+            for (ExcelCol col = ExcelCol.A; col <= ExcelCol.H; col++)
             {
                 var headerValue = sheet1.GetCellValue<string>(col, 1);
                 Console.Write($"{headerValue}\t");
@@ -424,13 +496,13 @@ namespace FluentNPOIConsoleExample
             Console.WriteLine("\n【Sheet1 前3筆資料】:");
             for (int row = 2; row <= 4; row++)
             {
-                var id = sheet1.GetCellValue<int>(ExcelColumns.A, row);
-                var name = sheet1.GetCellValue<string>(ExcelColumns.B, row);
-                var dateOfBirth = sheet1.GetCellValue<DateTime>(ExcelColumns.C, row);
-                var isActive = sheet1.GetCellValue<bool>(ExcelColumns.D, row);
-                var score = sheet1.GetCellValue<double>(ExcelColumns.E, row);
-                var amount = sheet1.GetCellValue<double>(ExcelColumns.F, row);
-                var notes = sheet1.GetCellValue<string>(ExcelColumns.G, row);
+                var id = sheet1.GetCellValue<int>(ExcelCol.A, row);
+                var name = sheet1.GetCellValue<string>(ExcelCol.B, row);
+                var dateOfBirth = sheet1.GetCellValue<DateTime>(ExcelCol.C, row);
+                var isActive = sheet1.GetCellValue<bool>(ExcelCol.D, row);
+                var score = sheet1.GetCellValue<double>(ExcelCol.E, row);
+                var amount = sheet1.GetCellValue<double>(ExcelCol.F, row);
+                var notes = sheet1.GetCellValue<string>(ExcelCol.G, row);
 
                 Console.WriteLine($"Row {row}: ID={id}, Name={name}, Birth={dateOfBirth:yyyy-MM-dd}, Active={isActive}, Score={score}, Amount={amount:C}, Notes={notes}");
             }
@@ -445,13 +517,13 @@ namespace FluentNPOIConsoleExample
             var dtSheet = fluent.UseSheet("DataTableExample");
             for (int row = 2; row <= 4; row++)
             {
-                var studentId = dtSheet.GetCellValue<int>(ExcelColumns.A, row);
-                var studentName = dtSheet.GetCellValue<string>(ExcelColumns.B, row);
-                var birthDate = dtSheet.GetCellValue<DateTime>(ExcelColumns.C, row);
-                var isEnrolled = dtSheet.GetCellValue<bool>(ExcelColumns.D, row);
-                var gpa = dtSheet.GetCellValue<double>(ExcelColumns.E, row);
-                var tuition = dtSheet.GetCellValue<double>(ExcelColumns.F, row);
-                var department = dtSheet.GetCellValue<string>(ExcelColumns.G, row);
+                var studentId = dtSheet.GetCellValue<int>(ExcelCol.A, row);
+                var studentName = dtSheet.GetCellValue<string>(ExcelCol.B, row);
+                var birthDate = dtSheet.GetCellValue<DateTime>(ExcelCol.C, row);
+                var isEnrolled = dtSheet.GetCellValue<bool>(ExcelCol.D, row);
+                var gpa = dtSheet.GetCellValue<double>(ExcelCol.E, row);
+                var tuition = dtSheet.GetCellValue<double>(ExcelCol.F, row);
+                var department = dtSheet.GetCellValue<string>(ExcelCol.G, row);
 
                 Console.WriteLine($"Student {studentId}: {studentName}, {department}, GPA={gpa:F1}, 學費={tuition:C}");
             }
@@ -464,7 +536,7 @@ namespace FluentNPOIConsoleExample
         {
             Console.WriteLine("\n【使用 FluentCell 讀取】:");
             var sheet1 = fluent.UseSheet("Sheet1");
-            var cellA1 = sheet1.GetCellPosition(ExcelColumns.A, 1);
+            var cellA1 = sheet1.GetCellPosition(ExcelCol.A, 1);
             if (cellA1 != null)
             {
                 var value = cellA1.GetValue();
@@ -480,7 +552,7 @@ namespace FluentNPOIConsoleExample
         {
             Console.WriteLine("\n【SetCellValueExample 示例】:");
             var exampleSheet = fluent.UseSheet("SetCellValueExample");
-            var helloValue = exampleSheet.GetCellValue<string>(ExcelColumns.A, 1);
+            var helloValue = exampleSheet.GetCellValue<string>(ExcelCol.A, 1);
             Console.WriteLine($"A1 值: {helloValue}");
         }
 
@@ -494,12 +566,12 @@ namespace FluentNPOIConsoleExample
 
             // 方法1：指定結束行（舊方法，仍然可用）
             Console.WriteLine("\n方法1：指定結束行");
-            var readData1 = sheet1.GetTable<ExampleData>(ExcelColumns.A, 2, 13);
+            var readData1 = sheet1.GetTable<ExampleData>(ExcelCol.A, 2, 13);
             Console.WriteLine($"成功讀取 {readData1.Count} 筆資料（指定結束行）");
 
             // 方法2：自動判斷最後一行（新方法）
             Console.WriteLine("\n方法2：自動判斷最後一行");
-            var readData2 = sheet1.GetTable<ExampleData>(ExcelColumns.A, 2);
+            var readData2 = sheet1.GetTable<ExampleData>(ExcelCol.A, 2);
             Console.WriteLine($"成功讀取 {readData2.Count} 筆資料（自動判斷最後一行）");
 
             Console.WriteLine("\n前5筆資料詳情:");
@@ -511,6 +583,59 @@ namespace FluentNPOIConsoleExample
                     $"Birth={item.DateOfBirth:yyyy-MM-dd}, Active={item.IsActive}, " +
                     $"Score={item.Score:F1}, Amount={item.Amount:C}");
             }
+        }
+
+        /// <summary>
+        /// 讀取範例6：讀取合併儲存格示例
+        /// </summary>
+        static void ReadCellMergeExample(FluentWorkbook fluent)
+        {
+            Console.WriteLine("\n【CellMergeExample 合併儲存格示例】:");
+            var mergeSheet = fluent.UseSheet("CellMergeExample");
+            var npoiSheet = mergeSheet.GetSheet();
+
+            // 顯示合併區域資訊
+            Console.WriteLine($"\n工作表共有 {npoiSheet.NumMergedRegions} 個合併區域：");
+
+            for (int i = 0; i < npoiSheet.NumMergedRegions; i++)
+            {
+                var mergedRegion = npoiSheet.GetMergedRegion(i);
+                var firstRow = mergedRegion.FirstRow + 1; // 轉換為 1-based
+                var lastRow = mergedRegion.LastRow + 1;
+                var firstCol = (ExcelCol)mergedRegion.FirstColumn;
+                var lastCol = (ExcelCol)mergedRegion.LastColumn;
+
+                // 讀取合併區域的第一個單元格的值
+                var cellValue = mergeSheet.GetCellValue<string>(firstCol, firstRow) ?? "";
+
+                if (firstRow == lastRow && firstCol == lastCol)
+                {
+                    // 單個單元格（不應該發生，但以防萬一）
+                    Console.WriteLine($"  [{i + 1}] {firstCol}{firstRow}: {cellValue}");
+                }
+                else if (firstRow == lastRow)
+                {
+                    // 橫向合併
+                    Console.WriteLine($"  [{i + 1}] 橫向合併: {firstCol}{firstRow}-{lastCol}{firstRow} = \"{cellValue}\"");
+                }
+                else if (firstCol == lastCol)
+                {
+                    // 縱向合併
+                    Console.WriteLine($"  [{i + 1}] 縱向合併: {firstCol}{firstRow}-{firstCol}{lastRow} = \"{cellValue}\"");
+                }
+                else
+                {
+                    // 區域合併
+                    Console.WriteLine($"  [{i + 1}] 區域合併: {firstCol}{firstRow}-{lastCol}{lastRow} = \"{cellValue}\"");
+                }
+            }
+
+            // 讀取一些具體的合併單元格值
+            Console.WriteLine("\n讀取合併單元格的值：");
+            Console.WriteLine($"  A1 (合併區域): {mergeSheet.GetCellValue<string>(ExcelCol.A, 1)}");
+            Console.WriteLine($"  A3 (縱向合併): {mergeSheet.GetCellValue<string>(ExcelCol.A, 3)}");
+            Console.WriteLine($"  A6 (橫向合併): {mergeSheet.GetCellValue<string>(ExcelCol.A, 6)}");
+            Console.WriteLine($"  A12 (區域合併): {mergeSheet.GetCellValue<string>(ExcelCol.A, 12)}");
         }
 
         #endregion

@@ -15,7 +15,7 @@ namespace FluentNPOI.Stages
     {
         public FluentTableCell(
             IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
-            ExcelColumns startCol, int startRow,
+            ExcelCol startCol, int startRow,
             Dictionary<string, ICellStyle> cellStylesCached,
             string cellName,
             List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets)
@@ -78,7 +78,7 @@ namespace FluentNPOI.Stages
             return this;
         }
 
-        public FluentTableCell<T> CopyStyleFromCell(ExcelColumns col, int rowIndex)
+        public FluentTableCell<T> CopyStyleFromCell(ExcelCol col, int rowIndex)
         {
             CopyStyleFromCellInternal(col, rowIndex);
             return this;

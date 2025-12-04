@@ -4,7 +4,7 @@ namespace FluentNPOI.Models
 	public class TableCellParams
 	{
 		public object CellValue { get; set; }
-		public ExcelColumns ColNum { get; set; }
+		public ExcelCol ColNum { get; set; }
 		public int RowNum { get; set; }
 		public object RowItem { get; set; }
 
@@ -17,7 +17,7 @@ namespace FluentNPOI.Models
 	public class TableCellParams<T>
 	{
 		public object CellValue { get; set; }
-		public ExcelColumns ColNum { get; set; }
+		public ExcelCol ColNum { get; set; }
 		public int RowNum { get; set; }
 		public T RowItem { get; set; }
 	}

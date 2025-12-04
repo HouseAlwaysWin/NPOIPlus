@@ -10,13 +10,13 @@ namespace FluentNPOI.Base
         protected List<TableCellSet> _cellBodySets;
         protected List<TableCellSet> _cellTitleSets;
         protected IEnumerable<T> _table;
-        protected ExcelColumns _startCol;
+        protected ExcelCol _startCol;
         protected int _startRow;
         protected TableCellSet _currentCellSet;
 
         protected FluentTableBase(
             IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
-            ExcelColumns startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
+            ExcelCol startCol, int startRow, Dictionary<string, ICellStyle> cellStylesCached,
             List<TableCellSet> cellTitleSets, List<TableCellSet> cellBodySets,
             TableCellSet currentCellSet)
             : base(workbook, sheet, cellStylesCached)
@@ -77,7 +77,7 @@ namespace FluentNPOI.Base
             _currentCellSet.CellType = cellType;
         }
 
-        protected void CopyStyleFromCellInternal(ExcelColumns col, int rowIndex)
+        protected void CopyStyleFromCellInternal(ExcelCol col, int rowIndex)
         {
             string key = $"{_sheet.SheetName}_{col}{rowIndex}";
             ICell cell = _sheet.GetExcelCell(col, rowIndex);

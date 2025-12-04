@@ -6,7 +6,7 @@ namespace FluentNPOI.Models
 	public class TableCellStyleParams
 	{
 		public IWorkbook Workbook { get; set; }
-		public ExcelColumns ColNum { get; set; }
+		public ExcelCol ColNum { get; set; }
 		public int RowNum { get; set; }
 		public object RowItem { get; set; }
 
@@ -19,7 +19,7 @@ namespace FluentNPOI.Models
 	public class TableCellStyleParams<T>
 	{
 		public IWorkbook Workbook { get; set; }
-		public ExcelColumns ColNum { get; set; }
+		public ExcelCol ColNum { get; set; }
 		public int RowNum { get; set; }
 		public T RowItem { get; set; }
 	}
