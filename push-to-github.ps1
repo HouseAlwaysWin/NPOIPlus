@@ -33,7 +33,7 @@ Write-Host ""
 $remoteExists = git remote | Select-String "origin"
 if (-not $remoteExists) {
     Write-Host "Adding remote..." -ForegroundColor Yellow
-    git remote add origin https://github.com/HouseAlwaysWin/NPOIPlus.git
+    git remote add origin https://github.com/HouseAlwaysWin/FluentNPOI.git
     Write-Host "Done" -ForegroundColor Green
 }
 
@@ -50,7 +50,7 @@ Write-Host ""
 
 # Push
 Write-Host "Ready to push to GitHub" -ForegroundColor Cyan
-Write-Host "Repository: https://github.com/HouseAlwaysWin/NPOIPlus.git" -ForegroundColor Cyan
+Write-Host "Repository: https://github.com/HouseAlwaysWin/FluentNPOI.git" -ForegroundColor Cyan
 Write-Host ""
 
 $response = Read-Host "Continue? (y/n)"
@@ -63,10 +63,10 @@ if ($response -eq 'y' -or $response -eq 'Y') {
     Write-Host "SUCCESS!" -ForegroundColor Green
     Write-Host ""
     Write-Host "Next steps:" -ForegroundColor Yellow
-    Write-Host "1. View repository: https://github.com/HouseAlwaysWin/NPOIPlus" -ForegroundColor White
-    Write-Host "2. View CI status: https://github.com/HouseAlwaysWin/NPOIPlus/actions" -ForegroundColor White
+    Write-Host "1. View repository: https://github.com/HouseAlwaysWin/FluentNPOI" -ForegroundColor White
+    Write-Host "2. View CI status: https://github.com/HouseAlwaysWin/FluentNPOI/actions" -ForegroundColor White
     Write-Host "3. IMPORTANT - Set NuGet API Key:" -ForegroundColor Red
-    Write-Host "   https://github.com/HouseAlwaysWin/NPOIPlus/settings/secrets/actions" -ForegroundColor White
+    Write-Host "   https://github.com/HouseAlwaysWin/FluentNPOI/settings/secrets/actions" -ForegroundColor White
     Write-Host "   Secret name: NUGET_API_KEY" -ForegroundColor White
 } else {
     Write-Host "Cancelled" -ForegroundColor Yellow

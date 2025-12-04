@@ -10,7 +10,7 @@ This document explains how to publish FluentNPOI to NuGet.org.
 
 ### 1. 確保項目配置正確
 
-確認 `NPOIPlus/NPOIPlus.csproj` 包含以下 NuGet 包元數據：
+確認 `FluentNPOI/FluentNPOI.csproj` 包含以下 NuGet 包元數據：
 
 - ✅ `PackageId` - 包名稱（必須唯一）
 - ✅ `Version` - 版本號
@@ -56,25 +56,29 @@ This document explains how to publish FluentNPOI to NuGet.org.
 #### 步驟：
 
 1. **確保所有測試通過**
+
    ```bash
    dotnet test
    ```
 
 2. **更新版本號**
-   
-   編輯 `NPOIPlus/NPOIPlus.csproj`，更新 `<Version>` 標籤：
+
+   編輯 `FluentNPOI/FluentNPOI.csproj`，更新 `<Version>` 標籤：
+
    ```xml
    <Version>1.0.1</Version>
    ```
 
 3. **提交並推送更改**
+
    ```bash
-   git add NPOIPlus/NPOIPlus.csproj
+   git add FluentNPOI/FluentNPOI.csproj
    git commit -m "chore: bump version to 1.0.1"
    git push origin main
    ```
 
 4. **創建 GitHub Release**
+
    - 前往倉庫的 **Releases** 頁面
    - 點擊 **Draft a new release**
    - 填寫資訊：
@@ -84,6 +88,7 @@ This document explains how to publish FluentNPOI to NuGet.org.
    - 點擊 **Publish release**
 
 5. **自動發布**
+
    - GitHub Actions 會自動觸發 `publish.yml` 工作流
    - 工作流會：
      - 構建專案
@@ -108,6 +113,7 @@ This document explains how to publish FluentNPOI to NuGet.org.
 2. **提交並推送**（同方法 1 的步驟 3）
 
 3. **手動觸發工作流**
+
    - 前往倉庫的 **Actions** 標籤頁
    - 選擇 **Publish to NuGet** 工作流
    - 點擊 **Run workflow**
@@ -128,8 +134,9 @@ This document explains how to publish FluentNPOI to NuGet.org.
 #### 步驟：
 
 1. **構建並打包**
+
    ```bash
-   cd NPOIPlus
+   cd FluentNPOI
    dotnet pack --configuration Release
    ```
 
@@ -149,6 +156,7 @@ This document explains how to publish FluentNPOI to NuGet.org.
 - **修訂號 (Patch)**: 向下兼容的問題修正
 
 範例：
+
 - `1.0.0` - 初始版本
 - `1.0.1` - 修復 bug
 - `1.1.0` - 新增功能
@@ -163,6 +171,7 @@ This document explains how to publish FluentNPOI to NuGet.org.
 - `1.0.0-rc.1`
 
 在 GitHub Release 中，Tag 仍使用 `v` 前綴：
+
 - Tag: `v1.0.0-alpha.1`
 - 工作流會自動去除 `v` 前綴
 
@@ -209,12 +218,14 @@ Install-Package FluentNPOI -Version 1.0.1
 ### Q: 發布失敗，提示 "Package already exists"
 
 **A:** 該版本號已存在。解決方法：
+
 - 使用新的版本號
 - 或刪除 NuGet.org 上的舊版本（如果允許）
 
 ### Q: 發布失敗，提示 "API Key invalid"
 
 **A:** 檢查：
+
 1. GitHub Secret `NUGET_API_KEY` 是否正確設置
 2. API Key 是否已過期
 3. API Key 權限是否正確（需要 Push 權限）
@@ -230,6 +241,7 @@ Install-Package FluentNPOI -Version 1.0.1
 ### Q: 可以撤回已發布的版本嗎？
 
 **A:** NuGet.org 不允許刪除已發布的版本，但可以：
+
 - 發布新版本修復問題
 - 將舊版本標記為已棄用（deprecated）
 
@@ -255,4 +267,3 @@ After publishing, your package will be available for developers worldwide!
 **最後更新 / Last Updated:** 2024-12-01
 
 **維護者 / Maintainer:** HouseAlwaysWin
-

@@ -22,15 +22,19 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 需要在以下文件中替换：
 
 1. **`.github/dependabot.yml`** - 第 13 行和第 31 行
+
    - `your-github-username` → 你的 GitHub 用户名
 
 2. **`README.md`** - 多处
+
    - `your-username` → 你的 GitHub 用户名
 
 3. **`CI_CD_SETUP.md`** - 多处
+
    - `your-username` → 你的 GitHub 用户名
 
 4. **`CI_CD_SUMMARY.md`** - 多处
+
    - `[Your Name]` → 你的名字
    - `your-username` → 你的 GitHub 用户名
 
@@ -45,7 +49,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 ```bash
 # 如果还没有初始化
-cd D:\DotNetProjects\NPOIPlus
+cd D:\DotNetProjects\FluentNPOI
 git init
 ```
 
@@ -71,7 +75,7 @@ git status
 ```bash
 git commit -m "feat: initial commit with complete CI/CD setup
 
-- Add NPOIPlus library with fluent API
+- Add FluentNPOI library with fluent API
 - Add console example project
 - Add comprehensive unit tests
 - Add CI/CD workflows (GitHub Actions)
@@ -83,7 +87,7 @@ git commit -m "feat: initial commit with complete CI/CD setup
 ### 第六步：在 GitHub 上创建仓库
 
 1. 前往 https://github.com/new
-2. 仓库名称：`NPOIPlus`
+2. 仓库名称：`FluentNPOI`
 3. 描述：`A fluent API wrapper for NPOI to simplify Excel operations in .NET`
 4. 选择：`Public` 或 `Private`
 5. **不要**勾选 "Add a README file"（我们已经有了）
@@ -95,7 +99,7 @@ git commit -m "feat: initial commit with complete CI/CD setup
 
 ```bash
 # 添加远程仓库（替换你的用户名）
-git remote add origin https://github.com/你的用户名/NPOIPlus.git
+git remote add origin https://github.com/你的用户名/FluentNPOI.git
 
 # 检查远程仓库
 git remote -v
@@ -116,16 +120,16 @@ git push -u origin main
 3. 点击右上角头像 > **API Keys**
 4. 点击 **Create**
 5. 填写信息：
-   - Key Name: `NPOIPlus GitHub Actions`
+   - Key Name: `FluentNPOI GitHub Actions`
    - Scopes: 选择 `Push` 和 `Push new packages and package versions`
-   - Glob Pattern: `NPOIPlus*`
+   - Glob Pattern: `FluentNPOI*`
    - Expires: 选择一个合适的过期时间（例如 365 天）
 6. 点击 **Create**
 7. **复制** 生成的 API Key（只显示一次！）
 
 ### 第九步：在 GitHub 添加 Secret
 
-1. 前往你的仓库：`https://github.com/你的用户名/NPOIPlus`
+1. 前往你的仓库：`https://github.com/你的用户名/FluentNPOI`
 2. 点击 **Settings** 标签
 3. 左侧菜单选择 **Secrets and variables** > **Actions**
 4. 点击 **New repository secret**
@@ -141,11 +145,13 @@ git push -u origin main
 ### 检查清单：
 
 1. **查看仓库**
-   - 访问 `https://github.com/你的用户名/NPOIPlus`
+
+   - 访问 `https://github.com/你的用户名/FluentNPOI`
    - 确认所有文件已上传
    - 查看 README 是否正确显示
 
 2. **查看 Actions**
+
    - 点击 **Actions** 标签
    - 应该看到第一次推送触发的 CI 工作流正在运行
    - 等待工作流完成（约 3-5 分钟）
@@ -179,15 +185,16 @@ git push -u origin main
 在 `README.md` 顶部添加：
 
 ```markdown
-# NPOIPlus
+# FluentNPOI
 
-[![CI](https://github.com/你的用户名/NPOIPlus/workflows/CI/badge.svg)](https://github.com/你的用户名/NPOIPlus/actions)
-[![Code Quality](https://github.com/你的用户名/NPOIPlus/workflows/Code%20Quality/badge.svg)](https://github.com/你的用户名/NPOIPlus/actions)
+[![CI](https://github.com/你的用户名/FluentNPOI/workflows/CI/badge.svg)](https://github.com/你的用户名/FluentNPOI/actions)
+[![Code Quality](https://github.com/你的用户名/FluentNPOI/workflows/Code%20Quality/badge.svg)](https://github.com/你的用户名/FluentNPOI/actions)
 [![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-blue.svg)](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ```
 
 然后：
+
 ```bash
 git add README.md
 git commit -m "docs: add status badges"
@@ -264,6 +271,7 @@ git push origin feature/your-feature-name
 A: GitHub 已不再支持密码验证，需要使用：
 
 **方法 1：Personal Access Token (推荐)**
+
 1. GitHub 头像 > Settings > Developer settings > Personal access tokens > Tokens (classic)
 2. Generate new token (classic)
 3. 选择 scopes: `repo` (全选)
@@ -271,6 +279,7 @@ A: GitHub 已不再支持密码验证，需要使用：
 5. 推送时使用 token 作为密码
 
 **方法 2：SSH Key**
+
 ```bash
 # 生成 SSH Key
 ssh-keygen -t ed25519 -C "your_email@example.com"
@@ -285,12 +294,13 @@ cat ~/.ssh/id_ed25519.pub
 # 粘贴公钥
 
 # 更改远程 URL 为 SSH
-git remote set-url origin git@github.com:你的用户名/NPOIPlus.git
+git remote set-url origin git@github.com:你的用户名/FluentNPOI.git
 ```
 
 ### Q2: CI 工作流失败怎么办？
 
-A: 
+A:
+
 1. 前往 Actions 标签查看详细日志
 2. 常见原因：
    - 测试失败：本地运行 `.\build.ps1 -Task Test` 检查
@@ -300,6 +310,7 @@ A:
 ### Q3: 如何更新已推送的代码？
 
 A:
+
 ```bash
 # 修改代码后
 git add .
@@ -310,6 +321,7 @@ git push
 ### Q4: 如何回退错误的提交？
 
 A:
+
 ```bash
 # 撤销最后一次提交（保留修改）
 git reset --soft HEAD~1
@@ -326,11 +338,13 @@ git push
 如果遇到问题：
 
 1. 查看文档：
+
    - `CI_CD_SETUP.md` - CI/CD 详细说明
    - `BUILD_GUIDE.md` - 构建指南
    - `CONTRIBUTING.md` - 贡献指南
 
 2. 查看 GitHub 帮助：
+
    - https://docs.github.com/
 
 3. 创建 Issue：
@@ -341,11 +355,10 @@ git push
 ## ✅ 完成！
 
 恭喜！你的项目现在已经：
+
 - ✅ 在 GitHub 上公开/私有托管
 - ✅ 配置了完整的 CI/CD 流程
 - ✅ 准备好接受贡献
 - ✅ 可以自动发布到 NuGet
 
 开始享受自动化开发流程吧！🎉
-
-
