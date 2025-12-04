@@ -7,6 +7,7 @@ using NPOI.SS.UserModel;
 using System.Collections.Generic;
 using FluentNPOI.Models;
 using System.Linq;
+using FluentNPOI.Stages;
 
 namespace FluentNPOIConsoleExample
 {
@@ -51,18 +52,18 @@ namespace FluentNPOIConsoleExample
         {
             return new List<ExampleData>
             {
-                new ExampleData(1, "Alice Chen", new DateTime(1994, 1, 1), true, 95.5, 12500.75m, "優秀學生"),
-                new ExampleData(2, "Bob Lee", new DateTime(1989, 5, 12), false, 78.0, 8900.50m, "需改進"),
-                new ExampleData(3, "Søren", new DateTime(1985, 7, 23), true, 88.5, 15000.00m, "表現良好"),
-                new ExampleData(4, "王小明", new DateTime(2000, 2, 29), true, 92.0, 11200.80m, "進步快速"),
-                new ExampleData(5, "This is a very very very long name to test wrapping and width", new DateTime(1980, 12, 31), false, 65.5, 7500.25m, "LongName"),
-                new ExampleData(6, "Élodie", new DateTime(1995, 5, 15), true, 85.0, 9800.00m, "穩定發揮"),
-                new ExampleData(7, "O'Connor", new DateTime(1975, 7, 7), false, 72.5, 8200.50m, "待觀察"),
-                new ExampleData(8, "李雷", new DateTime(2010, 10, 10), true, 90.0, 10500.75m, "潛力股"),
-                new ExampleData(9, "山田太郎", new DateTime(1999, 3, 3), true, 87.5, 9500.00m, "穩健型"),
-                new ExampleData(10, "Мария", new DateTime(1988, 8, 8), false, 70.0, 8000.25m, "需加強"),
-                new ExampleData(11, "محمد", new DateTime(1991, 9, 9), true, 93.5, 12000.00m, "頂尖"),
-                new ExampleData(12, "김민준", new DateTime(2004, 4, 4), true, 89.0, 10200.50m, "均衡發展"),
+                new(1, "Alice Chen", new DateTime(1994, 1, 1), true, 95.5, 12500.75m, "優秀學生"),
+                new(2, "Bob Lee", new DateTime(1989, 5, 12), false, 78.0, 8900.50m, "需改進"),
+                new(3, "Søren", new DateTime(1985, 7, 23), true, 88.5, 15000.00m, "表現良好"),
+                new(4, "王小明", new DateTime(2000, 2, 29), true, 92.0, 11200.80m, "進步快速"),
+                new(5, "This is a very very very long name to test wrapping and width", new DateTime(1980, 12, 31), false, 65.5, 7500.25m, "LongName"),
+                new(6, "Élodie", new DateTime(1995, 5, 15), true, 85.0, 9800.00m, "穩定發揮"),
+                new(7, "O'Connor", new DateTime(1975, 7, 7), false, 72.5, 8200.50m, "待觀察"),
+                new(8, "李雷", new DateTime(2010, 10, 10), true, 90.0, 10500.75m, "潛力股"),
+                new(9, "山田太郎", new DateTime(1999, 3, 3), true, 87.5, 9500.00m, "穩健型"),
+                new(10, "Мария", new DateTime(1988, 8, 8), false, 70.0, 8000.25m, "需加強"),
+                new(11, "محمد", new DateTime(1991, 9, 9), true, 93.5, 12000.00m, "頂尖"),
+                new(12, "김민준", new DateTime(2004, 4, 4), true, 89.0, 10200.50m, "均衡發展"),
             };
         }
 
@@ -398,6 +399,7 @@ namespace FluentNPOIConsoleExample
             ReadDataTableExample(fluent);
             ReadFluentCellExample(fluent);
             ReadSetCellValueExample(fluent);
+            ReadGetTableExample(fluent);
 
             Console.WriteLine("\n========== 讀取完成 ==========\n");
         }
@@ -480,6 +482,29 @@ namespace FluentNPOIConsoleExample
             var exampleSheet = fluent.UseSheet("SetCellValueExample");
             var helloValue = exampleSheet.GetCellValue<string>(ExcelColumns.A, 1);
             Console.WriteLine($"A1 值: {helloValue}");
+        }
+
+        /// <summary>
+        /// 讀取範例5：使用 GetTable<T> 讀取整個表格
+        /// </summary>
+        static void ReadGetTableExample(FluentWorkbook fluent)
+        {
+            Console.WriteLine("\n【使用 GetTable<T> 讀取表格】:");
+            var sheet1 = fluent.UseSheet("Sheet1");
+
+            // 讀取表格數據 (跳過標題行,從第2行開始讀取到第13行)
+            var readData = sheet1.GetTable<ExampleData>(ExcelColumns.A, 2, 13);
+
+            Console.WriteLine($"成功讀取 {readData.Count} 筆資料");
+            Console.WriteLine("\n前5筆資料詳情:");
+
+            for (int i = 0; i < Math.Min(5, readData.Count); i++)
+            {
+                var item = readData[i];
+                Console.WriteLine($"  [{i + 1}] ID={item.ID}, Name={item.Name}, " +
+                    $"Birth={item.DateOfBirth:yyyy-MM-dd}, Active={item.IsActive}, " +
+                    $"Score={item.Score:F1}, Amount={item.Amount:C}");
+            }
         }
 
         #endregion

@@ -7,8 +7,11 @@ using System.Collections.Generic;
 using System.IO;
 using FluentNPOI.Models;
 
-namespace FluentNPOI
+namespace FluentNPOI.Stages
 {
+    /// <summary>
+    /// 工作簿操作類
+    /// </summary>
     public class FluentWorkbook : FluentWorkbookBase
     {
         private ISheet _currentSheet;
@@ -79,6 +82,12 @@ namespace FluentNPOI
             return this;
         }
 
+        /// <summary>
+        /// 使用指定工作表
+        /// </summary>
+        /// <param name="sheetName">工作表名稱</param>
+        /// <param name="createIfMissing">如果不存在是否建立</param>
+        /// <returns></returns>
         public FluentSheet UseSheet(string sheetName, bool createIfMissing = true)
         {
             _currentSheet = _workbook.GetSheet(sheetName);
@@ -89,12 +98,23 @@ namespace FluentNPOI
             return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
         }
 
+        /// <summary>
+        /// 使用指定工作表
+        /// </summary>
+        /// <param name="sheet"></param>
+        /// <returns></returns>
         public FluentSheet UseSheet(ISheet sheet)
         {
             _currentSheet = sheet;
             return new FluentSheet(_workbook, _currentSheet, _cellStylesCached);
         }
 
+        /// <summary>
+        /// 使用指定索引的工作表
+        /// </summary>
+        /// <param name="index">索引</param>
+        /// <param name="createIfMissing">如果不存在是否建立</param>
+        /// <returns></returns>
         public FluentSheet UseSheetAt(int index, bool createIfMissing = false)
         {
             _currentSheet = _workbook.GetSheetAt(index);

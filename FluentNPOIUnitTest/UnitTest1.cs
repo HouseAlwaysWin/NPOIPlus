@@ -5,6 +5,7 @@ using NPOI.XSSF.UserModel;
 using NPOI.SS.UserModel;
 using System;
 using System.Collections.Generic;
+using FluentNPOI.Stages;
 
 namespace NPOIPlusUnitTest
 {

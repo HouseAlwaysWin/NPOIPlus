@@ -5,8 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FluentNPOI
+namespace FluentNPOI.Stages
 {
+    /// <summary>
+    /// 表格操作類
+    /// </summary>
+    /// <typeparam name="T">表格數據類型</typeparam>
     public class FluentTable<T> : FluentSheetBase
     {
         private IEnumerable<T> _table;

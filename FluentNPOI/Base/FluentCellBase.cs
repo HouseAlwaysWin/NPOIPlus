@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace FluentNPOI.Base
 {
+    /// <summary>
+    /// 基礎單元格操作類
+    /// </summary>
     public abstract class FluentCellBase : FluentWorkbookBase
     {
         protected ISheet _sheet;
@@ -17,6 +20,12 @@ namespace FluentNPOI.Base
 
 
 
+        /// <summary>
+        /// 設置單元格的樣式
+        /// </summary>
+        /// <param name="cell">單元格</param>
+        /// <param name="cellNameMap">單元格名稱對應表</param>
+        /// <param name="cellStyleParams">單元格樣式參數</param>
         protected void SetCellStyle(ICell cell, TableCellSet cellNameMap, TableCellStyleParams cellStyleParams)
         {
             // 如果有動態樣式設置函數，優先使用
@@ -38,6 +47,11 @@ namespace FluentNPOI.Base
             }
         }
 
+        /// <summary>
+        /// 設置單元格的值
+        /// </summary>
+        /// <param name="cell">單元格</param>
+        /// <param name="value">值</param>
         protected void SetCellValue(ICell cell, object value)
         {
             if (value is bool b)
@@ -79,6 +93,12 @@ namespace FluentNPOI.Base
             cell.SetCellValue(value.ToString());
         }
 
+        /// <summary>
+        /// 設置單元格的值
+        /// </summary>
+        /// <param name="cell">單元格</param>
+        /// <param name="value">值</param>
+        /// <param name="cellType">單元格類型</param>
         protected void SetCellValue(ICell cell, object value, CellType cellType)
         {
             if (cell == null)
@@ -139,6 +159,11 @@ namespace FluentNPOI.Base
             }
         }
 
+        /// <summary>
+        /// 設置公式值
+        /// </summary>
+        /// <param name="cell">單元格</param>
+        /// <param name="value">值</param>
         protected void SetFormulaValue(ICell cell, object value)
         {
             if (cell == null) return;
@@ -311,6 +336,14 @@ namespace FluentNPOI.Base
             }
         }
 
+        /// <summary>
+        /// 設置單元格範圍的樣式
+        /// </summary>
+        /// <param name="cellStyleConfig">樣式配置</param>
+        /// <param name="startCol">起始列</param>
+        /// <param name="endCol">結束列</param>
+        /// <param name="startRow">起始行</param>
+        /// <param name="endRow">結束行</param>   
         protected void SetCellStyleRange(
             CellStyleConfig cellStyleConfig,
              ExcelColumns startCol, ExcelColumns endCol, int startRow, int endRow)
