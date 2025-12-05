@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-01-XX
+
+### Added
+- 🖼️ **圖片插入功能**：新增 `SetPictureOnCell` 方法，支持在 Excel 單元格中插入圖片
+  - 自動檢測圖片格式（PNG, JPEG, GIF, BMP/DIB, EMF, WMF），無需手動指定格式
+  - 支持自動計算高度（1:1 比例）或手動指定寬度和高度
+  - 支持三種錨點類型：
+    - `MoveAndResize`：單元格移動或調整大小時，圖片隨之移動和調整大小（默認）
+    - `MoveDontResize`：單元格移動或調整大小時，圖片移動但不調整大小
+    - `DontMoveAndResize`：單元格移動或調整大小時，圖片不移動也不調整大小
+  - 支持自定義列寬轉換比例（`columnWidthRatio`），默認值為 7.0
+  - 支持 `pictureAction` 參數，允許對創建的 `IPicture` 對象進行自定義操作
+  - 完整的參數驗證和錯誤處理
+  - 支持鏈式調用，可與其他 `FluentCell` 方法組合使用
+  - 自動計算圖片在單元格中的位置和大小，確保圖片正確顯示
+
+### Fixed
+- 🔧 **修正 `GetCellValue<T>` 對 `DateTime` 類型的處理**
+  - 正確識別日期格式單元格（使用 `DateUtil.IsCellDateFormatted`）
+  - 支持將 Excel 數字日期轉換為 `DateTime`（使用 `DateUtil.GetJavaDate`）
+  - 支持字符串日期解析（使用 `DateTime.TryParse`）
+  - 支持 `DateTime?` 可空類型
+  - 修復了讀取日期類型數據時返回 `0001-01-01` 的問題
+
+- 🔧 **修正 `FluentTable` 構造函數**
+  - 移除了不必要的 `NormalizeCol` 調用，因為 `ExcelCol` 已經是枚舉類型，無需標準化
+
+### Improved
+- 📦 **測試代碼重構**：提升代碼可維護性和可讀性
+  - 將測試類拆分為獨立文件，每個測試類一個文件
+  - 保持命名空間和測試邏輯不變
+  - 更易於定位和維護特定功能的測試
+  - 文件結構更清晰，便於擴展新測試
+
+### Documentation
+- 📚 **更新 README.md**
+  - 添加圖片插入功能的詳細說明和示例
+  - 包含 `pictureAction` 參數的使用說明
+  - 提供多種使用場景的示例代碼
+  - 中英文文檔同步更新
+
 ## [1.1.0] - 2025-12-04
 
 ### Added
