@@ -23,28 +23,28 @@ namespace FluentNPOIConsoleExample
 
                 var fluent = new FluentWorkbook(new XSSFWorkbook(filePath));
 
-                // 設置樣式
+                // Setup styles
                 SetupStyles(fluent);
 
-                // ========== 寫入範例 ==========
-                // 表格寫入範例
+                // ========== Write Examples ==========
+                // Table write examples
                 CreateBasicTableExample(fluent, testData);
                 CreateSummaryExample(fluent, testData);
                 CreateDataTableExample(fluent);
 
-                // 樣式寫入範例
+                // Style write examples
                 CreateCopyStyleExample(fluent, testData);
                 CreateCellStyleRangeExample(fluent);
 
-                // 單元格寫入範例
+                // Cell write examples
                 CreateSetCellValueExample(fluent);
                 CreateCellMergeExample(fluent);
                 CreatePictureExample(fluent);
 
-                // 儲存檔案
+                // Save file
                 fluent.SaveToPath(outputPath);
 
-                // 讀取範例
+                // Read examples
                 ReadExcelExamples(fluent);
             }
             catch (Exception ex)
@@ -125,10 +125,10 @@ namespace FluentNPOIConsoleExample
 
         #endregion
 
-        #region 表格寫入範例
+        #region Table Write Examples
 
         /// <summary>
-        /// 範例1：基本表格 - 展示多種欄位型別
+        /// Example 1: Basic table - Demonstrates various field types
         /// </summary>
         static void CreateBasicTableExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
@@ -162,7 +162,7 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 範例2：摘要表格 - 展示不同欄位組合
+        /// Example 2: Summary table - Demonstrates different field combinations
         /// </summary>
         static void CreateSummaryExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
@@ -188,17 +188,17 @@ namespace FluentNPOIConsoleExample
 
         #endregion
 
-        #region 樣式寫入範例
+        #region Style Write Examples
 
         /// <summary>
-        /// 範例3：複製樣式與動態樣式
+        /// Example 3: Copy style and dynamic style
         /// </summary>
         static void CreateCopyStyleExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
             fluent.UseSheet("CopyStyleExample", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
                 .SetTable(testData, ExcelCol.A, 1)
-                // 展示 ID 欄位並套用自訂樣式
+                // Demonstrate ID field with custom style
                 .BeginTitleSet("編號").SetCellStyle("HeaderBlue")
                 .BeginBodySet("ID")
                 .SetCellStyle((styleParams) =>
@@ -213,22 +213,22 @@ namespace FluentNPOIConsoleExample
                 })
                 .End()
 
-                // 從 Sheet1 的樣式複製
+                // Copy style from Sheet1
                 .BeginTitleSet("姓名").CopyStyleFromCell(ExcelCol.A, 1)
                 .BeginBodySet("Name").SetCellType(CellType.String).End()
 
-                // 展示金額欄位並套用金額格式
+                // Demonstrate amount field with currency format
                 .BeginTitleSet("金額").SetCellStyle("HeaderBlue")
                 .BeginBodySet("Amount").SetCellType(CellType.Numeric)
                 .SetCellStyle("AmountCurrency")
                 .End()
 
-                // 展示活躍狀態欄位（根據數據動態變化樣式）
+                // Demonstrate active status field (dynamic style based on data)
                 .BeginTitleSet("活躍").SetCellStyle("HeaderBlue")
                 .BeginBodySet("IsActive").SetCellType(CellType.Boolean)
                 .SetCellStyle((styleParams) =>
                 {
-                    // ✅ 根據資料決定返回哪個樣式
+                    // Determine which style to return based on data
                     if (styleParams.GetRowItem<ExampleData>().IsActive)
                     {
                         return new("IsActiveStyle1", style =>
@@ -252,7 +252,7 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 範例4：使用 DataTable 作為資料來源
+        /// Example 4: Using DataTable as data source
         /// </summary>
         static void CreateDataTableExample(FluentWorkbook fluent)
         {
@@ -265,7 +265,7 @@ namespace FluentNPOIConsoleExample
             dataTable.Columns.Add("Tuition", typeof(decimal));
             dataTable.Columns.Add("Department", typeof(string));
 
-            // 添加資料
+            // Add data
             dataTable.Rows.Add(101, "張三", new DateTime(1998, 3, 15), true, 3.8, 25000m, "資訊工程");
             dataTable.Rows.Add(102, "李四", new DateTime(1999, 7, 20), true, 3.5, 22000m, "電機工程");
             dataTable.Rows.Add(103, "王五", new DateTime(1997, 11, 5), false, 2.9, 20000m, "機械工程");
@@ -299,7 +299,7 @@ namespace FluentNPOIConsoleExample
                 .BeginBodySet("Department").SetCellType(CellType.String)
                 .SetCellStyle((styleParams) =>
                 {
-                    // 根據科系動態設定顏色
+                    // Dynamically set color based on department
                     var row = styleParams.RowItem as DataRow;
                     var dept = row?["Department"]?.ToString() ?? "";
 
@@ -336,7 +336,7 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 範例5：批量設置單元格範圍樣式
+        /// Example 5: Batch set cell range styles
         /// </summary>
         static void CreateCellStyleRangeExample(FluentWorkbook fluent)
         {
@@ -386,10 +386,10 @@ namespace FluentNPOIConsoleExample
 
         #endregion
 
-        #region 單元格寫入範例
+        #region Cell Write Examples
 
         /// <summary>
-        /// 範例6：設置單個單元格值並套用樣式
+        /// Example 6: Set single cell value and apply style
         /// </summary>
         static void CreateSetCellValueExample(FluentWorkbook fluent)
         {
@@ -401,37 +401,37 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 範例7：合併儲存格示例
+        /// Example 7: Cell merge example
         /// </summary>
         static void CreateCellMergeExample(FluentWorkbook fluent)
         {
             var sheet = fluent.UseSheet("CellMergeExample", true);
 
-            // 設置欄寬
+            // Set column width
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.E, 15);
 
-            // 1. 橫向合併（標題行）
+            // 1. Horizontal merge (header row)
             sheet.SetCellPosition(ExcelCol.A, 1)
                 .SetValue("銷售報表")
                 .SetCellStyle("HeaderBlue");
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 1); // 合併 A1-E1
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 1); // Merge A1-E1
 
-            // 2. 設置子標題
+            // 2. Set sub-headers
             sheet.SetCellPosition(ExcelCol.A, 2).SetValue("產品名稱");
             sheet.SetCellPosition(ExcelCol.B, 2).SetValue("銷售量");
             sheet.SetCellPosition(ExcelCol.C, 2).SetValue("單價");
             sheet.SetCellPosition(ExcelCol.D, 2).SetValue("總金額");
             sheet.SetCellPosition(ExcelCol.E, 2).SetValue("備註");
 
-            // 為標題行設置樣式
+            // Apply style to header row
             for (ExcelCol col = ExcelCol.A; col <= ExcelCol.E; col++)
             {
                 sheet.SetCellPosition(col, 2).SetCellStyle("HeaderBlue");
             }
 
-            // 3. 縱向合併（用於分類）
+            // 3. Vertical merge (for categorization)
             sheet.SetCellPosition(ExcelCol.A, 3).SetValue("電子產品");
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 3, 5); // 合併 A3-A5
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 3, 5); // Merge A3-A5
 
             sheet.SetCellPosition(ExcelCol.B, 3).SetValue(100);
             sheet.SetCellPosition(ExcelCol.C, 3).SetValue(5000);
@@ -448,74 +448,74 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.D, 5).SetValue(100000);
             sheet.SetCellPosition(ExcelCol.E, 5).SetValue("一般");
 
-            // 4. 區域合併（用於總計）
+            // 4. Region merge (for totals)
             sheet.SetCellPosition(ExcelCol.A, 6).SetValue("總計");
             sheet.SetCellPosition(ExcelCol.D, 6).SetValue(840000);
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 6); // 合併 A6-C6（橫向）
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 6); // Merge A6-C6 (horizontal)
             sheet.SetCellPosition(ExcelCol.A, 6).SetCellStyle("HighlightYellow");
 
-            // 5. 多個合併區域示例
+            // 5. Multiple merge regions example
             sheet.SetCellPosition(ExcelCol.A, 8).SetValue("部門A");
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 8, 10); // 縱向合併 A8-A10
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 8, 10); // Vertical merge A8-A10
 
             sheet.SetCellPosition(ExcelCol.B, 8).SetValue("部門B");
-            sheet.SetExcelCellMerge(ExcelCol.B, ExcelCol.B, 8, 10); // 縱向合併 B8-B10
+            sheet.SetExcelCellMerge(ExcelCol.B, ExcelCol.B, 8, 10); // Vertical merge B8-B10
 
             sheet.SetCellPosition(ExcelCol.C, 8).SetValue("部門C");
-            sheet.SetExcelCellMerge(ExcelCol.C, ExcelCol.C, 8, 10); // 縱向合併 C8-C10
+            sheet.SetExcelCellMerge(ExcelCol.C, ExcelCol.C, 8, 10); // Vertical merge C8-C10
 
-            // 6. 區域合併示例（多行多列）
+            // 6. Region merge example (multiple rows and columns)
             sheet.SetCellPosition(ExcelCol.A, 12).SetValue("重要通知");
-            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 12, 14); // 合併 A12-E14（區域）
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 12, 14); // Merge A12-E14 (region)
             sheet.SetCellPosition(ExcelCol.A, 12).SetCellStyle("HighlightYellow");
         }
 
         /// <summary>
-        /// 範例7：插入圖片示例
+        /// Example 8: Insert picture example
         /// </summary>
         static void CreatePictureExample(FluentWorkbook fluent)
         {
             var sheet = fluent.UseSheet("PictureExample", true);
 
-            // 設置欄寬
+            // Set column width
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.D, 20);
 
-            // 讀取圖片文件
+            // Read image file
             var imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "pain.jpg");
 
             if (!File.Exists(imagePath))
             {
-                Console.WriteLine($"警告：圖片文件不存在: {imagePath}");
+                Console.WriteLine($"Warning: Image file not found: {imagePath}");
                 return;
             }
 
             byte[] imageBytes = File.ReadAllBytes(imagePath);
 
-            // 1. 基本插入圖片（自動計算高度，使用默認列寬比例）
+            // 1. Basic picture insertion (auto-calculate height, use default column width ratio)
             sheet.SetCellPosition(ExcelCol.A, 1)
                 .SetValue("基本插入（自動高度）")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.A, 2)
-                .SetPictureOnCell(imageBytes, 200); // 寬度 200 像素，高度自動計算（1:1）
+                .SetPictureOnCell(imageBytes, 200); // Width 200 pixels, height auto-calculated (1:1)
 
-            // 2. 手動設置寬度和高度
+            // 2. Manually set width and height
             sheet.SetCellPosition(ExcelCol.B, 1)
                 .SetValue("手動設置尺寸")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.B, 2)
-                .SetPictureOnCell(imageBytes, 200, 150); // 寬度 200，高度 150 像素
+                .SetPictureOnCell(imageBytes, 200, 150); // Width 200, height 150 pixels
 
-            // 3. 自定義列寬轉換比例
+            // 3. Custom column width conversion ratio
             sheet.SetCellPosition(ExcelCol.C, 1)
                 .SetValue("自定義列寬比例")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.C, 2)
-                .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0); // 使用 5.0 作為轉換比例
+                .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0); // Use 5.0 as conversion ratio
 
-            // 4. 鏈式調用示例（插入圖片後繼續設置樣式）
+            // 4. Chained call example (continue setting after inserting picture)
             sheet.SetCellPosition(ExcelCol.D, 1)
                 .SetValue("鏈式調用示例")
                 .SetCellStyle("HeaderBlue");
@@ -523,9 +523,9 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.D, 2)
                 .SetPictureOnCell(imageBytes, 180, 180, AnchorType.MoveAndResize, 7.0)
                 .SetCellPosition(ExcelCol.D, 10)
-                .SetValue("圖片下方文字"); // 鏈式調用，在圖片後設置文字
+                .SetValue("圖片下方文字"); // Chained call, set text after picture
 
-            // 5. 不同錨點類型示例
+            // 5. Different anchor type examples
             sheet.SetCellPosition(ExcelCol.A, 5)
                 .SetValue("MoveAndResize（默認）")
                 .SetCellStyle("HeaderBlue");
@@ -547,7 +547,7 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.C, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.DontMoveAndResize);
 
-            // 6. 多個圖片排列示例
+            // 6. Multiple pictures arrangement example
             sheet.SetCellPosition(ExcelCol.A, 9)
                 .SetValue("多圖片排列")
                 .SetCellStyle("HeaderBlue");
@@ -558,38 +558,38 @@ namespace FluentNPOIConsoleExample
                     .SetPictureOnCell(imageBytes, 100, 100);
             }
 
-            Console.WriteLine("✓ 圖片插入示例已創建");
+            Console.WriteLine("✓ Picture insertion example created");
         }
 
         #endregion
 
-        #region 表格讀取範例
+        #region Table Read Examples
 
         static void ReadExcelExamples(FluentWorkbook fluent)
         {
-            Console.WriteLine("\n========== 讀取 Excel 數據示例 ==========");
+            Console.WriteLine("\n========== Read Excel Data Examples ==========");
 
-            // 表格讀取範例
+            // Table read examples
             ReadSheet1Example(fluent);
             ReadDataTableExample(fluent);
             ReadGetTableExample(fluent);
 
-            // 單元格讀取範例
+            // Cell read examples
             ReadFluentCellExample(fluent);
             ReadSetCellValueExample(fluent);
             ReadCellMergeExample(fluent);
 
-            Console.WriteLine("\n========== 讀取完成 ==========\n");
+            Console.WriteLine("\n========== Read Complete ==========\n");
         }
 
         /// <summary>
-        /// 讀取範例1：讀取 Sheet1 的資料
+        /// Read Example 1: Read data from Sheet1
         /// </summary>
         static void ReadSheet1Example(FluentWorkbook fluent)
         {
             var sheet1 = fluent.UseSheet("Sheet1");
 
-            // 讀取標題行
+            // Read header row
             Console.WriteLine("\n【Sheet1 標題行】:");
             for (ExcelCol col = ExcelCol.A; col <= ExcelCol.H; col++)
             {
@@ -598,7 +598,7 @@ namespace FluentNPOIConsoleExample
             }
             Console.WriteLine();
 
-            // 讀取資料行（第2行開始）
+            // Read data rows (starting from row 2)
             Console.WriteLine("\n【Sheet1 前3筆資料】:");
             for (int row = 2; row <= 4; row++)
             {
@@ -615,7 +615,7 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 讀取範例2：讀取 DataTableExample 的資料
+        /// Read Example 2: Read data from DataTableExample
         /// </summary>
         static void ReadDataTableExample(FluentWorkbook fluent)
         {
@@ -636,26 +636,26 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 讀取範例3：使用 GetTable<T> 讀取整個表格
+        /// Read Example 3: Use GetTable<T> to read entire table
         /// </summary>
         static void ReadGetTableExample(FluentWorkbook fluent)
         {
             Console.WriteLine("\n【使用 GetTable<T> 讀取表格】:");
             var sheet1 = fluent.UseSheet("Sheet1");
 
-            // 方法1：指定結束行（舊方法，仍然可用）
+            // Method 1: Specify end row (old method, still available)
             Console.WriteLine("\n方法1：指定結束行");
             var readData1 = sheet1.GetTable<ExampleData>(ExcelCol.A, 2, 13);
             Console.WriteLine($"成功讀取 {readData1.Count} 筆資料（指定結束行）");
 
-            // 方法2：自動判斷最後一行（新方法）
+            // Method 2: Auto-detect last row (new method)
             Console.WriteLine("\n方法2：自動判斷最後一行");
             var readData2 = sheet1.GetTable<ExampleData>(ExcelCol.A, 2);
             Console.WriteLine($"成功讀取 {readData2.Count} 筆資料（自動判斷最後一行）");
 
-            // 方法3：指定列範圍和行範圍（新方法）
+            // Method 3: Specify column and row range (new method)
             Console.WriteLine("\n方法3：指定列範圍和行範圍");
-            // 創建一個只包含部分欄位的類來演示
+            // Create a class with only partial fields for demonstration
             var readData3 = sheet1.GetTable<PartialData>(ExcelCol.A, ExcelCol.C, 2, 5);
             Console.WriteLine($"成功讀取 {readData3.Count} 筆資料（只讀取 A-C 列，第 2-5 行）");
             Console.WriteLine("前3筆資料詳情（只包含 ID, Name, DateOfBirth）:");
@@ -665,7 +665,7 @@ namespace FluentNPOIConsoleExample
                 Console.WriteLine($"  [{i + 1}] ID={item.ID}, Name={item.Name}, Birth={item.DateOfBirth:yyyy-MM-dd}");
             }
 
-            // 方法3示例2：讀取中間的列範圍
+            // Method 3 Example 2: Read middle column range
             Console.WriteLine("\n方法3示例2：讀取中間的列範圍（D-F 列，第 2-4 行）");
             var readData4 = sheet1.GetTable<MiddleColumnsData>(ExcelCol.D, ExcelCol.F, 2, 4);
             Console.WriteLine($"成功讀取 {readData4.Count} 筆資料");
@@ -688,10 +688,10 @@ namespace FluentNPOIConsoleExample
 
         #endregion
 
-        #region 單元格讀取範例
+        #region Cell Read Examples
 
         /// <summary>
-        /// 讀取範例1：使用 FluentCell 讀取單個單元格
+        /// Read Example 1: Use FluentCell to read single cell
         /// </summary>
         static void ReadFluentCellExample(FluentWorkbook fluent)
         {
@@ -707,7 +707,7 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 讀取範例2：讀取 SetCellValueExample
+        /// Read Example 2: Read SetCellValueExample
         /// </summary>
         static void ReadSetCellValueExample(FluentWorkbook fluent)
         {
@@ -718,7 +718,7 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// 讀取範例3：讀取合併儲存格示例
+        /// Read Example 3: Read merged cells example
         /// </summary>
         static void ReadCellMergeExample(FluentWorkbook fluent)
         {
@@ -726,43 +726,43 @@ namespace FluentNPOIConsoleExample
             var mergeSheet = fluent.UseSheet("CellMergeExample");
             var npoiSheet = mergeSheet.GetSheet();
 
-            // 顯示合併區域資訊
+            // Display merged region information
             Console.WriteLine($"\n工作表共有 {npoiSheet.NumMergedRegions} 個合併區域：");
 
             for (int i = 0; i < npoiSheet.NumMergedRegions; i++)
             {
                 var mergedRegion = npoiSheet.GetMergedRegion(i);
-                var firstRow = mergedRegion.FirstRow + 1; // 轉換為 1-based
+                var firstRow = mergedRegion.FirstRow + 1; // Convert to 1-based
                 var lastRow = mergedRegion.LastRow + 1;
                 var firstCol = (ExcelCol)mergedRegion.FirstColumn;
                 var lastCol = (ExcelCol)mergedRegion.LastColumn;
 
-                // 讀取合併區域的第一個單元格的值
+                // Read the value of the first cell in the merged region
                 var cellValue = mergeSheet.GetCellValue<string>(firstCol, firstRow) ?? "";
 
                 if (firstRow == lastRow && firstCol == lastCol)
                 {
-                    // 單個單元格（不應該發生，但以防萬一）
+                    // Single cell (should not happen, but just in case)
                     Console.WriteLine($"  [{i + 1}] {firstCol}{firstRow}: {cellValue}");
                 }
                 else if (firstRow == lastRow)
                 {
-                    // 橫向合併
+                    // Horizontal merge
                     Console.WriteLine($"  [{i + 1}] 橫向合併: {firstCol}{firstRow}-{lastCol}{firstRow} = \"{cellValue}\"");
                 }
                 else if (firstCol == lastCol)
                 {
-                    // 縱向合併
+                    // Vertical merge
                     Console.WriteLine($"  [{i + 1}] 縱向合併: {firstCol}{firstRow}-{firstCol}{lastRow} = \"{cellValue}\"");
                 }
                 else
                 {
-                    // 區域合併
+                    // Region merge
                     Console.WriteLine($"  [{i + 1}] 區域合併: {firstCol}{firstRow}-{lastCol}{lastRow} = \"{cellValue}\"");
                 }
             }
 
-            // 讀取一些具體的合併單元格值
+            // Read some specific merged cell values
             Console.WriteLine("\n讀取合併單元格的值：");
             Console.WriteLine($"  A1 (合併區域): {mergeSheet.GetCellValue<string>(ExcelCol.A, 1)}");
             Console.WriteLine($"  A3 (縱向合併): {mergeSheet.GetCellValue<string>(ExcelCol.A, 3)}");
@@ -774,7 +774,7 @@ namespace FluentNPOIConsoleExample
     }
 
     /// <summary>
-    /// 部分欄位數據類（用於演示只讀取部分列）
+    /// Partial field data class (for demonstrating reading only partial columns)
     /// </summary>
     public class PartialData
     {
@@ -784,7 +784,7 @@ namespace FluentNPOIConsoleExample
     }
 
     /// <summary>
-    /// 中間欄位數據類（用於演示讀取中間的列範圍）
+    /// Middle columns data class (for demonstrating reading middle column range)
     /// </summary>
     public class MiddleColumnsData
     {
