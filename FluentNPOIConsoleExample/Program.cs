@@ -34,6 +34,7 @@ namespace FluentNPOIConsoleExample
                 CreateCellStyleRangeExample(fluent);
                 CreateSetCellValueExample(fluent);
                 CreateCellMergeExample(fluent);
+                CreatePictureExample(fluent);
 
                 // 儲存檔案
                 fluent.SaveToPath(outputPath);
@@ -458,6 +459,96 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.A, 12).SetCellStyle("HighlightYellow");
         }
 
+        /// <summary>
+        /// 範例7：插入圖片示例
+        /// </summary>
+        static void CreatePictureExample(FluentWorkbook fluent)
+        {
+            var sheet = fluent.UseSheet("PictureExample", true);
+
+            // 設置欄寬
+            sheet.SetColumnWidth(ExcelCol.A, ExcelCol.D, 20);
+
+            // 讀取圖片文件
+            var imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "pain.jpg");
+            
+            if (!File.Exists(imagePath))
+            {
+                Console.WriteLine($"警告：圖片文件不存在: {imagePath}");
+                return;
+            }
+
+            byte[] imageBytes = File.ReadAllBytes(imagePath);
+
+            // 1. 基本插入圖片（自動計算高度，使用默認列寬比例）
+            sheet.SetCellPosition(ExcelCol.A, 1)
+                .SetValue("基本插入（自動高度）")
+                .SetCellStyle("HeaderBlue");
+            
+            sheet.SetCellPosition(ExcelCol.A, 2)
+                .SetPictureOnCell(imageBytes, 200); // 寬度 200 像素，高度自動計算（1:1）
+
+            // 2. 手動設置寬度和高度
+            sheet.SetCellPosition(ExcelCol.B, 1)
+                .SetValue("手動設置尺寸")
+                .SetCellStyle("HeaderBlue");
+            
+            sheet.SetCellPosition(ExcelCol.B, 2)
+                .SetPictureOnCell(imageBytes, 200, 150); // 寬度 200，高度 150 像素
+
+            // 3. 自定義列寬轉換比例
+            sheet.SetCellPosition(ExcelCol.C, 1)
+                .SetValue("自定義列寬比例")
+                .SetCellStyle("HeaderBlue");
+            
+            sheet.SetCellPosition(ExcelCol.C, 2)
+                .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0); // 使用 5.0 作為轉換比例
+
+            // 4. 鏈式調用示例（插入圖片後繼續設置樣式）
+            sheet.SetCellPosition(ExcelCol.D, 1)
+                .SetValue("鏈式調用示例")
+                .SetCellStyle("HeaderBlue");
+            
+            sheet.SetCellPosition(ExcelCol.D, 2)
+                .SetPictureOnCell(imageBytes, 180, 180, AnchorType.MoveAndResize, 7.0)
+                .SetValue("圖片下方文字"); // 鏈式調用，在圖片後設置文字
+
+            // 5. 不同錨點類型示例
+            sheet.SetCellPosition(ExcelCol.A, 5)
+                .SetValue("MoveAndResize（默認）")
+                .SetCellStyle("HeaderBlue");
+            
+            sheet.SetCellPosition(ExcelCol.A, 6)
+                .SetPictureOnCell(imageBytes, 150, 150, AnchorType.MoveAndResize);
+
+            sheet.SetCellPosition(ExcelCol.B, 5)
+                .SetValue("MoveDontResize")
+                .SetCellStyle("HeaderBlue");
+            
+            sheet.SetCellPosition(ExcelCol.B, 6)
+                .SetPictureOnCell(imageBytes, 150, 150, AnchorType.MoveDontResize);
+
+            sheet.SetCellPosition(ExcelCol.C, 5)
+                .SetValue("DontMoveAndResize")
+                .SetCellStyle("HeaderBlue");
+            
+            sheet.SetCellPosition(ExcelCol.C, 6)
+                .SetPictureOnCell(imageBytes, 150, 150, AnchorType.DontMoveAndResize);
+
+            // 6. 多個圖片排列示例
+            sheet.SetCellPosition(ExcelCol.A, 9)
+                .SetValue("多圖片排列")
+                .SetCellStyle("HeaderBlue");
+
+            for (int i = 0; i < 3; i++)
+            {
+                sheet.SetCellPosition((ExcelCol)((int)ExcelCol.A + i), 10)
+                    .SetPictureOnCell(imageBytes, 100, 100);
+            }
+
+            Console.WriteLine("✓ 圖片插入示例已創建");
+        }
+
         #endregion
 
         #region Read Examples
@@ -536,7 +627,7 @@ namespace FluentNPOIConsoleExample
         {
             Console.WriteLine("\n【使用 FluentCell 讀取】:");
             var sheet1 = fluent.UseSheet("Sheet1");
-            var cellA1 = sheet1.GetCellPosition(ExcelCol.A, 1);
+            var cellA1 = sheet1.SetCellPosition(ExcelCol.A, 1);
             if (cellA1 != null)
             {
                 var value = cellA1.GetValue();

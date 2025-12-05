@@ -390,7 +390,7 @@ namespace NPOIPlusUnitTest
 
             // Act
             sheet.SetCellPosition(ExcelCol.A, 1).SetValue("Test Value");
-            var cell = sheet.GetCellPosition(ExcelCol.A, 1);
+            var cell = sheet.SetCellPosition(ExcelCol.A, 1);
             var value = cell.GetValue<string>();
 
             // Assert

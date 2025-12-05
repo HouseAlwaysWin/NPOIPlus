@@ -25,7 +25,8 @@ namespace FluentNPOI.Stages
             : base(workbook, sheet, cellStylesCached)
         {
             _table = table;
-            _startCol = NormalizeCol(startCol);
+            // ExcelCol 已經是有效的列枚舉，不需要規範化
+            _startCol = startCol;
             _startRow = NormalizeRow(startRow);
             _cellTitleSets = cellTitleSets;
             _cellBodySets = cellBodySets;

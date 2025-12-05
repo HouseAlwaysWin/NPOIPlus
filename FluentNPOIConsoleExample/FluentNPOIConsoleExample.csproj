@@ -15,6 +15,10 @@
 		<None Update="Resources\Test.xlsx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="Resources\pain.jpg">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+
 	</ItemGroup>
 
 </Project>

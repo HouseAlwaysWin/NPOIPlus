@@ -53,12 +53,11 @@ namespace FluentNPOI.Stages
         {
             if (_sheet == null) throw new System.InvalidOperationException("No active sheet. Call UseSheet(...) first.");
 
-            var normalizedCol = NormalizeCol(col);
             var normalizedRow = NormalizeRow(row);
 
             var rowObj = _sheet.GetRow(normalizedRow) ?? _sheet.CreateRow(normalizedRow);
-            var cell = rowObj.GetCell((int)normalizedCol) ?? rowObj.CreateCell((int)normalizedCol);
-            return new FluentCell(_workbook, _sheet, cell, _cellStylesCached);
+            var cell = rowObj.GetCell((int)col) ?? rowObj.CreateCell((int)col);
+            return new FluentCell(_workbook, _sheet, cell, col, normalizedRow, _cellStylesCached);
         }
 
         public FluentTable<T> SetTable<T>(IEnumerable<T> table, ExcelCol startCol, int startRow)
@@ -360,17 +359,17 @@ namespace FluentNPOI.Stages
         /// <param name="col">列位置</param>
         /// <param name="row">行位置（1-based）</param>
         /// <returns>FluentCell 對象，可以鏈式調用讀取方法</returns>
-        public FluentCell GetCellPosition(ExcelCol col, int row)
-        {
-            var normalizedRow = NormalizeRow(row);
-            var rowObj = _sheet.GetRow(normalizedRow);
-            if (rowObj == null) return null;
+        // public FluentCell GetCellPosition(ExcelCol col, int row)
+        // {
+        //     var normalizedRow = NormalizeRow(row);
+        //     var rowObj = _sheet.GetRow(normalizedRow);
+        //     if (rowObj == null) return null;
 
-            var cell = rowObj.GetCell((int)col);
-            if (cell == null) return null;
+        //     var cell = rowObj.GetCell((int)col);
+        //     if (cell == null) return null;
 
-            return new FluentCell(_workbook, _sheet, cell, _cellStylesCached);
-        }
+        //     return new FluentCell(_workbook, _sheet, cell, col, normalizedRow, _cellStylesCached);
+        // }
 
         public FluentSheet SetCellStyleRange(string cellStyleKey, ExcelCol startCol, ExcelCol endCol, int startRow, int endRow)
         {
