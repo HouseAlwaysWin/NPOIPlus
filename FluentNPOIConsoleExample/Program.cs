@@ -574,7 +574,29 @@ namespace FluentNPOIConsoleExample
             var readData2 = sheet1.GetTable<ExampleData>(ExcelCol.A, 2);
             Console.WriteLine($"成功讀取 {readData2.Count} 筆資料（自動判斷最後一行）");
 
-            Console.WriteLine("\n前5筆資料詳情:");
+            // 方法3：指定列範圍和行範圍（新方法）
+            Console.WriteLine("\n方法3：指定列範圍和行範圍");
+            // 創建一個只包含部分欄位的類來演示
+            var readData3 = sheet1.GetTable<PartialData>(ExcelCol.A, ExcelCol.C, 2, 5);
+            Console.WriteLine($"成功讀取 {readData3.Count} 筆資料（只讀取 A-C 列，第 2-5 行）");
+            Console.WriteLine("前3筆資料詳情（只包含 ID, Name, DateOfBirth）:");
+            for (int i = 0; i < Math.Min(3, readData3.Count); i++)
+            {
+                var item = readData3[i];
+                Console.WriteLine($"  [{i + 1}] ID={item.ID}, Name={item.Name}, Birth={item.DateOfBirth:yyyy-MM-dd}");
+            }
+
+            // 方法3示例2：讀取中間的列範圍
+            Console.WriteLine("\n方法3示例2：讀取中間的列範圍（D-F 列，第 2-4 行）");
+            var readData4 = sheet1.GetTable<MiddleColumnsData>(ExcelCol.D, ExcelCol.F, 2, 4);
+            Console.WriteLine($"成功讀取 {readData4.Count} 筆資料");
+            for (int i = 0; i < readData4.Count; i++)
+            {
+                var item = readData4[i];
+                Console.WriteLine($"  [{i + 1}] IsActive={item.IsActive}, Score={item.Score:F1}, Amount={item.Amount:C}");
+            }
+
+            Console.WriteLine("\n前5筆完整資料詳情（方法2的結果）:");
 
             for (int i = 0; i < Math.Min(5, readData2.Count); i++)
             {
@@ -639,6 +661,26 @@ namespace FluentNPOIConsoleExample
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// 部分欄位數據類（用於演示只讀取部分列）
+    /// </summary>
+    public class PartialData
+    {
+        public int ID { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public DateTime DateOfBirth { get; set; }
+    }
+
+    /// <summary>
+    /// 中間欄位數據類（用於演示讀取中間的列範圍）
+    /// </summary>
+    public class MiddleColumnsData
+    {
+        public bool IsActive { get; set; }
+        public double Score { get; set; }
+        public decimal Amount { get; set; }
     }
 
 }

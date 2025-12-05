@@ -238,6 +238,41 @@ namespace FluentNPOI.Base
                 if (value is T result)
                     return result;
 
+                // 特殊處理 DateTime 類型
+                if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
+                {
+                    if (value is DateTime dt)
+                        return (T)(object)dt;
+                    
+                    // 如果值是 double（Excel 日期存儲為數字），嘗試轉換
+                    if (value is double d && cell != null)
+                    {
+                        // 檢查單元格是否有日期格式
+                        if (DateUtil.IsCellDateFormatted(cell))
+                        {
+                            return (T)(object)cell.DateCellValue;
+                        }
+                        // 嘗試將數字轉換為日期（OLE 日期格式）
+                        try
+                        {
+                            var dateTime = DateUtil.GetJavaDate(d);
+                            return (T)(object)dateTime;
+                        }
+                        catch
+                        {
+                            // 如果轉換失敗，返回默認值
+                        }
+                    }
+                    
+                    // 嘗試字符串轉換
+                    if (value is string str && DateTime.TryParse(str, out var parsedDate))
+                    {
+                        return (T)(object)parsedDate;
+                    }
+                    
+                    return default(T);
+                }
+
                 // 嘗試轉換
                 return (T)Convert.ChangeType(value, typeof(T));
             }

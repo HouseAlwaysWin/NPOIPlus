@@ -1,6 +1,7 @@
 using NPOI.SS.UserModel;
 using FluentNPOI.Base;
 using FluentNPOI.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -151,6 +152,119 @@ namespace FluentNPOI.Stages
                 }
 
                 result.Add(instance);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 從 Excel 讀取表格數據並轉換為物件集合（指定列範圍和行範圍）
+        /// </summary>
+        /// <typeparam name="T">目標類型</typeparam>
+        /// <param name="startCol">起始列</param>
+        /// <param name="endCol">結束列</param>
+        /// <param name="startRow">起始行（1-based）</param>
+        /// <param name="endRow">結束行（1-based）</param>
+        /// <returns>物件集合</returns>
+        public List<T> GetTable<T>(ExcelCol startCol, ExcelCol endCol, int startRow, int endRow)
+        {
+            var result = new List<T>();
+            var type = typeof(T);
+
+            // 獲取所有公開的屬性和欄位,按照定義順序排序
+            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .OrderBy(p => p.MetadataToken)
+                .ToArray();
+            var fields = type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .OrderBy(f => f.MetadataToken)
+                .ToArray();
+
+            // 計算可用的屬性/欄位數量
+            int availableFieldCount = fields.Length;
+            int availablePropertyCount = properties.Count(p => p.CanWrite);
+            int totalAvailableMembers = availableFieldCount + availablePropertyCount;
+
+            // 計算要讀取的列數
+            int columnCount = (int)endCol - (int)startCol + 1;
+            
+            // 如果起始列大於結束列，返回空列表
+            if (columnCount <= 0)
+                return result;
+            
+            // 如果指定的列數超過可用的成員數，只使用可用的成員數
+            int membersToUse = Math.Min(columnCount, totalAvailableMembers);
+
+            // 遍歷每一行
+            for (int row = startRow; row <= endRow; row++)
+            {
+                var normalizedRow = NormalizeRow(row);
+                var rowObj = _sheet.GetRow(normalizedRow);
+
+                // 如果行不存在,跳過
+                if (rowObj == null)
+                    continue;
+
+                // 創建新實例
+                T instance = (T)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+                int memberIndex = 0;
+                bool hasData = false;
+
+                // 設置所有欄位的值
+                foreach (var field in fields)
+                {
+                    if (memberIndex >= membersToUse)
+                        break;
+
+                    var colIndex = (int)startCol + memberIndex;
+                    
+                    // 確保不超過結束列
+                    if (colIndex > (int)endCol)
+                        break;
+
+                    var cell = rowObj.GetCell(colIndex);
+
+                    if (cell != null && !IsCellEmpty(cell))
+                    {
+                        var value = GetCellValueForType(cell, field.FieldType);
+                        field.SetValue(instance, value);
+                        hasData = true;
+                    }
+
+                    memberIndex++;
+                }
+
+                // 設置所有屬性的值
+                foreach (var prop in properties)
+                {
+                    if (!prop.CanWrite)
+                        continue;
+
+                    if (memberIndex >= membersToUse)
+                        break;
+
+                    var colIndex = (int)startCol + memberIndex;
+                    
+                    // 確保不超過結束列
+                    if (colIndex > (int)endCol)
+                        break;
+
+                    var cell = rowObj.GetCell(colIndex);
+
+                    if (cell != null && !IsCellEmpty(cell))
+                    {
+                        var value = GetCellValueForType(cell, prop.PropertyType);
+                        prop.SetValue(instance, value);
+                        hasData = true;
+                    }
+
+                    memberIndex++;
+                }
+
+                // 只有當至少有一個單元格有數據時才添加到結果
+                if (hasData)
+                {
+                    result.Add(instance);
+                }
             }
 
             return result;
