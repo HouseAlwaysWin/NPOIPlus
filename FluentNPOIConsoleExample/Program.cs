@@ -20,7 +20,7 @@ namespace FluentNPOIConsoleExample
             {
                 var testData = GetTestData();
                 var filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test.xlsx";
-                var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2.xlsx";
+                var outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\Test2_v2.xlsx";
 
                 // Ensure Resources folder exists
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
@@ -92,7 +92,14 @@ namespace FluentNPOIConsoleExample
                 {
                     style.SetAligment(HorizontalAlignment.Center);
                     style.SetBorderAllStyle(BorderStyle.Thin);
-                    style.SetFontInfo(workbook, "Calibri", 10);
+                    style.SetFontInfo(workbook, "新細明體", 10);
+                })
+
+                .SetupCellStyle("BodyString", (workbook, style) =>
+                {
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                    style.SetAligment(HorizontalAlignment.Center);
+                    style.SetFontInfo(workbook, "新細明體", 10);
                 })
                 .SetupCellStyle("DateOfBirth", (workbook, style) =>
                 {
@@ -101,6 +108,7 @@ namespace FluentNPOIConsoleExample
                     style.SetAligment(HorizontalAlignment.Center);
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+                    style.SetFontInfo(workbook, fontFamily: "新細明體");
                 })
                 .SetupCellStyle("HeaderBlue", (workbook, style) =>
                 {
@@ -108,6 +116,7 @@ namespace FluentNPOIConsoleExample
                     style.SetAligment(HorizontalAlignment.Center);
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.LightCornflowerBlue);
+                    style.SetFontInfo(workbook, fontFamily: "新細明體");
                 })
                 .SetupCellStyle("BodyGreen", (workbook, style) =>
                 {
@@ -115,18 +124,21 @@ namespace FluentNPOIConsoleExample
                     style.SetAligment(HorizontalAlignment.Center);
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.LightGreen);
+                    style.SetFontInfo(workbook, fontFamily: "新細明體");
                 })
                 .SetupCellStyle("AmountCurrency", (workbook, style) =>
                 {
                     style.SetBorderAllStyle(BorderStyle.Thin);
                     style.SetDataFormat(workbook, "#,##0.00");
                     style.SetAligment(HorizontalAlignment.Right);
+                    style.SetFontInfo(workbook, fontFamily: "新細明體");
                 })
                 .SetupCellStyle("HighlightYellow", (workbook, style) =>
                 {
                     style.SetBorderAllStyle(BorderStyle.Thin);
                     style.FillPattern = FillPattern.SolidForeground;
                     style.SetCellFillForegroundColor(IndexedColors.Yellow);
+                    style.SetFontInfo(workbook, fontFamily: "新細明體");
                 });
         }
 
@@ -224,11 +236,12 @@ namespace FluentNPOIConsoleExample
             dataTable.Rows.Add(106, "林八", new DateTime(1999, 5, 8), false, 3.2, 21000m, "財務金融");
 
             // 使用 DataTableMapping
+            // 使用 DataTableMapping
             var mapping = new DataTableMapping();
             mapping.Map("StudentID").ToColumn(ExcelCol.A).WithTitle("學號")
                 .WithTitleStyle("HeaderBlue").WithCellType(CellType.Numeric);
             mapping.Map("StudentName").ToColumn(ExcelCol.B).WithTitle("姓名")
-                .WithTitleStyle("HeaderBlue");
+                .WithTitleStyle("HeaderBlue").WithCellType(CellType.String);
             mapping.Map("BirthDate").ToColumn(ExcelCol.C).WithTitle("出生日期")
                 .WithTitleStyle("HeaderBlue").WithStyle("DateOfBirth");
             mapping.Map("IsEnrolled").ToColumn(ExcelCol.D).WithTitle("在學中")
@@ -238,7 +251,7 @@ namespace FluentNPOIConsoleExample
             mapping.Map("Tuition").ToColumn(ExcelCol.F).WithTitle("學費")
                 .WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency").WithCellType(CellType.Numeric);
             mapping.Map("Department").ToColumn(ExcelCol.G).WithTitle("科系")
-                .WithTitleStyle("HeaderBlue");
+                .WithTitleStyle("HeaderBlue").WithStyle("BodyString").WithCellType(CellType.String);
 
             fluent.UseSheet("DataTableExample", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.G, 20)
@@ -402,6 +415,56 @@ namespace FluentNPOIConsoleExample
             fluent.UseSheet("SheetGlobalStyle_Yellow")
                 .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
 
+            // Sheet 3: 混合使用 Sheet 全域樣式和特定樣式
+            var mixedMapping = new FluentMapping<ExampleData>();
+            mixedMapping.Map(x => x.ID).ToColumn(ExcelCol.A).WithTitle("ID")
+                .WithStyle("HighlightYellow"); // 覆蓋全域
+
+            mixedMapping.Map(x => x.Name).ToColumn(ExcelCol.B).WithTitle("名稱"); // 使用全域
+
+            mixedMapping.Map(x => x.DateOfBirth).ToColumn(ExcelCol.C).WithTitle("生日")
+                .WithStyle("DateOfBirth"); // 覆蓋全域
+
+            mixedMapping.Map(x => x.IsActive).ToColumn(ExcelCol.D).WithTitle("是否活躍")
+                .WithCellType(CellType.Boolean)
+                .WithDynamicStyle(x => x.IsActive ? "Sheet3_ActiveGreen" : "Sheet3_InactiveRed");
+
+            // 預先註冊 Dynamic Styles
+            fluent.SetupCellStyle("Sheet3_ActiveGreen", (wb, s) =>
+            {
+                s.FillPattern = FillPattern.SolidForeground;
+                s.SetCellFillForegroundColor(IndexedColors.Green);
+                s.SetBorderAllStyle(BorderStyle.Thin);
+                s.SetFontInfo(wb, fontFamily: "新細明體");
+            });
+            fluent.SetupCellStyle("Sheet3_InactiveRed", (wb, s) =>
+            {
+                s.FillPattern = FillPattern.SolidForeground;
+                s.SetCellFillForegroundColor(IndexedColors.Red);
+                s.SetBorderAllStyle(BorderStyle.Thin);
+                s.SetFontInfo(wb, fontFamily: "新細明體");
+            });
+
+            fluent.UseSheet("SheetGlobalStyle_Mixed", true)
+                .SetColumnWidth(ExcelCol.A, ExcelCol.D, 20)
+                .SetupSheetGlobalCachedCellStyles((wb, style) =>
+                {
+                    style.FillPattern = FillPattern.SolidForeground;
+                    style.SetCellFillForegroundColor(IndexedColors.Aqua);
+                    style.SetBorderAllStyle(BorderStyle.Thin);
+                    style.SetAligment(HorizontalAlignment.Center);
+                    style.SetFontInfo(wb, fontFamily: "新細明體");
+                })
+                .SetTable(limitedData, mixedMapping, 2)
+                .BuildRows();
+
+            fluent.UseSheet("SheetGlobalStyle_Mixed")
+                .SetCellPosition(ExcelCol.A, 1)
+                .SetValue("混合樣式：Sheet 全域(水藍) + 特定樣式覆蓋")
+                .SetCellStyle("HeaderBlue");
+            fluent.UseSheet("SheetGlobalStyle_Mixed")
+                .SetExcelCellMerge(ExcelCol.A, ExcelCol.D, 1);
+
             Console.WriteLine("  ✓ SheetGlobalStyle 建立完成");
         }
 
@@ -478,88 +541,121 @@ namespace FluentNPOIConsoleExample
             sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.C, 6);
             sheet.SetCellPosition(ExcelCol.A, 6).SetCellStyle("HighlightYellow");
 
+            // 5. Multiple merge regions example
+            sheet.SetCellPosition(ExcelCol.A, 8).SetValue("部門A");
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 8, 10); // Vertical merge A8-A10
+
+            sheet.SetCellPosition(ExcelCol.B, 8).SetValue("部門B");
+            sheet.SetExcelCellMerge(ExcelCol.B, ExcelCol.B, 8, 10); // Vertical merge B8-B10
+
+            sheet.SetCellPosition(ExcelCol.C, 8).SetValue("部門C");
+            sheet.SetExcelCellMerge(ExcelCol.C, ExcelCol.C, 8, 10); // Vertical merge C8-C10
+
+            // 6. Region merge example (multiple rows and columns)
+            sheet.SetCellPosition(ExcelCol.A, 12).SetValue("重要通知");
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.E, 12, 14); // Merge A12-E14 (region)
+            sheet.SetCellPosition(ExcelCol.A, 12).SetCellStyle("HighlightYellow");
+
             Console.WriteLine("  ✓ CellMergeExample 建立完成");
         }
 
         /// <summary>
-        /// Example 8: Insert picture
+        /// Example 8: Insert picture example
         /// </summary>
         static void CreatePictureExample(FluentWorkbook fluent)
         {
             Console.WriteLine("建立 PictureExample...");
 
             var sheet = fluent.UseSheet("PictureExample", true);
+
+            // Set column width
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.D, 20);
 
+            // Read image file
             var imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "pain.jpg");
 
             if (!File.Exists(imagePath))
             {
-                Console.WriteLine($"  ⚠ 圖片檔案不存在: {imagePath}");
-                sheet.SetCellPosition(ExcelCol.A, 1)
-                    .SetValue("圖片檔案不存在，請放置 pain.jpg 到 Resources 資料夾");
+                Console.WriteLine($"Warning: Image file not found: {imagePath}");
                 return;
             }
 
             byte[] imageBytes = File.ReadAllBytes(imagePath);
 
-            // 1. 基本插入
+            // 1. Basic picture insertion (auto-calculate height, use default column width ratio)
             sheet.SetCellPosition(ExcelCol.A, 1)
-                .SetValue("基本插入 (自動高度)")
+                .SetValue("基本插入（自動高度）")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.A, 2)
-                .SetPictureOnCell(imageBytes, 200);
+                .SetPictureOnCell(imageBytes, 200); // Width 200 pixels, height auto-calculated (1:1)
 
-            // 2. 手動尺寸
+            // 2. Manually set width and height
             sheet.SetCellPosition(ExcelCol.B, 1)
-                .SetValue("手動尺寸")
+                .SetValue("手動設置尺寸")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.B, 2)
-                .SetPictureOnCell(imageBytes, 200, 150);
+                .SetPictureOnCell(imageBytes, 200, 150); // Width 200, height 150 pixels
 
-            // 3. 自定義列寬比例 + Anchor
+            // 3. Custom column width conversion ratio
             sheet.SetCellPosition(ExcelCol.C, 1)
                 .SetValue("自定義列寬比例")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.C, 2)
-                .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0);
+                .SetPictureOnCell(imageBytes, 300, AnchorType.MoveAndResize, 5.0); // Use 5.0 as conversion ratio
 
-            // 4. 鏈式調用
+            // 4. Chained call example (continue setting after inserting picture)
             sheet.SetCellPosition(ExcelCol.D, 1)
-                .SetValue("鏈式調用")
+                .SetValue("鏈式調用示例")
                 .SetCellStyle("HeaderBlue");
 
             sheet.SetCellPosition(ExcelCol.D, 2)
                 .SetPictureOnCell(imageBytes, 180, 180, AnchorType.MoveAndResize, 7.0)
                 .SetCellPosition(ExcelCol.D, 10)
-                .SetValue("圖片下方文字");
+                .SetValue("圖片下方文字"); // Chained call, set text after picture
 
-            // 5. 不同的 Anchor 類型
+            // 5. Different anchor type examples
             sheet.SetCellPosition(ExcelCol.A, 5)
-                .SetValue("MoveAndResize")
+                .SetValue("MoveAndResize（默認）")
                 .SetCellStyle("HeaderBlue");
+
             sheet.SetCellPosition(ExcelCol.A, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.MoveAndResize);
 
             sheet.SetCellPosition(ExcelCol.B, 5)
                 .SetValue("MoveDontResize")
                 .SetCellStyle("HeaderBlue");
+
             sheet.SetCellPosition(ExcelCol.B, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.MoveDontResize);
 
             sheet.SetCellPosition(ExcelCol.C, 5)
                 .SetValue("DontMoveAndResize")
                 .SetCellStyle("HeaderBlue");
+
             sheet.SetCellPosition(ExcelCol.C, 6)
                 .SetPictureOnCell(imageBytes, 150, 150, AnchorType.DontMoveAndResize);
+
+            // 6. Multiple pictures arrangement example
+            sheet.SetCellPosition(ExcelCol.A, 9)
+                .SetValue("多圖片排列")
+                .SetCellStyle("HeaderBlue");
+
+            for (int i = 0; i < 3; i++)
+            {
+                sheet.SetCellPosition((ExcelCol)((int)ExcelCol.A + i), 10)
+                    .SetPictureOnCell(imageBytes, 100, 100);
+            }
 
             Console.WriteLine("  ✓ PictureExample 建立完成");
         }
 
         #endregion
+
+
+
 
         #region Read Examples
 

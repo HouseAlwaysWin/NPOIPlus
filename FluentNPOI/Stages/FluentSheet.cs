@@ -169,6 +169,8 @@ namespace FluentNPOI.Stages
 
         private void ApplyStyle(ICell cell, string styleKey)
         {
+            if (string.IsNullOrEmpty(styleKey)) styleKey = "global";
+
             if (!string.IsNullOrEmpty(styleKey) && _cellStylesCached.TryGetValue(styleKey, out var style))
                 cell.CellStyle = style;
         }

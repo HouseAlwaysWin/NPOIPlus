@@ -176,9 +176,23 @@ namespace FluentNPOI.Stages
                     // 套用標題樣式
                     if (map.TitleStyleRef != null)
                     {
-                        var refRow = _sheet.GetRow(map.TitleStyleRef.Row);
-                        var refCell = refRow?.GetCell((int)map.TitleStyleRef.Column);
-                        if (refCell != null) cell.CellStyle = refCell.CellStyle;
+                        string refKey = $"{_sheet.SheetName}_{map.TitleStyleRef.Column}{map.TitleStyleRef.Row}";
+                        if (_cellStylesCached.TryGetValue(refKey, out var cachedStyle))
+                        {
+                            cell.CellStyle = cachedStyle;
+                        }
+                        else
+                        {
+                            var refRow = _sheet.GetRow(map.TitleStyleRef.Row);
+                            var refCell = refRow?.GetCell((int)map.TitleStyleRef.Column);
+                            if (refCell != null && refCell.CellStyle != null)
+                            {
+                                ICellStyle newCellStyle = _workbook.CreateCellStyle();
+                                newCellStyle.CloneStyleFrom(refCell.CellStyle);
+                                _cellStylesCached[refKey] = newCellStyle;
+                                cell.CellStyle = newCellStyle;
+                            }
+                        }
                     }
                     else if (!string.IsNullOrEmpty(map.TitleStyleKey) && _cellStylesCached.TryGetValue(map.TitleStyleKey, out var titleStyle))
                     {
@@ -249,9 +263,23 @@ namespace FluentNPOI.Stages
                 // 複製資料樣式
                 if (map.DataStyleRef != null)
                 {
-                    var refRow = _sheet.GetRow(map.DataStyleRef.Row);
-                    var refCell = refRow?.GetCell((int)map.DataStyleRef.Column);
-                    if (refCell != null) cell.CellStyle = refCell.CellStyle;
+                    string refKey = $"{_sheet.SheetName}_{map.DataStyleRef.Column}{map.DataStyleRef.Row}";
+                    if (_cellStylesCached.TryGetValue(refKey, out var cachedStyle))
+                    {
+                        cell.CellStyle = cachedStyle;
+                    }
+                    else
+                    {
+                        var refRow = _sheet.GetRow(map.DataStyleRef.Row);
+                        var refCell = refRow?.GetCell((int)map.DataStyleRef.Column);
+                        if (refCell != null && refCell.CellStyle != null)
+                        {
+                            ICellStyle newCellStyle = _workbook.CreateCellStyle();
+                            newCellStyle.CloneStyleFrom(refCell.CellStyle);
+                            _cellStylesCached[refKey] = newCellStyle;
+                            cell.CellStyle = newCellStyle;
+                        }
+                    }
                 }
 
                 // 如果沒有設定任何樣式，嘗試套用 Sheet 全域樣式
