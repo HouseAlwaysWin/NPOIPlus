@@ -1,6 +1,7 @@
 using NPOI.SS.UserModel;
 using FluentNPOI.Base;
 using FluentNPOI.Models;
+using FluentNPOI.Streaming.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -110,6 +111,20 @@ namespace FluentNPOI.Stages
         public FluentTable<T> SetTable<T>(IEnumerable<T> table, ExcelCol startCol, int startRow)
         {
             return new FluentTable<T>(_workbook, _sheet, table, startCol, startRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
+        }
+
+        /// <summary>
+        /// 使用 FluentMapping 設定表格資料（推薦使用）
+        /// </summary>
+        /// <typeparam name="T">資料型別</typeparam>
+        /// <param name="table">資料集合</param>
+        /// <param name="mapping">FluentMapping 設定</param>
+        /// <param name="startRow">起始行（1-based），預設為 1</param>
+        /// <returns>FluentTable 实例（已套用 mapping）</returns>
+        public FluentTable<T> SetTable<T>(IEnumerable<T> table, FluentMapping<T> mapping, int startRow = 1) where T : new()
+        {
+            var fluentTable = new FluentTable<T>(_workbook, _sheet, table, ExcelCol.A, startRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
+            return fluentTable.WithMapping(mapping);
         }
 
         /// <summary>

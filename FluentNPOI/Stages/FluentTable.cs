@@ -1,6 +1,7 @@
 using NPOI.SS.UserModel;
 using FluentNPOI.Base;
 using FluentNPOI.Models;
+using FluentNPOI.Streaming.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace FluentNPOI.Stages
         private int _startRow;
         private List<TableCellSet> _cellBodySets;
         private List<TableCellSet> _cellTitleSets;
+        private IReadOnlyList<ColumnMapping> _columnMappings;
 
         public FluentTable(IWorkbook workbook, ISheet sheet, IEnumerable<T> table,
             ExcelCol startCol, int startRow,
@@ -30,6 +32,15 @@ namespace FluentNPOI.Stages
             _startRow = NormalizeRow(startRow);
             _cellTitleSets = cellTitleSets;
             _cellBodySets = cellBodySets;
+        }
+
+        /// <summary>
+        /// 使用 FluentMapping 設定欄位對應（可取代 BeginTitleSet/BeginBodySet）
+        /// </summary>
+        public FluentTable<T> WithMapping<TMapping>(FluentMapping<TMapping> mapping) where TMapping : new()
+        {
+            _columnMappings = mapping.GetMappings();
+            return this;
         }
 
         private T GetItemAt(int index)
@@ -142,20 +153,92 @@ namespace FluentNPOI.Stages
             return this;
         }
 
-        public FluentTableCell<T> BeginBodySet(string cellName)
+        /// <summary>
+        /// 使用 FluentMapping 寫入一行
+        /// </summary>
+        private FluentTable<T> SetRowWithMapping(int rowOffset, bool writeTitle)
         {
-            _cellBodySets.Add(new TableCellSet { CellName = cellName });
-            return new FluentTableCell<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, cellName, _cellTitleSets, _cellBodySets);
+            if (_columnMappings == null || _columnMappings.Count == 0) return this;
+
+            var item = GetItemAt(rowOffset);
+            var targetRowIndex = _startRow + rowOffset + (writeTitle ? 1 : 0);
+
+            // 寫入標題行（只在第一次）
+            if (writeTitle && rowOffset == 0)
+            {
+                var titleRow = _sheet.GetRow(_startRow) ?? _sheet.CreateRow(_startRow);
+                foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
+                {
+                    var colIdx = (int)map.ColumnIndex.Value;
+                    var cell = titleRow.GetCell(colIdx) ?? titleRow.CreateCell(colIdx);
+                    cell.SetCellValue(map.Title ?? map.Property?.Name ?? map.ColumnName ?? "");
+
+                    // 套用標題樣式
+                    if (!string.IsNullOrEmpty(map.TitleStyleKey) && _cellStylesCached.TryGetValue(map.TitleStyleKey, out var titleStyle))
+                    {
+                        cell.CellStyle = titleStyle;
+                    }
+                }
+            }
+
+            // 寫入資料行
+            var dataRow = _sheet.GetRow(targetRowIndex) ?? _sheet.CreateRow(targetRowIndex);
+            foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
+            {
+                var colIdx = (int)map.ColumnIndex.Value;
+                var cell = dataRow.GetCell(colIdx) ?? dataRow.CreateCell(colIdx);
+
+                // 公式優先
+                if (map.FormulaFunc != null)
+                {
+                    var formula = map.FormulaFunc(targetRowIndex + 1, colIdx); // Excel 是 1-based
+                    cell.SetCellFormula(formula);
+                }
+                else
+                {
+                    // 計算值 (優先使用 ValueFunc，否則從屬性取值)
+                    object value;
+                    if (map.ValueFunc != null)
+                    {
+                        value = map.ValueFunc(item);
+                    }
+                    else if (map.Property != null)
+                    {
+                        value = map.Property.GetValue(item);
+                    }
+                    else
+                    {
+                        value = null;
+                    }
+
+                    SetCellValue(cell, value, CellType.Unknown);
+                }
+
+                // 套用資料樣式
+                if (!string.IsNullOrEmpty(map.StyleKey) && _cellStylesCached.TryGetValue(map.StyleKey, out var dataStyle))
+                {
+                    cell.CellStyle = dataStyle;
+                }
+            }
+
+            return this;
         }
 
-        public FluentTableHeader<T> BeginTitleSet(string title)
-        {
-            _cellTitleSets.Add(new TableCellSet { CellName = $"{title}_TITLE", CellValue = title });
-            return new FluentTableHeader<T>(_workbook, _sheet, _table, _startCol, _startRow, _cellStylesCached, title, _cellTitleSets, _cellBodySets);
-        }
 
         public FluentTable<T> BuildRows()
         {
+            // 如果有 FluentMapping，使用 mapping 方式寫入
+            if (_columnMappings != null)
+            {
+                bool writeTitle = _columnMappings.Any(m => !string.IsNullOrEmpty(m.Title));
+                for (int i = 0; i < _table.Count(); i++)
+                {
+                    SetRowWithMapping(i, writeTitle);
+                }
+                return this;
+            }
+
+            // 否則使用原有方式
             for (int i = 0; i < _table.Count(); i++)
             {
                 SetRow(i);
@@ -164,4 +247,3 @@ namespace FluentNPOI.Stages
         }
     }
 }
-

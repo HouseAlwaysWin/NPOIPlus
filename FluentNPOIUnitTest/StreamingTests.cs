@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FluentNPOI;
+using FluentNPOI.Models;
+using FluentNPOI.Stages;
 using FluentNPOI.Streaming;
 using FluentNPOI.Streaming.Abstractions;
 using FluentNPOI.Streaming.Mapping;
@@ -77,9 +80,9 @@ namespace FluentNPOIUnitTest
         public void FluentMapping_Map_SetsColumnIndex()
         {
             var mapping = new FluentMapping<Person>();
-            mapping.Map(x => x.Name).ToColumn(0);
-            mapping.Map(x => x.Age).ToColumn(1);
-            mapping.Map(x => x.Email).ToColumn(2);
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.A);
+            mapping.Map(x => x.Age).ToColumn(ExcelCol.B);
+            mapping.Map(x => x.Email).ToColumn(ExcelCol.C);
 
             var mappings = mapping.GetMappings();
             Assert.Equal(3, mappings.Count);
@@ -89,9 +92,9 @@ namespace FluentNPOIUnitTest
         public void FluentMapping_Map_MapsRowToDto()
         {
             var mapping = new FluentMapping<Person>();
-            mapping.Map(x => x.Name).ToColumn(0);
-            mapping.Map(x => x.Age).ToColumn(1);
-            mapping.Map(x => x.Email).ToColumn(2);
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.A);
+            mapping.Map(x => x.Age).ToColumn(ExcelCol.B);
+            mapping.Map(x => x.Email).ToColumn(ExcelCol.C);
 
             var values = new object[] { "Alice", 25, "alice@example.com" };
             var row = new StreamingRow(0, values);
@@ -107,8 +110,8 @@ namespace FluentNPOIUnitTest
         public void FluentMapping_Map_HandlesNullValues()
         {
             var mapping = new FluentMapping<Person>();
-            mapping.Map(x => x.Name).ToColumn(0);
-            mapping.Map(x => x.Age).ToColumn(1);
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.A);
+            mapping.Map(x => x.Age).ToColumn(ExcelCol.B);
 
             var values = new object?[] { null, null };
             var row = new StreamingRow(0, values!);
@@ -135,8 +138,8 @@ namespace FluentNPOIUnitTest
             });
 
             var mapping = new FluentMapping<Person>();
-            mapping.Map(x => x.Name).ToColumn(0);
-            mapping.Map(x => x.Age).ToColumn(1);
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.A);
+            mapping.Map(x => x.Age).ToColumn(ExcelCol.B);
 
             var pipeline = StreamingPipelineBuilder.CreatePipeline<Person>(reader, mapping)
                 .Skip(1);
@@ -158,8 +161,8 @@ namespace FluentNPOIUnitTest
             });
 
             var mapping = new FluentMapping<Person>();
-            mapping.Map(x => x.Name).ToColumn(0);
-            mapping.Map(x => x.Age).ToColumn(1);
+            mapping.Map(x => x.Name).ToColumn(ExcelCol.A);
+            mapping.Map(x => x.Age).ToColumn(ExcelCol.B);
 
             var pipeline = StreamingPipelineBuilder.CreatePipeline<Person>(reader, mapping)
                 .Where(row => row.GetValue<int>(1) >= 18);
@@ -189,9 +192,9 @@ namespace FluentNPOIUnitTest
                 });
 
                 var mapping = new FluentMapping<Person>();
-                mapping.Map(x => x.Name).ToColumn(0);
-                mapping.Map(x => x.Age).ToColumn(1);
-                mapping.Map(x => x.Email).ToColumn(2);
+                mapping.Map(x => x.Name).ToColumn(ExcelCol.A);
+                mapping.Map(x => x.Age).ToColumn(ExcelCol.B);
+                mapping.Map(x => x.Email).ToColumn(ExcelCol.C);
 
                 var results = FluentExcelReader.Read<Person>(testFilePath, mapping).ToList();
 
@@ -232,6 +235,208 @@ namespace FluentNPOIUnitTest
             using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
                 workbook.Write(fs);
+            }
+        }
+
+        #endregion
+
+        #region Write With Mapping Tests
+
+        [Fact]
+        public void FluentTable_WithMapping_WritesToCorrectColumns()
+        {
+            var testFilePath = Path.Combine(Path.GetTempPath(), $"write_test_{Guid.NewGuid()}.xlsx");
+            try
+            {
+                var data = new List<Person>
+                {
+                    new Person { Name = "Alice", Age = 25, Email = "alice@example.com" },
+                    new Person { Name = "Bob", Age = 30, Email = "bob@example.com" }
+                };
+
+                var mapping = new FluentMapping<Person>();
+                mapping.Map(x => x.Name).ToColumn(ExcelCol.A).WithTitle("姓名");
+                mapping.Map(x => x.Age).ToColumn(ExcelCol.B).WithTitle("年齡");
+
+                var workbook = new XSSFWorkbook();
+                new FluentWorkbook(workbook)
+                    .UseSheet("Sheet1")
+                    .SetTable(data, ExcelCol.A, 1)
+                    .WithMapping(mapping)
+                    .BuildRows();
+
+                // Save with FileStream
+                using (var fs = new FileStream(testFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    workbook.Write(fs);
+                }
+
+                // Verify the file was created and read back
+                using (var fs = new FileStream(testFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    var readWorkbook = new XSSFWorkbook(fs);
+                    var sheet = readWorkbook.GetSheetAt(0);
+
+                    // Check title row
+                    var titleRow = sheet.GetRow(0);
+                    Assert.Equal("姓名", titleRow.GetCell(0).StringCellValue);
+                    Assert.Equal("年齡", titleRow.GetCell(1).StringCellValue);
+
+                    // Check data rows
+                    var dataRow1 = sheet.GetRow(1);
+                    Assert.Equal("Alice", dataRow1.GetCell(0).StringCellValue);
+                    Assert.Equal(25, (int)dataRow1.GetCell(1).NumericCellValue);
+                }
+            }
+            finally
+            {
+                if (File.Exists(testFilePath))
+                    File.Delete(testFilePath);
+            }
+        }
+
+        [Fact]
+        public void FluentTable_WithMapping_SupportsOutOfOrderColumns()
+        {
+            var testFilePath = Path.Combine(Path.GetTempPath(), $"write_test_order_{Guid.NewGuid()}.xlsx");
+            try
+            {
+                var data = new List<Person>
+                {
+                    new Person { Name = "Alice", Age = 25, Email = "alice@example.com" }
+                };
+
+                // Map in non-sequential order: Age -> A, Name -> C (skip B)
+                var mapping = new FluentMapping<Person>();
+                mapping.Map(x => x.Age).ToColumn(ExcelCol.A).WithTitle("年齡");
+                mapping.Map(x => x.Name).ToColumn(ExcelCol.C).WithTitle("姓名");
+
+                var workbook = new XSSFWorkbook();
+                new FluentWorkbook(workbook)
+                    .UseSheet("Sheet1")
+                    .SetTable(data, ExcelCol.A, 1)
+                    .WithMapping(mapping)
+                    .BuildRows();
+
+                // Save with FileStream
+                using (var fs = new FileStream(testFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    workbook.Write(fs);
+                }
+
+                // Verify the columns are in the correct positions
+                using (var fs = new FileStream(testFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    var readWorkbook = new XSSFWorkbook(fs);
+                    var sheet = readWorkbook.GetSheetAt(0);
+
+                    // Check title row
+                    var titleRow = sheet.GetRow(0);
+                    Assert.Equal("年齡", titleRow.GetCell(0).StringCellValue); // Column A
+                    Assert.Equal("姓名", titleRow.GetCell(2).StringCellValue); // Column C
+
+                    // Check data row
+                    var dataRow = sheet.GetRow(1);
+                    Assert.Equal(25, (int)dataRow.GetCell(0).NumericCellValue); // Age in Column A
+                    Assert.Equal("Alice", dataRow.GetCell(2).StringCellValue); // Name in Column C
+                }
+            }
+            finally
+            {
+                if (File.Exists(testFilePath))
+                    File.Delete(testFilePath);
+            }
+        }
+
+        [Fact]
+        public void FluentTable_WithMapping_WithValue_UsesCustomValueFunc()
+        {
+            var testFilePath = Path.Combine(Path.GetTempPath(), $"write_test_value_{Guid.NewGuid()}.xlsx");
+            try
+            {
+                var data = new List<Person>
+                {
+                    new Person { Name = "Alice", Age = 25 }
+                };
+
+                var mapping = new FluentMapping<Person>();
+                mapping.Map(x => x.Name).ToColumn(ExcelCol.A).WithTitle("姓名");
+                mapping.Map(x => x.Age).ToColumn(ExcelCol.B).WithTitle("年齡")
+                    .WithValue(p => p.Age * 2);  // Custom: double the age
+
+                var workbook = new XSSFWorkbook();
+                new FluentWorkbook(workbook)
+                    .UseSheet("Sheet1")
+                    .SetTable(data, ExcelCol.A, 1)
+                    .WithMapping(mapping)
+                    .BuildRows();
+
+                using (var fs = new FileStream(testFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    workbook.Write(fs);
+                }
+
+                using (var fs = new FileStream(testFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    var readWorkbook = new XSSFWorkbook(fs);
+                    var sheet = readWorkbook.GetSheetAt(0);
+                    var dataRow = sheet.GetRow(1);
+
+                    Assert.Equal(50, (int)dataRow.GetCell(1).NumericCellValue); // 25 * 2 = 50
+                }
+            }
+            finally
+            {
+                if (File.Exists(testFilePath))
+                    File.Delete(testFilePath);
+            }
+        }
+
+        [Fact]
+        public void FluentTable_WithMapping_WithFormula_SetsFormula()
+        {
+            var testFilePath = Path.Combine(Path.GetTempPath(), $"write_test_formula_{Guid.NewGuid()}.xlsx");
+            try
+            {
+                var data = new List<Person>
+                {
+                    new Person { Name = "Alice", Age = 25 }
+                };
+
+                var mapping = new FluentMapping<Person>();
+                mapping.Map(x => x.Age).ToColumn(ExcelCol.A).WithTitle("年齡");
+                mapping.Map(x => x.Name).ToColumn(ExcelCol.B).WithTitle("姓名");
+                mapping.Map(x => x.Email).ToColumn(ExcelCol.C).WithTitle("公式欄")
+                    .WithFormula((row, col) => $"A{row}*2");  // Formula: =A2*2
+
+                var workbook = new XSSFWorkbook();
+                new FluentWorkbook(workbook)
+                    .UseSheet("Sheet1")
+                    .SetTable(data, ExcelCol.A, 1)
+                    .WithMapping(mapping)
+                    .BuildRows();
+
+                using (var fs = new FileStream(testFilePath, FileMode.Create, FileAccess.Write))
+                {
+                    workbook.Write(fs);
+                }
+
+                using (var fs = new FileStream(testFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    var readWorkbook = new XSSFWorkbook(fs);
+                    var sheet = readWorkbook.GetSheetAt(0);
+                    var dataRow = sheet.GetRow(1);
+
+                    // Check formula was set on column C
+                    var formulaCell = dataRow.GetCell(2);
+                    Assert.Equal(NPOI.SS.UserModel.CellType.Formula, formulaCell.CellType);
+                    Assert.Equal("A2*2", formulaCell.CellFormula);
+                }
+            }
+            finally
+            {
+                if (File.Exists(testFilePath))
+                    File.Delete(testFilePath);
             }
         }
 

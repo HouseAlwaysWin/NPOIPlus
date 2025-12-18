@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using FluentNPOI.Models;
 using FluentNPOI.Streaming.Abstractions;
 
 namespace FluentNPOI.Streaming.Mapping
@@ -42,7 +43,7 @@ namespace FluentNPOI.Streaming.Mapping
                 if (!mapping.ColumnIndex.HasValue)
                     continue;
 
-                var value = row.GetValue(mapping.ColumnIndex.Value);
+                var value = row.GetValue((int)mapping.ColumnIndex.Value);
                 if (value == null)
                     continue;
 
@@ -101,11 +102,11 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
-        /// 設定對應的 Excel 欄位索引
+        /// 設定對應的 Excel 欄位
         /// </summary>
-        public FluentColumnBuilder<T> ToColumn(int columnIndex)
+        public FluentColumnBuilder<T> ToColumn(ExcelCol column)
         {
-            _mapping.ColumnIndex = columnIndex;
+            _mapping.ColumnIndex = column;
             return this;
         }
 
@@ -128,6 +129,43 @@ namespace FluentNPOI.Streaming.Mapping
         }
 
         /// <summary>
+        /// 設定自訂值計算 (用於寫入時)
+        /// </summary>
+        public FluentColumnBuilder<T> WithValue(Func<T, object> valueFunc)
+        {
+            _mapping.ValueFunc = obj => valueFunc((T)obj);
+            return this;
+        }
+
+        /// <summary>
+        /// 設定公式 (用於寫入時)
+        /// </summary>
+        /// <param name="formulaFunc">公式函數，參數為 (row, col)，回傳公式字串 (不含 =)</param>
+        public FluentColumnBuilder<T> WithFormula(Func<int, int, string> formulaFunc)
+        {
+            _mapping.FormulaFunc = formulaFunc;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定資料儲存格樣式 (使用樣式 Key)
+        /// </summary>
+        public FluentColumnBuilder<T> WithStyle(string styleKey)
+        {
+            _mapping.StyleKey = styleKey;
+            return this;
+        }
+
+        /// <summary>
+        /// 設定標題儲存格樣式 (使用樣式 Key)
+        /// </summary>
+        public FluentColumnBuilder<T> WithTitleStyle(string styleKey)
+        {
+            _mapping.TitleStyleKey = styleKey;
+            return this;
+        }
+
+        /// <summary>
         /// 繼續設定下一個屬性
         /// </summary>
         public FluentColumnBuilder<T> Map<TProperty>(Expression<Func<T, TProperty>> expression)
@@ -142,8 +180,17 @@ namespace FluentNPOI.Streaming.Mapping
     public class ColumnMapping
     {
         public PropertyInfo Property { get; set; }
-        public int? ColumnIndex { get; set; }
+        public ExcelCol? ColumnIndex { get; set; }
         public string Title { get; set; }
         public string Format { get; set; }
+
+        // 寫入時使用
+        public Func<object, object> ValueFunc { get; set; }
+        public Func<int, int, string> FormulaFunc { get; set; }
+        public string StyleKey { get; set; }
+        public string TitleStyleKey { get; set; }
+
+        // 欄位名稱 (for DataTable)
+        public string ColumnName { get; set; }
     }
 }
