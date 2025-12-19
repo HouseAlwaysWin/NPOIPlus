@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 📄 **Excel 轉 PDF** (NEW)
   - 新增 `SaveAsPdf` 與 `ToPdfBytes` 方法
   - 使用 QuestPDF 引擎
-  - 支援背景色、文字顏色、粗體、斜體、字型大小、底線、刪除線、邊框樣式、數值格式化、文字對齊
+  - 完整支援：背景色、文字顏色、粗體、斜體、字型大小、底線、刪除線、邊框樣式、數值格式化、文字對齊、合併儲存格
 
 ### Documentation
 

@@ -878,6 +878,24 @@ namespace FluentNPOIConsoleExample
             sheet.SetCellPosition(ExcelCol.D, 3).SetValue(0.1234)
                  .SetCellStyle("NumberFmt");
 
+            // Row 4-6: 合併儲存格示範
+            // 垂直合併 (A4:A6)
+            sheet.SetCellPosition(ExcelCol.A, 4).SetValue("Vertical\nMerge")
+                 .SetCellStyle("MergedTitle");
+            sheet.SetExcelCellMerge(ExcelCol.A, ExcelCol.A, 4, 6);
+
+            // 2x2 區塊合併 (B4:C5)
+            sheet.SetCellPosition(ExcelCol.B, 4).SetValue("2x2 Block Merge")
+                 .SetCellStyle("RedBg");
+            sheet.SetExcelCellMerge(ExcelCol.B, ExcelCol.C, 4, 5);
+
+            // 一般儲存格填充剩餘位置
+            sheet.SetCellPosition(ExcelCol.D, 4).SetValue("D4");
+            sheet.SetCellPosition(ExcelCol.D, 5).SetValue("D5");
+            sheet.SetCellPosition(ExcelCol.B, 6).SetValue("B6");
+            sheet.SetCellPosition(ExcelCol.C, 6).SetValue("C6");
+            sheet.SetCellPosition(ExcelCol.D, 6).SetValue("D6");
+
             // 2. 匯出為 HTML
             fluent.SaveAsHtml(htmlPath, fullHtml: true);
 
@@ -889,7 +907,7 @@ namespace FluentNPOIConsoleExample
         }
 
         /// <summary>
-        /// Example 13: Export to PDF
+        /// Example 13: Export to PDF with merged cells
         /// </summary>
         static void CreatePdfExportExample(FluentWorkbook fluent)
         {
@@ -897,11 +915,17 @@ namespace FluentNPOIConsoleExample
 
             var pdfPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\ExportedReport.pdf";
 
-            // 使用剛建立的 HtmlDemo Sheet (已有樣式)
+            // 使用剛建立的 HtmlDemo Sheet (已有樣式與合併儲存格)
+            // HtmlDemo 包含:
+            //   - A1:D1 水平合併標題
+            //   - A4:A6 垂直合併
+            //   - B4:C5 2x2 區塊合併
             fluent.UseSheet("HtmlDemo", true);
             fluent.SaveAsPdf(pdfPath);
 
             Console.WriteLine($"  ✓ PDF 匯出完成: {pdfPath}");
+            Console.WriteLine("  > PDF 支援: 背景色、文字顏色、粗體/斜體、底線/刪除線、");
+            Console.WriteLine("              邊框樣式、數值格式化、文字對齊、合併儲存格");
         }
 
         #endregion

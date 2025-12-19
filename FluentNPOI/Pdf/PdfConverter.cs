@@ -90,20 +90,40 @@ namespace FluentNPOI.Pdf
                     }
                 });
 
-                // Render rows - simplified version (no merge support for now)
+                // Render rows with merge support
                 for (int r = 0; r <= sheet.LastRowNum; r++)
                 {
                     var row = sheet.GetRow(r);
 
                     for (int c = 0; c < maxCol; c++)
                     {
+                        // Check if inside merged region
+                        var region = GetMergedRegion(sheet, r, c);
+
+                        // Skip cells that are inside a merged region but not the first cell
+                        if (region != null && (r != region.FirstRow || c != region.FirstColumn))
+                        {
+                            continue;
+                        }
+
                         ICell cell = row?.GetCell(c);
                         var cellStyle = cell?.CellStyle;
 
-                        // Create cell with explicit position
+                        // Calculate span
+                        uint rowSpan = 1;
+                        uint colSpan = 1;
+                        if (region != null)
+                        {
+                            rowSpan = (uint)(region.LastRow - region.FirstRow + 1);
+                            colSpan = (uint)(region.LastColumn - region.FirstColumn + 1);
+                        }
+
+                        // Create cell with explicit position and span
                         var tableCell = table.Cell()
                             .Row((uint)(r + 1))
                             .Column((uint)(c + 1))
+                            .RowSpan(rowSpan)
+                            .ColumnSpan(colSpan)
                             .Padding(3);
 
                         // Apply borders from Excel style
@@ -179,6 +199,20 @@ namespace FluentNPOI.Pdf
                     }
                 }
             });
+        }
+
+        private static CellRangeAddress GetMergedRegion(ISheet sheet, int row, int col)
+        {
+            for (int i = 0; i < sheet.NumMergedRegions; i++)
+            {
+                var region = sheet.GetMergedRegion(i);
+                if (row >= region.FirstRow && row <= region.LastRow &&
+                    col >= region.FirstColumn && col <= region.LastColumn)
+                {
+                    return region;
+                }
+            }
+            return null;
         }
 
         private static void ApplyBorders(ref IContainer container, ICellStyle style, IWorkbook workbook)
