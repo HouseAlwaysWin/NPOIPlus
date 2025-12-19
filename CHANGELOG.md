@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 支援將 Excel 工作表轉換為 HTML 表格
   - **完整支援**：CSS 樣式生成 (包含背景色/文字顏色/邊框)、合併儲存格 (`colspan`/`rowspan`) 與數值格式化
 
+- 📄 **Excel 轉 PDF** (NEW)
+  - 新增 `SaveAsPdf` 與 `ToPdfBytes` 方法
+  - 使用 QuestPDF 引擎
+  - 支援背景色、文字顏色、粗體、斜體、字型大小、底線、刪除線、邊框樣式
+
 ### Documentation
 
 - 📚 **文件更新**

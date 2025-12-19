@@ -58,6 +58,9 @@ namespace FluentNPOIConsoleExample
                 // HTML Export example
                 CreateHtmlExportExample(fluent);
 
+                // PDF Export example
+                CreatePdfExportExample(fluent);
+
                 // Save file
                 fluent.SaveToPath(outputPath);
                 Console.WriteLine($"✓ 檔案儲存至: {outputPath}");
@@ -856,6 +859,22 @@ namespace FluentNPOIConsoleExample
 
             Console.WriteLine($"  ✓ HTML 匯出完成: {htmlPath}");
             Console.WriteLine($"  ✓ HTML 片段預覽 (前 100 字): {htmlFragment.Substring(0, Math.Min(100, htmlFragment.Length))}...");
+        }
+
+        /// <summary>
+        /// Example 13: Export to PDF
+        /// </summary>
+        static void CreatePdfExportExample(FluentWorkbook fluent)
+        {
+            Console.WriteLine("建立 PdfExportExample...");
+
+            var pdfPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\ExportedReport.pdf";
+
+            // 使用剛建立的 HtmlDemo Sheet (已有樣式)
+            fluent.UseSheet("HtmlDemo", true);
+            fluent.SaveAsPdf(pdfPath);
+
+            Console.WriteLine($"  ✓ PDF 匯出完成: {pdfPath}");
         }
 
         #endregion

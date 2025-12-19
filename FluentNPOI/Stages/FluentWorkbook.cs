@@ -280,7 +280,6 @@ namespace FluentNPOI.Stages
         public FluentWorkbook SaveAsHtml(string filePath, bool fullHtml = true)
         {
             if (_currentSheet == null) throw new InvalidOperationException("No active sheet selected.");
-            var html = FluentNPOI.Html.HtmlConverter.ConvertSheetToHtml(_currentSheet, fullHtml);
 
             var dir = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
@@ -288,12 +287,13 @@ namespace FluentNPOI.Stages
                 Directory.CreateDirectory(dir);
             }
 
-            File.WriteAllText(filePath, html);
+            var html = FluentNPOI.Html.HtmlConverter.ConvertSheetToHtml(_currentSheet, fullHtml);
+            System.IO.File.WriteAllText(filePath, html, System.Text.Encoding.UTF8);
             return this;
         }
 
         /// <summary>
-        /// Get current sheet as HTML string
+        /// Export current sheet to HTML string
         /// </summary>
         /// <param name="fullHtml">Generate full HTML</param>
         /// <returns>HTML string</returns>
@@ -301,6 +301,32 @@ namespace FluentNPOI.Stages
         {
             if (_currentSheet == null) throw new InvalidOperationException("No active sheet selected.");
             return FluentNPOI.Html.HtmlConverter.ConvertSheetToHtml(_currentSheet, fullHtml);
+        }
+
+        /// <summary>
+        /// Export current sheet to PDF and save to file
+        /// </summary>
+        public FluentWorkbook SaveAsPdf(string filePath)
+        {
+            if (_currentSheet == null) throw new InvalidOperationException("No active sheet selected.");
+
+            var dir = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            FluentNPOI.Pdf.PdfConverter.ConvertSheetToPdf(_currentSheet, _workbook, filePath);
+            return this;
+        }
+
+        /// <summary>
+        /// Export current sheet to PDF bytes
+        /// </summary>
+        public byte[] ToPdfBytes()
+        {
+            if (_currentSheet == null) throw new InvalidOperationException("No active sheet selected.");
+            return FluentNPOI.Pdf.PdfConverter.ConvertSheetToPdfBytes(_currentSheet, _workbook);
         }
 
         /// <summary>
