@@ -144,7 +144,7 @@ namespace FluentNPOIConsoleExample
         /// </summary>
         static void CreateBasicTableExample(FluentWorkbook fluent, List<ExampleData> testData)
         {
-            Console.WriteLine("建立 Sheet1 (BasicTable)...");
+            Console.WriteLine("建立 BasicTableExample (BasicTable)...");
 
             var mapping = new FluentMapping<ExampleData>();
             mapping.Map(x => x.ID).ToColumn(ExcelCol.A)
@@ -169,12 +169,12 @@ namespace FluentNPOIConsoleExample
             mapping.Map(x => x.MaybeNull).ToColumn(ExcelCol.H)
                 .WithTitle("可能為空").WithTitleStyle("HeaderBlue");
 
-            fluent.UseSheet("Sheet1", true)
+            fluent.UseSheet("BasicTableExample", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.H, 20)
                 .SetTable(testData, mapping)
                 .BuildRows();
 
-            Console.WriteLine("  ✓ Sheet1 建立完成");
+            Console.WriteLine("  ✓ BasicTableExample 建立完成");
         }
 
         /// <summary>
@@ -325,6 +325,7 @@ namespace FluentNPOIConsoleExample
             // 1. 從 Sheet1 的 A1 複製標題樣式 (HeaderBlue)
             mapping.Map(x => x.Name).ToColumn(ExcelCol.A)
                 .WithTitle("姓名 (Copy Header)")
+                .WithRowOffset(2)
                 .WithTitleStyleFrom(1, ExcelCol.B); // Copy from Sheet1!B1 if current sheet is same... wait.
                                                     // WithTitleStyleFrom copies from CURRENT sheet's cell.
                                                     // UseSheet switches sheet. 
@@ -348,8 +349,11 @@ namespace FluentNPOIConsoleExample
                 .WithTitleStyleFrom(1, ExcelCol.Z) // 從 Z1 複製樣式
                 .WithCellType(CellType.Numeric);
 
+            // 使用 WithStartRow 設定預設起始列（而非在 SetTable 傳入）
+            mapping.WithStartRow(2);
+
             sheet.SetColumnWidth(ExcelCol.A, ExcelCol.C, 20)
-                .SetTable(testData, mapping, 2) // 從第2行開始寫 Table
+                .SetTable(testData, mapping) // 會使用 mapping.StartRow (= 2)
                 .BuildRows();
 
             Console.WriteLine("  ✓ CopyStyleExample 建立完成");

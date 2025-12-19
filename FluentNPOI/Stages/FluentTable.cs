@@ -166,9 +166,11 @@ namespace FluentNPOI.Stages
             // 寫入標題行（只在第一次）
             if (writeTitle && rowOffset == 0)
             {
-                var titleRow = _sheet.GetRow(_startRow) ?? _sheet.CreateRow(_startRow);
                 foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
                 {
+                    // 計算此欄的標題列位置（加上 per-column offset）
+                    var titleRowIndex = _startRow + map.RowOffset;
+                    var titleRow = _sheet.GetRow(titleRowIndex) ?? _sheet.CreateRow(titleRowIndex);
                     var colIdx = (int)map.ColumnIndex.Value;
                     var cell = titleRow.GetCell(colIdx) ?? titleRow.CreateCell(colIdx);
                     cell.SetCellValue(map.Title ?? map.Property?.Name ?? map.ColumnName ?? "");
@@ -215,9 +217,11 @@ namespace FluentNPOI.Stages
             }
 
             // 寫入資料行
-            var dataRow = _sheet.GetRow(targetRowIndex) ?? _sheet.CreateRow(targetRowIndex);
             foreach (var map in _columnMappings.Where(m => m.ColumnIndex.HasValue))
             {
+                // 計算此欄的資料列位置（加上 per-column offset）
+                var colTargetRowIndex = targetRowIndex + map.RowOffset;
+                var dataRow = _sheet.GetRow(colTargetRowIndex) ?? _sheet.CreateRow(colTargetRowIndex);
                 var colIdx = (int)map.ColumnIndex.Value;
                 var cell = dataRow.GetCell(colIdx) ?? dataRow.CreateCell(colIdx);
 

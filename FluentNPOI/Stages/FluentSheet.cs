@@ -106,11 +106,13 @@ namespace FluentNPOI.Stages
         /// <typeparam name="T">資料型別</typeparam>
         /// <param name="table">資料集合</param>
         /// <param name="mapping">FluentMapping 設定</param>
-        /// <param name="startRow">起始行（1-based），預設為 1</param>
+        /// <param name="startRow">起始行（1-based），若未指定則使用 mapping.StartRow（預設為 1）</param>
         /// <returns>FluentTable 实例（已套用 mapping）</returns>
-        public FluentTable<T> SetTable<T>(IEnumerable<T> table, FluentMapping<T> mapping, int startRow = 1) where T : new()
+        public FluentTable<T> SetTable<T>(IEnumerable<T> table, FluentMapping<T> mapping, int? startRow = null) where T : new()
         {
-            var fluentTable = new FluentTable<T>(_workbook, _sheet, table, ExcelCol.A, startRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
+            // 優先使用參數指定的 startRow，否則使用 mapping 中的 StartRow
+            int actualStartRow = startRow ?? mapping.StartRow;
+            var fluentTable = new FluentTable<T>(_workbook, _sheet, table, ExcelCol.A, actualStartRow, _cellStylesCached, new List<TableCellSet>(), new List<TableCellSet>());
             return fluentTable.WithMapping(mapping);
         }
 
@@ -119,10 +121,12 @@ namespace FluentNPOI.Stages
         /// </summary>
         /// <param name="dataTable">DataTable 資料</param>
         /// <param name="mapping">DataTableMapping 設定 (可為 null，將自動產生)</param>
-        /// <param name="startRow">起始行（1-based），預設為 1</param>
-        public FluentSheet WriteDataTable(System.Data.DataTable dataTable, DataTableMapping mapping = null, int startRow = 1)
+        /// <param name="startRow">起始行（1-based），若未指定則使用 mapping.StartRow（預設為 1）</param>
+        public FluentSheet WriteDataTable(System.Data.DataTable dataTable, DataTableMapping mapping = null, int? startRow = null)
         {
             var actualMapping = mapping ?? DataTableMapping.FromDataTable(dataTable);
+            // 優先使用參數指定的 startRow，否則使用 mapping 中的 StartRow
+            int actualStartRow = startRow ?? actualMapping.StartRow;
             var mappings = actualMapping.GetMappings().Where(m => m.ColumnIndex.HasValue).ToList();
 
             bool writeTitle = mappings.Any(m => !string.IsNullOrEmpty(m.Title));
@@ -130,7 +134,7 @@ namespace FluentNPOI.Stages
             // 寫入標題行
             if (writeTitle)
             {
-                var titleRow = GetOrCreateRow(startRow - 1);
+                var titleRow = GetOrCreateRow(actualStartRow - 1);
                 foreach (var map in mappings)
                 {
                     var cell = GetOrCreateCell(titleRow, (int)map.ColumnIndex.Value);
@@ -140,7 +144,7 @@ namespace FluentNPOI.Stages
             }
 
             // 寫入資料行
-            int dataRowStart = startRow - 1 + (writeTitle ? 1 : 0);
+            int dataRowStart = actualStartRow - 1 + (writeTitle ? 1 : 0);
             for (int rowIdx = 0; rowIdx < dataTable.Rows.Count; rowIdx++)
             {
                 var dataRow = dataTable.Rows[rowIdx];

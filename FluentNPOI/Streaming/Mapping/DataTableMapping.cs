@@ -14,6 +14,21 @@ namespace FluentNPOI.Streaming.Mapping
         private readonly List<ColumnMapping> _mappings = new List<ColumnMapping>();
 
         /// <summary>
+        /// 預設起始列（1-based），預設為 1
+        /// </summary>
+        public int StartRow { get; private set; } = 1;
+
+        /// <summary>
+        /// 設定表格預設起始列（1-based）
+        /// </summary>
+        /// <param name="row">起始列（1-based，第 1 列 = 1）</param>
+        public DataTableMapping WithStartRow(int row)
+        {
+            StartRow = row < 1 ? 1 : row;
+            return this;
+        }
+
+        /// <summary>
         /// 開始設定欄位對應
         /// </summary>
         public DataTableColumnBuilder Map(string columnName)
@@ -186,6 +201,38 @@ namespace FluentNPOI.Streaming.Mapping
         public DataTableColumnBuilder WithCellType(NPOI.SS.UserModel.CellType cellType)
         {
             _mapping.CellType = cellType;
+            return this;
+        }
+
+        /// <summary>
+        /// 從指定儲存格複製標題樣式
+        /// </summary>
+        /// <param name="row">來源列（1-based，第 1 列 = 1）</param>
+        /// <param name="col">來源欄</param>
+        public DataTableColumnBuilder WithTitleStyleFrom(int row, ExcelCol col)
+        {
+            _mapping.TitleStyleRef = StyleReference.FromUserInput(row, col);
+            return this;
+        }
+
+        /// <summary>
+        /// 從指定儲存格複製資料樣式
+        /// </summary>
+        /// <param name="row">來源列（1-based，第 1 列 = 1）</param>
+        /// <param name="col">來源欄</param>
+        public DataTableColumnBuilder WithStyleFrom(int row, ExcelCol col)
+        {
+            _mapping.DataStyleRef = StyleReference.FromUserInput(row, col);
+            return this;
+        }
+
+        /// <summary>
+        /// 設定欄位列偏移（此欄位相對於表格起始列往下偏移）
+        /// </summary>
+        /// <param name="offset">偏移量（正數表示往下偏移，預設 0）</param>
+        public DataTableColumnBuilder WithRowOffset(int offset)
+        {
+            _mapping.RowOffset = offset;
             return this;
         }
 

@@ -16,6 +16,21 @@ namespace FluentNPOI.Streaming.Mapping
         private readonly List<ColumnMapping> _mappings = new List<ColumnMapping>();
 
         /// <summary>
+        /// 預設起始列（1-based），預設為 1
+        /// </summary>
+        public int StartRow { get; private set; } = 1;
+
+        /// <summary>
+        /// 設定表格預設起始列（1-based）
+        /// </summary>
+        /// <param name="row">起始列（1-based，第 1 列 = 1）</param>
+        public FluentMapping<T> WithStartRow(int row)
+        {
+            StartRow = row < 1 ? 1 : row;
+            return this;
+        }
+
+        /// <summary>
         /// 開始設定屬性對應
         /// </summary>
         public FluentColumnBuilder<T> Map<TProperty>(Expression<Func<T, TProperty>> expression)
@@ -210,18 +225,22 @@ namespace FluentNPOI.Streaming.Mapping
         /// <summary>
         /// 從指定儲存格複製標題樣式
         /// </summary>
+        /// <param name="row">來源列（1-based，第 1 列 = 1）</param>
+        /// <param name="col">來源欄</param>
         public FluentColumnBuilder<T> WithTitleStyleFrom(int row, ExcelCol col)
         {
-            _mapping.TitleStyleRef = new StyleReference { Row = row, Column = col };
+            _mapping.TitleStyleRef = StyleReference.FromUserInput(row, col);
             return this;
         }
 
         /// <summary>
         /// 從指定儲存格複製資料樣式
         /// </summary>
+        /// <param name="row">來源列（1-based，第 1 列 = 1）</param>
+        /// <param name="col">來源欄</param>
         public FluentColumnBuilder<T> WithStyleFrom(int row, ExcelCol col)
         {
-            _mapping.DataStyleRef = new StyleReference { Row = row, Column = col };
+            _mapping.DataStyleRef = StyleReference.FromUserInput(row, col);
             return this;
         }
 
@@ -241,6 +260,16 @@ namespace FluentNPOI.Streaming.Mapping
         public FluentColumnBuilder<T> WithDynamicStyle(Func<T, string> styleFunc)
         {
             _mapping.DynamicStyleFunc = obj => styleFunc((T)obj);
+            return this;
+        }
+
+        /// <summary>
+        /// 設定欄位列偏移（此欄位相對於表格起始列往下偏移）
+        /// </summary>
+        /// <param name="offset">偏移量（正數表示往下偏移，預設 0）</param>
+        public FluentColumnBuilder<T> WithRowOffset(int offset)
+        {
+            _mapping.RowOffset = offset;
             return this;
         }
 
@@ -278,11 +307,30 @@ namespace FluentNPOI.Streaming.Mapping
         // 樣式參考
         public StyleReference TitleStyleRef { get; set; }
         public StyleReference DataStyleRef { get; set; }
+
+        /// <summary>
+        /// 欄位列偏移（預設 0，正數表示往下偏移）
+        /// </summary>
+        public int RowOffset { get; set; } = 0;
     }
 
     public class StyleReference
     {
         public int Row { get; set; }
         public ExcelCol Column { get; set; }
+
+        /// <summary>
+        /// 從使用者輸入建立 StyleReference（自動將 1-based row 轉換為 0-based）
+        /// </summary>
+        /// <param name="row">使用者輸入的列號（1-based，第 1 列 = 1）</param>
+        /// <param name="col">欄位</param>
+        public static StyleReference FromUserInput(int row, ExcelCol col)
+        {
+            return new StyleReference
+            {
+                Row = row < 1 ? 0 : row - 1,  // 將 1-based 轉換為 0-based
+                Column = col
+            };
+        }
     }
 }
