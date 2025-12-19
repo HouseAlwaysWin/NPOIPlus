@@ -251,7 +251,9 @@ namespace FluentNPOIConsoleExample
             mapping.Map("Tuition").ToColumn(ExcelCol.F).WithTitle("學費")
                 .WithTitleStyle("HeaderBlue").WithStyle("AmountCurrency").WithCellType(CellType.Numeric);
             mapping.Map("Department").ToColumn(ExcelCol.G).WithTitle("科系")
-                .WithTitleStyle("HeaderBlue").WithStyle("BodyString").WithCellType(CellType.String);
+                .WithTitleStyle("HeaderBlue")
+                .WithValue((row) => $"{row["Department"]} hello")
+                .WithStyle("BodyString").WithCellType(CellType.String);
 
             fluent.UseSheet("DataTableExample", true)
                 .SetColumnWidth(ExcelCol.A, ExcelCol.G, 20)

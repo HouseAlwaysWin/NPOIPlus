@@ -1,0 +1,25 @@
+﻿{
+	"folders": [
+		{
+			"name": "FluentNPOI",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/bin": true,
+			"**/obj": true,
+			"**/.git": true
+		},
+		"editor.formatOnSave": true,
+		"omnisharp.enableRoslynAnalyzers": true,
+		"dotnet.defaultSolution": "FluentNPOI.sln"
+	},
+	"extensions": {
+		"recommendations": [
+			"ms-dotnettools.csharp",
+			"ms-dotnettools.csdevkit",
+			"ms-dotnettools.vscode-dotnet-runtime"
+		]
+	}
+}
