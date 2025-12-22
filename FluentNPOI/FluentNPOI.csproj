@@ -22,6 +22,7 @@
 
   <!-- Include README.md in NuGet package -->
   <ItemGroup>
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
     <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
