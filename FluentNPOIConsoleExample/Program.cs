@@ -21,8 +21,6 @@ namespace FluentNPOIConsoleExample
     internal partial class Program
     {
         public static List<ExampleData> testData = GetTestData();
-        public static string filePath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\";
-        public static string outputPath = @$"{AppDomain.CurrentDomain.BaseDirectory}\Resources\";
         static void Main(string[] args)
         {
             HotReloadExamples.RunHotReloadExample();

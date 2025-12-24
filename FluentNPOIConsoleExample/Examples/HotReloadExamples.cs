@@ -1,11 +1,5 @@
 using System;
-using FluentNPOI;
-using FluentNPOI.Models;
-using FluentNPOI.Stages;
 using FluentNPOI.HotReload;
-
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 
 namespace FluentNPOIConsoleExample;
 
@@ -33,9 +27,9 @@ public static class HotReloadExamples
             Program.SetupStyles(wb);
 
             // === 基礎範例 ===
-            // Program.CreateBasicTableExample(wb, Program.testData);
+            Program.CreateBasicTableExample(wb, Program.testData);
             Program.CreateSummaryExample(wb, Program.testData);
-            // Program.CreateDataTableExample(wb);
+            Program.CreateDataTableExample(wb);
 
             // === 樣式範例 ===
             // Program.CreateCellStyleRangeExample(wb);
@@ -52,7 +46,7 @@ public static class HotReloadExamples
             // Program.CreateChartExample(wb, Program.testData);
 
             // === 匯出範例 ===
-            // Program.CreateHtmlExportExample(wb); 
+            // Program.CreateHtmlExportExample(wb);
             // Program.CreatePdfExportExample(wb);
 
             // === 進階範例 (注意：這些可能不需要 wb 參數或會建立新檔案，請小心使用) ===
