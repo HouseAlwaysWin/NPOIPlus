@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using FluentNPOI.HotReload.Context;
 using FluentNPOI.HotReload.Diagnostics;
+using FluentNPOI.HotReload.Styling;
 
 namespace FluentNPOI.HotReload.Widgets;
 
@@ -21,6 +22,17 @@ public abstract class ExcelWidget
     /// Used for debugging and error reporting.
     /// </summary>
     public DebugLocation SourceLocation { get; }
+
+    /// <summary>
+    /// Weight for Flexbox-style layout calculation.
+    /// Used by FlexibleRow to automatically calculate column widths.
+    /// </summary>
+    public int? Weight { get; set; }
+
+    /// <summary>
+    /// The style to apply to this widget.
+    /// </summary>
+    public FluentStyle? Style { get; set; }
 
     /// <summary>
     /// Creates a new ExcelWidget, automatically capturing the source location.
@@ -49,5 +61,39 @@ public abstract class ExcelWidget
     {
         Key = key;
         return this;
+    }
+
+    /// <summary>
+    /// Sets the weight for Flexbox-style layout and returns itself for fluent chaining.
+    /// </summary>
+    /// <param name="weight">The weight value for layout calculation.</param>
+    /// <returns>This widget instance.</returns>
+    public ExcelWidget WithWeight(int weight)
+    {
+        Weight = weight;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the style for this widget and returns itself for fluent chaining.
+    /// </summary>
+    /// <param name="style">The FluentStyle to apply.</param>
+    /// <returns>This widget instance.</returns>
+    public ExcelWidget WithStyle(FluentStyle style)
+    {
+        Style = style;
+        return this;
+    }
+
+    /// <summary>
+    /// Applies the widget's style to the current cell if a style is set.
+    /// </summary>
+    /// <param name="ctx">The Excel context.</param>
+    protected void ApplyStyleIfSet(ExcelContext ctx)
+    {
+        if (Style != null)
+        {
+            ctx.ApplyStyle(Style);
+        }
     }
 }

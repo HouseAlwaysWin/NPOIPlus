@@ -1,5 +1,6 @@
 using FluentNPOI.Models;
 using FluentNPOI.Stages;
+using FluentNPOI.HotReload.Styling;
 using NPOI.SS.UserModel;
 
 namespace FluentNPOI.HotReload.Context;
@@ -11,6 +12,7 @@ namespace FluentNPOI.HotReload.Context;
 public class ExcelContext
 {
     private readonly FluentSheet _sheet;
+    private readonly StyleManager? _styleManager;
     private int _currentRow = 1;
     private ExcelCol _currentCol = ExcelCol.A;
     private readonly int _startRow;
@@ -44,6 +46,19 @@ public class ExcelContext
         _currentCol = startCol;
         _startRow = startRow;
         _startCol = startCol;
+    }
+
+    /// <summary>
+    /// Creates a new ExcelContext with StyleManager for caching styles.
+    /// </summary>
+    /// <param name="sheet">The FluentSheet to build into.</param>
+    /// <param name="styleManager">The StyleManager for style caching.</param>
+    /// <param name="startRow">The starting row (1-indexed, default: 1).</param>
+    /// <param name="startCol">The starting column (default: A).</param>
+    public ExcelContext(FluentSheet sheet, StyleManager styleManager, int startRow = 1, ExcelCol startCol = ExcelCol.A)
+        : this(sheet, startRow, startCol)
+    {
+        _styleManager = styleManager;
     }
 
     /// <summary>
@@ -90,6 +105,70 @@ public class ExcelContext
     }
 
     /// <summary>
+    /// Applies a FluentStyle to the current cell using the StyleManager for caching.
+    /// </summary>
+    /// <param name="style">The FluentStyle to apply.</param>
+    /// <returns>This context for chaining.</returns>
+    public ExcelContext ApplyStyle(FluentStyle style)
+    {
+        if (!style.HasAnyStyle())
+            return this;
+
+        var cell = _sheet.SetCellPosition(_currentCol, _currentRow).GetCell();
+
+        if (_styleManager != null)
+        {
+            _styleManager.ApplyStyle(cell, style);
+        }
+        else
+        {
+            // Fallback: apply style directly without caching
+            ApplyStyleDirectly(cell, style);
+        }
+
+        return this;
+    }
+
+    /// <summary>
+    /// Applies style directly without using StyleManager (fallback).
+    /// </summary>
+    private void ApplyStyleDirectly(ICell cell, FluentStyle style)
+    {
+        if (style.BackgroundColor != null)
+        {
+            _sheet.SetCellPosition(_currentCol, _currentRow).SetBackgroundColor(style.BackgroundColor);
+        }
+
+        if (style.IsBold)
+        {
+            _sheet.SetCellPosition(_currentCol, _currentRow).SetFont(isBold: true);
+        }
+    }
+
+    /// <summary>
+    /// Sets the width of the current column.
+    /// </summary>
+    /// <param name="col">The column to set width for.</param>
+    /// <param name="width">The width in characters.</param>
+    /// <returns>This context for chaining.</returns>
+    public ExcelContext SetColumnWidth(ExcelCol col, int width)
+    {
+        _sheet.SetColumnWidth(col, width);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the width of the current column.
+    /// </summary>
+    /// <param name="width">The width in characters.</param>
+    /// <returns>This context for chaining.</returns>
+    public ExcelContext SetCurrentColumnWidth(int width)
+    {
+        _sheet.SetColumnWidth(_currentCol, width);
+        return this;
+    }
+
+    /// <summary>
     /// Moves to the next row, resetting the column to the start column.
     /// </summary>
     /// <returns>This context for chaining.</returns>
@@ -129,7 +208,9 @@ public class ExcelContext
     /// <returns>A new context starting at the current position.</returns>
     public ExcelContext CreateNestedContext()
     {
-        return new ExcelContext(_sheet, _currentRow, _currentCol);
+        return _styleManager != null
+            ? new ExcelContext(_sheet, _styleManager, _currentRow, _currentCol)
+            : new ExcelContext(_sheet, _currentRow, _currentCol);
     }
 
     /// <summary>
