@@ -14,7 +14,7 @@
     <!-- 統一依賴版本 -->
     <NpoiVersion>2.7.1</NpoiVersion>
     <QuestPdfVersion>2025.12.0</QuestPdfVersion>
-    <ExcelDataReaderVersion>3.7.0</ExcelDataReaderVersion>
+    <ExcelDataReaderVersion>3.8.0</ExcelDataReaderVersion>
     <SystemDrawingCommonVersion>8.0.0</SystemDrawingCommonVersion>
     
     <!-- 共用建置設定 -->
