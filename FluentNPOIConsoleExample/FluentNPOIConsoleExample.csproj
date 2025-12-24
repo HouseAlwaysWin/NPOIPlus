@@ -10,6 +10,7 @@
         <ProjectReference Include="..\FluentNPOI.Pdf\FluentNPOI.Pdf.csproj" />
         <ProjectReference Include="..\FluentNPOI.Streaming\FluentNPOI.Streaming.csproj" />
         <ProjectReference Include="..\FluentNPOI.Charts\FluentNPOI.Charts.csproj" />
+        <ProjectReference Include="..\FluentNPOI.HotReload\FluentNPOI.HotReload.csproj" />
     </ItemGroup>
     <ItemGroup>
         <None Update="Resources\Test.xlsx">

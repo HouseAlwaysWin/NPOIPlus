@@ -70,6 +70,112 @@ Create a new project to house all hot reload and widget infrastructure.
 
 ---
 
+## FluentNPOI 整合方式
+
+提供三種整合方式，讓開發者可以選擇最適合的方式使用 Hot Reload：
+
+### 方式 1：直接使用現有 FluentNPOI 程式碼（零學習成本）
+
+使用 `FluentLivePreview` 把現有的 FluentNPOI 程式碼直接包裝成熱重載：
+
+```csharp
+// 你的現有 FluentNPOI 程式碼完全不用改
+FluentLivePreview.Run("output.xlsx", workbook =>
+{
+    workbook.UseSheet("Sheet1")
+        .SetCellPosition(ExcelCol.A, 1)
+        .SetValue("Hello World")
+        .SetCellPosition(ExcelCol.B, 1)
+        .SetValue(123);
+});
+```
+
+**優點**：
+- 零學習成本，現有程式碼直接可用
+- 適合已有大量 FluentNPOI 程式碼的專案
+- 快速體驗熱重載功能
+
+---
+
+### 方式 2：使用 Widget 宣告式風格
+
+使用 `ExcelLivePreview` 和 Widget 系統建立宣告式報表：
+
+```csharp
+public class SalesReport : ExcelWidget
+{
+    public override void Build(ExcelContext ctx)
+    {
+        var layout = new Column(
+            new Header("銷售報表"),
+            new FlexibleRow(
+                new Label("產品").WithWeight(2),
+                new Label("價格").WithWeight(1),
+                new Label("數量").WithWeight(1)
+            ).SetTotalWidth(60),
+            new FlexibleRow(
+                new Label("蘋果").WithWeight(2),
+                new InputCell(30).WithWeight(1),
+                new InputCell(100).WithWeight(1)
+            ).SetTotalWidth(60)
+        );
+        layout.Build(ctx);
+    }
+}
+
+// 使用
+ExcelLivePreview.Run<SalesReport>("output.xlsx");
+```
+
+**優點**：
+- Flutter 風格宣告式語法，結構清晰
+- 自動欄寬計算 (Weight)
+- 樣式快取確保不超過 Excel 4,000 樣式限制
+
+---
+
+### 方式 3：混合使用 Widget 和 FluentNPOI
+
+在 FluentNPOI 程式碼中嵌入 Widget，或在 Widget 中嵌入 FluentNPOI：
+
+```csharp
+// 在 FluentNPOI 中使用 Widget
+FluentLivePreview.Run("output.xlsx", workbook =>
+{
+    var sheet = workbook.UseSheet("Report");
+    
+    // FluentNPOI 風格設定標題
+    sheet.SetCellPosition(ExcelCol.A, 1)
+        .SetValue("混合報表")
+        .SetFont(isBold: true);
+    
+    // 使用 Widget 建立複雜表格
+    var table = new Column(
+        new FlexibleRow(new Header("A"), new Header("B")),
+        new FlexibleRow(new InputCell(100), new InputCell(200))
+    );
+    sheet.BuildWidget(table, startRow: 3);
+});
+
+// 在 Widget 中使用 FluentBridge
+new Column(
+    new Header("標題"),
+    new FluentBridge(sheet =>
+    {
+        // 原生 FluentNPOI 程式碼
+        sheet.SetCellPosition(ExcelCol.A, 2).SetValue("從 FluentBridge");
+    }),
+    new Label("結尾")
+)
+```
+
+**優點**：
+- 漸進式遷移，不需一次改完
+- 複雜佈局用 Widget，簡單操作用 FluentNPOI
+- 混合使用兩種風格的優點
+
+---
+
 ### Widget Engine Core ✅ Phase 1 Complete
 
 #### [DONE] Widgets/ExcelWidget.cs
