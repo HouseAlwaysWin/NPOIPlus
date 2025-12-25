@@ -215,6 +215,128 @@ namespace FluentNPOIUnitTest
 
         #endregion
 
+        #region RunFromTemplate Tests
+
+        [Fact]
+        public void FluentHotReloadSession_WithFactory_ShouldLoadFromTemplate()
+        {
+            // Arrange
+            var templatePath = Path.Combine(Path.GetTempPath(), $"template_{Guid.NewGuid()}.xlsx");
+            var outputPath = Path.Combine(Path.GetTempPath(), $"output_{Guid.NewGuid()}.xlsx");
+
+            try
+            {
+                // 1. Create a template file
+                using (var fs = File.Create(templatePath))
+                {
+                    var wb = new XSSFWorkbook();
+                    wb.CreateSheet("TemplateSheet").CreateRow(0).CreateCell(0).SetCellValue("Original");
+                    wb.Write(fs);
+                }
+
+                // 2. Create session with factory that loads the template
+                using var session = FluentLivePreview.CreateSession(outputPath, wb =>
+                {
+                    // Modify the loaded template
+                    wb.UseSheet("TemplateSheet")
+                      .SetCellPosition(FluentNPOI.Models.ExcelCol.B, 1)
+                      .SetValue("Modified");
+                },
+                workbookFactory: () =>
+                {
+                    using var file = File.OpenRead(templatePath);
+                    return WorkbookFactory.Create(file);
+                });
+
+                // Act
+                session.Refresh();
+
+                // Assert
+                Assert.True(File.Exists(outputPath));
+
+                using (var fs = File.OpenRead(outputPath))
+                {
+                    var resultWb = new XSSFWorkbook(fs);
+                    var sheet = resultWb.GetSheet("TemplateSheet");
+                    Assert.NotNull(sheet);
+                    Assert.Equal("Original", sheet.GetRow(0).GetCell(0).StringCellValue);
+                    Assert.Equal("Modified", sheet.GetRow(0).GetCell(1).StringCellValue);
+                }
+            }
+            finally
+            {
+                if (File.Exists(templatePath)) File.Delete(templatePath);
+                if (File.Exists(outputPath)) File.Delete(outputPath);
+            }
+        }
+
+        [Fact]
+        public void FluentHotReloadSession_WithStreamFactory_ShouldSupportMultipleRefreshes()
+        {
+            // This test simulates the logic inside RunFromTemplate(Stream) where we cache bytes
+
+            // Arrange
+            var templatePath = Path.Combine(Path.GetTempPath(), $"stream_template_{Guid.NewGuid()}.xlsx");
+            var outputPath = Path.Combine(Path.GetTempPath(), $"stream_output_{Guid.NewGuid()}.xlsx");
+
+            try
+            {
+                // 1. Create a template
+                using (var fs = File.Create(templatePath))
+                {
+                    var wb = new XSSFWorkbook();
+                    wb.CreateSheet("Sheet1").CreateRow(0).CreateCell(0).SetCellValue("StreamOriginal");
+                    wb.Write(fs);
+                }
+
+                // 2. Read to memory (simulating RunFromTemplate logic)
+                byte[] templateBytes;
+                using (var fs = File.OpenRead(templatePath))
+                using (var ms = new MemoryStream())
+                {
+                    fs.CopyTo(ms);
+                    templateBytes = ms.ToArray();
+                }
+
+                // 3. Create session with factory using cached bytes
+                using var session = FluentLivePreview.CreateSession(outputPath, wb =>
+                {
+                    wb.UseSheet("Sheet1").SetCellPosition(FluentNPOI.Models.ExcelCol.A, 2).SetValue("Pass " + wb.GetWorkbook().GetSheetAt(0).GetRow(0).GetCell(0).StringCellValue);
+                },
+                workbookFactory: () =>
+                {
+                    return WorkbookFactory.Create(new MemoryStream(templateBytes));
+                });
+
+                // Act - Refresh 1
+                session.Refresh();
+
+                // Assert 1
+                using (var fs = File.OpenRead(outputPath))
+                {
+                    var wb = new XSSFWorkbook(fs);
+                    Assert.Equal("Pass StreamOriginal", wb.GetSheetAt(0).GetRow(1).GetCell(0).StringCellValue);
+                }
+
+                // Act - Refresh 2 (Verify stream can be reused/recreated)
+                session.Refresh();
+
+                // Assert 2
+                using (var fs = File.OpenRead(outputPath))
+                {
+                    var wb = new XSSFWorkbook(fs);
+                    Assert.Equal("Pass StreamOriginal", wb.GetSheetAt(0).GetRow(1).GetCell(0).StringCellValue);
+                }
+            }
+            finally
+            {
+                if (File.Exists(templatePath)) File.Delete(templatePath);
+                if (File.Exists(outputPath)) File.Delete(outputPath);
+            }
+        }
+
+        #endregion
+
         #region Integration Tests
 
         [Fact]

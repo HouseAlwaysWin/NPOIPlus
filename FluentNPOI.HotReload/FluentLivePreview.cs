@@ -1,6 +1,7 @@
 using FluentNPOI.HotReload.Bridge;
 using FluentNPOI.HotReload.HotReload;
 using FluentNPOI.Stages;
+using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 
 namespace FluentNPOI.HotReload;
@@ -32,12 +33,14 @@ public static class FluentLivePreview
     /// <param name="outputPath">The path to write the Excel preview file to.</param>
     /// <param name="buildAction">Your existing FluentNPOI code.</param>
     /// <param name="configure">Optional session configuration.</param>
+    /// <param name="workbookFactory">Optional factory to create the IWorkbook (default: XSSFWorkbook).</param>
     public static void Run(
         string outputPath,
         Action<FluentWorkbook> buildAction,
-        Action<FluentHotReloadSession>? configure = null)
+        Action<FluentHotReloadSession>? configure = null,
+        Func<IWorkbook>? workbookFactory = null)
     {
-        using var session = new FluentHotReloadSession(outputPath, buildAction);
+        using var session = new FluentHotReloadSession(outputPath, buildAction, workbookFactory);
         configure?.Invoke(session);
         session.Start();
 
@@ -69,13 +72,15 @@ public static class FluentLivePreview
     /// <param name="buildAction">Your existing FluentNPOI code.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="configure">Optional session configuration.</param>
+    /// <param name="workbookFactory">Optional factory to create the IWorkbook.</param>
     public static async Task RunAsync(
         string outputPath,
         Action<FluentWorkbook> buildAction,
         CancellationToken cancellationToken = default,
-        Action<FluentHotReloadSession>? configure = null)
+        Action<FluentHotReloadSession>? configure = null,
+        Func<IWorkbook>? workbookFactory = null)
     {
-        using var session = new FluentHotReloadSession(outputPath, buildAction);
+        using var session = new FluentHotReloadSession(outputPath, buildAction, workbookFactory);
         configure?.Invoke(session);
         session.Start();
 
@@ -95,12 +100,65 @@ public static class FluentLivePreview
     /// </summary>
     /// <param name="outputPath">The path to write the Excel preview file to.</param>
     /// <param name="buildAction">Your existing FluentNPOI code.</param>
+    /// <param name="workbookFactory">Optional factory to create the IWorkbook.</param>
     /// <returns>A configured but not started FluentHotReloadSession.</returns>
     public static FluentHotReloadSession CreateSession(
         string outputPath,
-        Action<FluentWorkbook> buildAction)
+        Action<FluentWorkbook> buildAction,
+        Func<IWorkbook>? workbookFactory = null)
     {
-        return new FluentHotReloadSession(outputPath, buildAction);
+        return new FluentHotReloadSession(outputPath, buildAction, workbookFactory);
+    }
+
+
+    /// <summary>
+    /// Runs a hot reload session starting from an existing template file.
+    /// </summary>
+    /// <param name="templatePath">Path to the template Excel file.</param>
+    /// <param name="outputPath">Path to the output Excel file.</param>
+    /// <param name="buildAction">FluentNPOI code to modify the template.</param>
+    /// <param name="configure">Optional session configuration.</param>
+    public static void RunFromTemplate(
+        string templatePath,
+        string outputPath,
+        Action<FluentWorkbook> buildAction,
+        Action<FluentHotReloadSession>? configure = null)
+    {
+        Run(outputPath, buildAction, configure, () =>
+        {
+            // Read to memory to avoid locking the template file during repeated reads
+            var bytes = File.ReadAllBytes(templatePath);
+            using var ms = new MemoryStream(bytes);
+            return WorkbookFactory.Create(ms);
+        });
+    }
+
+    /// <summary>
+    /// Runs a hot reload session starting from an existing template stream.
+    /// Note: The stream is read immediately into memory to support repeated reloads.
+    /// </summary>
+    /// <param name="templateStream">Stream containing the Excel template.</param>
+    /// <param name="outputPath">Path to the output Excel file.</param>
+    /// <param name="buildAction">FluentNPOI code to modify the template.</param>
+    /// <param name="configure">Optional session configuration.</param>
+    public static void RunFromTemplate(
+        Stream templateStream,
+        string outputPath,
+        Action<FluentWorkbook> buildAction,
+        Action<FluentHotReloadSession>? configure = null)
+    {
+        // Read stream to memory immediately so we can reuse it for multiple refreshes
+        var ms = new MemoryStream();
+        templateStream.CopyTo(ms);
+        var templateBytes = ms.ToArray();
+        // ms can be disposed here as ToArray creates a copy, but let's just let GC handle it or use local scope.
+        // Actually, let's look cleaner.
+
+        Run(outputPath, buildAction, configure, () =>
+        {
+            // Create a fresh stream from the cached bytes for each refresh
+            return WorkbookFactory.Create(new MemoryStream(templateBytes));
+        });
     }
 
     private static void PrintBanner(string outputPath)
@@ -133,6 +191,7 @@ public class FluentHotReloadSession : IDisposable
 {
     private readonly string _outputPath;
     private readonly Action<FluentWorkbook> _buildAction;
+    private readonly Func<IWorkbook> _workbookFactory;
     private readonly object _refreshLock = new();
     private bool _isDisposed;
     private int _refreshCount;
@@ -176,10 +235,12 @@ public class FluentHotReloadSession : IDisposable
     /// </summary>
     /// <param name="outputPath">The path to write the Excel file to.</param>
     /// <param name="buildAction">The FluentNPOI building action.</param>
-    public FluentHotReloadSession(string outputPath, Action<FluentWorkbook> buildAction)
+    /// <param name="workbookFactory">Optional factory for creating the IWorkbook.</param>
+    public FluentHotReloadSession(string outputPath, Action<FluentWorkbook> buildAction, Func<IWorkbook>? workbookFactory = null)
     {
         _outputPath = outputPath ?? throw new ArgumentNullException(nameof(outputPath));
         _buildAction = buildAction ?? throw new ArgumentNullException(nameof(buildAction));
+        _workbookFactory = workbookFactory ?? (() => new XSSFWorkbook());
 
         var directory = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -219,15 +280,6 @@ public class FluentHotReloadSession : IDisposable
 
     private void OnRefreshRequested(Type[]? updatedTypes)
     {
-        // If not using shadow copy, we MUST kill LibreOffice before Refresh() attempts to write to the file
-        if (!LibreOfficeOptions.UseShadowCopy && LibreOfficeOptions.AutoRefresh)
-        {
-            Console.WriteLine("🛑 Closing LibreOffice to release file lock...");
-            KillExistingSofficeProcesses();
-            // Wait for file handles to be strictly released
-            Thread.Sleep(500);
-        }
-
         Refresh();
 
         // Auto-refresh LibreOffice if configured
@@ -241,23 +293,14 @@ public class FluentHotReloadSession : IDisposable
     {
         try
         {
-            string targetPath;
+            // Create fixed shadow copy path (not random GUID)
+            _shadowCopyPath = GetShadowCopyPath(_outputPath);
+            string targetPath = _shadowCopyPath;
 
-            if (LibreOfficeOptions.UseShadowCopy)
+            // Copy current output to shadow
+            if (File.Exists(_outputPath))
             {
-                // Create fixed shadow copy path (not random GUID)
-                _shadowCopyPath = GetShadowCopyPath(_outputPath);
-                targetPath = _shadowCopyPath;
-
-                // Copy current output to shadow
-                if (File.Exists(_outputPath))
-                {
-                    File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
-                }
-            }
-            else
-            {
-                targetPath = _outputPath;
+                File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
             }
 
             // Detect LibreOffice
@@ -312,50 +355,32 @@ public class FluentHotReloadSession : IDisposable
             // Wait for NPOI to finish writing
             await Task.Delay(200);
 
-            string targetPath;
-
-            if (LibreOfficeOptions.UseShadowCopy)
+            // Update the shadow copy file
+            if (!string.IsNullOrEmpty(_shadowCopyPath) && File.Exists(_outputPath))
             {
-                // Update the shadow copy file
-                if (!string.IsNullOrEmpty(_shadowCopyPath) && File.Exists(_outputPath))
-                {
-                    // Kill existing LibreOffice BEFORE copying to avoid file in use (if it's opening the shadow file)
-                    if (_libreOfficeProcess != null && !_libreOfficeProcess.HasExited)
-                    {
-                        try { _libreOfficeProcess.Kill(); } catch { }
-                    }
-
-                    // Update shadow copy
-                    File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
-                    targetPath = _shadowCopyPath;
-                }
-                else
-                {
-                    return; // Should not happen if initialized correctly
-                }
-            }
-            else
-            {
-                targetPath = _outputPath;
-                // Kill existing process
+                // Kill existing LibreOffice BEFORE copying to avoid file in use (if it's opening the shadow file)
                 if (_libreOfficeProcess != null && !_libreOfficeProcess.HasExited)
                 {
                     try { _libreOfficeProcess.Kill(); } catch { }
                 }
-            }
 
-            // Reopen LibreOffice
-            var sofficePath = LibreOfficeBridge.DetectPath();
-            if (!string.IsNullOrEmpty(sofficePath))
-            {
-                _libreOfficeProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                // Update shadow copy
+                File.Copy(_outputPath, _shadowCopyPath, overwrite: true);
+                string targetPath = _shadowCopyPath;
+
+                // Reopen LibreOffice
+                var sofficePath = LibreOfficeBridge.DetectPath();
+                if (!string.IsNullOrEmpty(sofficePath))
                 {
-                    FileName = sofficePath,
-                    Arguments = $"--nologo --norestore --calc \"{targetPath}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                });
-                Console.WriteLine("🔄 LibreOffice reopened with updated file");
+                    _libreOfficeProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = sofficePath,
+                        Arguments = $"--nologo --norestore --calc \"{targetPath}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                    Console.WriteLine("🔄 LibreOffice reopened with updated file");
+                }
             }
         }
         catch (Exception ex)
@@ -404,7 +429,7 @@ public class FluentHotReloadSession : IDisposable
                 var startTime = DateTime.Now;
 
                 // Create new workbook
-                var workbook = new XSSFWorkbook();
+                var workbook = _workbookFactory();
                 var fluentWorkbook = new FluentWorkbook(workbook);
 
                 // Execute user's FluentNPOI code
@@ -497,6 +522,7 @@ public static class FluentHotReloadExtensions
     /// <param name="buildAction">Your FluentWorkbook building code.</param>
     /// <param name="outputPath">The output path for the preview file.</param>
     /// <param name="configure">Optional session configuration.</param>
+    /// <param name="workbookFactory">Optional factory to create the IWorkbook.</param>
     /// <example>
     /// <code>
     /// // One-liner to add hot reload to existing code
@@ -513,8 +539,9 @@ public static class FluentHotReloadExtensions
     public static void WithHotReload(
         this Action<FluentWorkbook> buildAction,
         string outputPath,
-        Action<FluentHotReloadSession>? configure = null)
+        Action<FluentHotReloadSession>? configure = null,
+        Func<IWorkbook>? workbookFactory = null)
     {
-        FluentLivePreview.Run(outputPath, buildAction, configure);
+        FluentLivePreview.Run(outputPath, buildAction, configure, workbookFactory);
     }
 }

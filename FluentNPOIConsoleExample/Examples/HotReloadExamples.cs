@@ -21,7 +21,7 @@ public static class HotReloadExamples
         Console.WriteLine("Modify code in any Example file (e.g., TableExamples.cs) to see live changes.");
         Console.WriteLine();
 
-        FluentLivePreview.Run("output/style_demo.xlsx", wb =>
+        FluentLivePreview.Run("output/demo.xlsx", wb =>
         {
             // Set up necessary styles first
             Program.SetupStyles(wb);
@@ -58,9 +58,25 @@ public static class HotReloadExamples
         },
         session =>
         {
-            // Use Shadow Copy (Default) to avoid file locking issues
-            // session.LibreOfficeOptions.UseShadowCopy = false;
+            // Configure session here if needed
         });
+
+        // Example: Reading from an existing template
+        // FluentLivePreview.RunFromTemplate("template.xlsx", "output/modified_template.xlsx", wb =>
+        // {
+        //     wb.UseSheet("Sheet1")
+        //       .SetCellPosition(ExcelCol.A, 1)
+        //       .SetValue("Modified!");
+        // });
+
+        // Example: Reading from a Stream
+        // using var fs = File.OpenRead("template.xlsx");
+        // FluentLivePreview.RunFromTemplate(fs, "output/stream_modified.xlsx", wb =>
+        // {
+        //     wb.UseSheet("Sheet1")
+        //       .SetCellPosition(ExcelCol.B, 2)
+        //       .SetValue("From Stream!");
+        // });
     }
 
 
