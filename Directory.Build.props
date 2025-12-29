@@ -13,7 +13,7 @@
     
     <!-- 統一依賴版本 -->
     <NpoiVersion>2.7.1</NpoiVersion>
-    <QuestPdfVersion>2025.12.0</QuestPdfVersion>
+    <QuestPdfVersion>2025.12.1</QuestPdfVersion>
     <ExcelDataReaderVersion>3.7.0</ExcelDataReaderVersion>
     <SystemDrawingCommonVersion>8.0.0</SystemDrawingCommonVersion>
     
